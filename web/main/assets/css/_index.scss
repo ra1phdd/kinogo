@@ -1,0 +1,72 @@
+// Импорты
+@import "variables";
+@import "mixins";
+
+// Объявление шрифтов
+@font-face {
+    font-family: "Comfortaa", sans-serif;
+    src: url("/web/main/assets/fonts/Comfortaa-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+html {
+    background-color: #27247b;
+    background-image: url("/web/main/assets/images/background.svg");
+    background-attachment: fixed;
+    background-size: cover;
+}
+body {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    font-family: $font-primary;
+    margin: 0;
+    overflow-x: hidden;
+    * {
+        color: $tcolor-primary;
+        box-sizing: border-box;
+    }
+}
+.container {
+    width: $width-body;
+    margin: 0 auto;
+    padding: 25px 0;
+    header {
+        display: flex;
+        margin-bottom: 25px;
+        .header__logotype h1 {
+            font-size: 24px;
+            padding: 0;
+            margin: 0;
+            a {
+                text-decoration: none;
+            }
+        }
+        nav {
+            margin: auto;
+            a {
+                margin: 0 7.5px;
+                vertical-align: middle;
+                text-decoration: none;
+                transition: 0.3s;
+                &:hover {
+                    color: $tcolor-border;
+                    transition: 0.3s;
+                }
+            }
+        }
+        @include glassphormism();
+    }
+    main {
+        display: flex;
+        .sections {
+            width: 100%;
+            margin-right: 25px;
+        }
+        aside {
+            max-width: 20rem;
+            width: 100%;
+        }
+    }
+}

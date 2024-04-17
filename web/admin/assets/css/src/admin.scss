@@ -1,0 +1,113 @@
+@import "../../../../main/assets/css/mixins";
+@import "../../../../main/assets/css/variables";
+@import "../../../../main/assets/css/index";
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.section__movies {
+    .section__movies-add {
+        text-align: center;
+        input {
+            @include glassphormism();
+            font-size: 16px;
+            width: 380px;
+            height: 54px;
+            padding: 7.5px 12.5px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            &::placeholder {
+                color: $tcolor-secondary;
+            }
+            &:focus {
+                outline: none;
+            }
+        }
+        form {
+            display: block;
+            #section__movies-list {
+                @include glassphormism();
+                width: 380px;
+                display: none;
+                margin: 0 auto 15px auto;
+                input {
+                    display: none;
+                    &:checked {
+                        + label {
+                            @include glassphormism();
+                            padding: 9px 12.5px;
+                        }
+                    }
+                }
+                label {
+                    display: block;
+                    font-size: 16px;
+                    border-radius: 10px;
+                    padding: 10px 12.5px;
+                    &:hover {
+                        @include glassphormism();
+                        padding: 9px 12.5px;
+                        cursor: pointer;
+                    }
+                }
+            }
+            .section__movies-send {
+                width: 380px;
+                margin: 0 auto 15px auto;
+                #drop_zone {
+                    cursor: pointer;
+                    @include glassphormism();
+                }
+                #send_video {
+                    display: none;
+                }
+            }
+            #progress-bar {
+                width: 0%;
+                height: 10px;
+                border-radius: 5px;
+                background-color: $tcolor-border;
+            }
+            .enabled {
+                display: block !important;
+            }
+            .btnPointer {
+                cursor: pointer;
+            }
+            button {
+                @include glassphormism();
+                font-size: 16px;
+                width: 380px;
+                height: 54px;
+                padding: 7.5px 12.5px;
+                border-radius: 10px;
+                border-left: 0;
+            }
+        }
+        @include glassphormism();
+    }
+}
+
+.hystmodal__window {
+    @include glassphormism();
+    width: 480px;
+    height: 360px;
+    background: none !important;
+    .progress-bar {
+        background-color: $tcolor-border;
+        border-radius: 15px;
+        height: 24px;
+    }
+    #progress__processing {
+        display: none;
+        #progress__processing-bar {
+            width: 0.1%;
+        }
+    }
+}

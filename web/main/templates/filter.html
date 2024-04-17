@@ -1,0 +1,16 @@
+{{ define "filter" }}
+<div class="section__videos-filters animate__animated animate__fadeInLeft animate__faster">
+    <h3>Фильтры:</h3>
+    {{range .FilterData.Genre}}
+        {{if ne . "выбрать"}}
+            <span>{{ . }}</span>
+        {{end}}
+    {{end}}
+    {{if ne .FilterData.YearMin 1980}}
+        <span>>{{ .FilterData.YearMin }}</span>
+    {{end}}
+    {{if ne .FilterData.YearMax 2024}}
+        <span><{{ .FilterData.YearMax }}</span>
+    {{end}}
+</div>
+{{ end }}
