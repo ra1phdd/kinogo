@@ -19,8 +19,31 @@ services:
     container_name: redis-stack
     restart: unless-stopped
     volumes:
-        - /opt/docker/redis/etc:/usr/local/etc/redis
+        - ./internal/config/redis/:/usr/local/etc/redis
     ports:
       - "6379:6379"
       - "8001:8001"
     command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+  grafana:
+    image: grafana/grafana-oss
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - ./internal/config/grafana/:/var/lib/grafana
+    extra_hosts:
+      - "postgres:192.168.1.1"
+    ports:
+     - '3000:3000'
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./internal/config/prometheus/:/etc/prometheus/
+    container_name: prometheus
+    hostname: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    environment:
+      TZ: "Europe/Moscow"

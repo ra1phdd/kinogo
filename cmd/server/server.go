@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"kinogo/cmd/metrics"
 	"kinogo/internal/handlers"
 	"kinogo/internal/services"
 	"kinogo/pkg/logger"
@@ -60,6 +61,8 @@ func Start() {
 	mux.HandleFunc("/series", handlers.IndexHandler)
 	mux.HandleFunc("/telecasts", handlers.IndexHandler)
 	mux.HandleFunc("/", handlers.IndexHandler)
+
+	metrics.Init(mux)
 
 	err := http.ListenAndServe(":4000", mux)
 	if err != nil {

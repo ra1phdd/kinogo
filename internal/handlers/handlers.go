@@ -16,7 +16,16 @@ import (
 
 // Главная страница
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" && r.URL.Path != "/filter" && r.URL.Path != "/search" && r.URL.Path != "/films" && r.URL.Path != "/cartoons" && r.URL.Path != "/telecasts" {
+	// Вывод 404 на несуществующую страницу
+	validPaths := map[string]bool{
+		"/":          true,
+		"/filter":    true,
+		"/search":    true,
+		"/films":     true,
+		"/cartoons":  true,
+		"/telecasts": true,
+	}
+	if _, ok := validPaths[r.URL.Path]; !ok {
 		http.NotFound(w, r)
 		return
 	}
@@ -25,49 +34,40 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	var movies []models.MovieData
 	var bestMovie models.MovieData
 	var err error
-	if r.URL.Path == "/films" || r.URL.Path == "/cartoons" || r.URL.Path == "/telecasts" {
-		if r.URL.Path == "/films" {
-			// Запрос к БД/кэшу списка фильмов
-			movies, err = services.GetAllFilms()
-			if err != nil {
-				fmt.Println("Ошибка:", err)
-				return
-			}
-			fmt.Println(movies)
-		} else if r.URL.Path == "/cartoons" {
-			// Запрос к БД/кэшу списка фильмов
-			movies, err = services.GetAllCartoons()
-			if err != nil {
-				fmt.Println("Ошибка:", err)
-				return
-			}
-			fmt.Println(movies)
-		} else if r.URL.Path == "/telecasts" {
-			// Запрос к БД/кэшу списка фильмов
-			movies, err = services.GetAllTelecasts()
-			if err != nil {
-				fmt.Println("Ошибка:", err)
-				return
-			}
-			fmt.Println(movies)
+	switch r.URL.Path {
+	case "/films":
+		movies, err = services.GetAllFilms()
+		if err != nil {
+			fmt.Println("Ошибка:", err)
+			return
 		}
 		streaming = false
-	} else {
-		// Запрос к БД/кэшу списка фильмов
+	case "/cartoons":
+		movies, err = services.GetAllCartoons()
+		if err != nil {
+			fmt.Println("Ошибка:", err)
+			return
+		}
+		streaming = false
+	case "/telecasts":
+		movies, err = services.GetAllTelecasts()
+		if err != nil {
+			fmt.Println("Ошибка:", err)
+			return
+		}
+		streaming = false
+	default:
 		movies, err = services.GetAllMovies()
 		if err != nil {
 			fmt.Println("Ошибка:", err)
 			return
 		}
-		fmt.Println(movies)
 
-		// Запрос к API Twitch/кэшу статуса стрима
 		streaming, err = services.IsStreaming()
 		if err != nil {
 			fmt.Println("Ошибка:", err)
 			return
 		}
-		fmt.Println(streaming)
 	}
 
 	bestMovie, err = services.GetBestMovie()
@@ -75,7 +75,6 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Ошибка:", err)
 		return
 	}
-	fmt.Println(bestMovie)
 
 	var allData models.AllData
 	allData.GeneralData = models.GeneralData{
@@ -221,7 +220,7 @@ func SearchPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("admin/templates/index.html")
+	tmpl, err := template.ParseFiles("web/admin/templates/index.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
