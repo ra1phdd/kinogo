@@ -1,6 +1,9 @@
 package logger
 
 import (
+	"fmt"
+	"os"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -9,47 +12,39 @@ var logger *zap.Logger
 
 func Init(loggerLevel string) {
 	// Логгирование
-	atomicLevel := zap.NewAtomicLevel()
+	config := zap.NewProductionEncoderConfig()
+	config.EncodeLevel = zapcore.LowercaseLevelEncoder
+	config.EncodeTime = zapcore.ISO8601TimeEncoder
+
+	fileEncoder := zapcore.NewJSONEncoder(config)
+	consoleEncoder := zapcore.NewConsoleEncoder(config)
+	logFile, err := os.OpenFile("logs/golog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("ошибка создания файла golog")
+	}
+	writer := zapcore.AddSync(logFile)
+
+	var defaultLogLevel zapcore.Level
 	switch loggerLevel {
 	case "debug":
-		atomicLevel.SetLevel(zap.DebugLevel)
+		defaultLogLevel = zapcore.DebugLevel
 	case "warn":
-		atomicLevel.SetLevel(zap.WarnLevel)
+		defaultLogLevel = zapcore.WarnLevel
 	case "error":
-		atomicLevel.SetLevel(zap.ErrorLevel)
+		defaultLogLevel = zapcore.ErrorLevel
 	case "fatal":
-		atomicLevel.SetLevel(zap.FatalLevel)
+		defaultLogLevel = zapcore.FatalLevel
 	case "info":
 	default:
-		atomicLevel.SetLevel(zap.InfoLevel)
+		defaultLogLevel = zapcore.InfoLevel
 	}
 
-	config := zap.Config{
-		Level:       atomicLevel,
-		Development: false,
-		Sampling: &zap.SamplingConfig{
-			Initial:    100,
-			Thereafter: 100,
-		},
-		Encoding: "json",
-		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "ts",
-			LevelKey:       "level",
-			NameKey:        "logger",
-			CallerKey:      "caller",
-			FunctionKey:    zapcore.OmitKey,
-			MessageKey:     "msg",
-			StacktraceKey:  "stacktrace",
-			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    zapcore.LowercaseLevelEncoder,
-			EncodeTime:     zapcore.ISO8601TimeEncoder,
-			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
-		},
-		OutputPaths:      []string{"stdout", "log.json"},
-		ErrorOutputPaths: []string{"stderr"},
-	}
-	logger, _ = config.Build()
+	core := zapcore.NewTee(
+		zapcore.NewCore(fileEncoder, writer, defaultLogLevel),
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), defaultLogLevel),
+	)
+	logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	logger.Info("hui")
 	defer logger.Sync()
 }
 

@@ -57,6 +57,10 @@ func Start() {
 	fsMedia := http.FileServer(http.Dir("media"))
 	mux.Handle("/media/", http.StripPrefix("/media/", fsMedia))
 
+	// JSON логи
+	fsLogs := http.FileServer(http.Dir("logs"))
+	mux.Handle("/logs/", http.StripPrefix("/logs/", fsLogs))
+
 	mux.HandleFunc("/films", handlers.IndexHandler)
 	mux.HandleFunc("/series", handlers.IndexHandler)
 	mux.HandleFunc("/telecasts", handlers.IndexHandler)

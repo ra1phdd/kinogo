@@ -1,0 +1,12 @@
+{"level":"info","ts":"2024-04-19T05:59:17.578Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T06:09:43.535Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T08:35:06.324Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T08:35:34.483Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T08:38:54.568Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"error","ts":"2024-04-19T08:38:57.765Z","caller":"logger/logger.go:52","msg":"Ошибка при подключении к БД","error":"failed to connect to `host=91.215.21.236 user=postgres database=kinogo_db`: dial error (dial tcp 91.215.21.236:5432: connect: no route to host)","stacktrace":"kinogo/pkg/logger.Error\n\t/app/pkg/logger/logger.go:52\nmain.main\n\t/app/cmd/main/main.go:30\nruntime.main\n\t/usr/local/go/src/runtime/proc.go:271"}
+{"level":"info","ts":"2024-04-19T08:39:46.106Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T08:44:57.884Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T08:50:43.619Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T10:57:34.709Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T11:55:03.830Z","caller":"logger/logger.go:47","msg":"hui"}
+{"level":"info","ts":"2024-04-19T11:56:41.456Z","caller":"logger/logger.go:47","msg":"hui"}
