@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"os"
 
 	"go.uber.org/zap"
@@ -20,7 +19,7 @@ func Init(loggerLevel string) {
 	consoleEncoder := zapcore.NewConsoleEncoder(config)
 	logFile, err := os.OpenFile("logs/golog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println("ошибка создания файла golog")
+		logger.Error("Ошибка создания файла golog", zap.Error(err))
 	}
 	writer := zapcore.AddSync(logFile)
 
@@ -44,14 +43,25 @@ func Init(loggerLevel string) {
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), defaultLogLevel),
 	)
 	logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
-	logger.Info("hui")
 	defer logger.Sync()
 }
 
-func Error(text string, err error) {
-	logger.Error(text, zap.Error(err))
+func Debug(message string, fields ...zap.Field) {
+	logger.Debug(message, fields...)
 }
 
-func Warn(text string, err error) {
-	logger.Warn(text, zap.Error(err))
+func Info(message string, fields ...zap.Field) {
+	logger.Info(message, fields...)
+}
+
+func Warn(message string, fields ...zap.Field) {
+	logger.Warn(message, fields...)
+}
+
+func Error(message string, fields ...zap.Field) {
+	logger.Error(message, fields...)
+}
+
+func Fatal(message string, fields ...zap.Field) {
+	logger.Fatal(message, fields...)
 }

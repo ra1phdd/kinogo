@@ -13,14 +13,14 @@ services:
     extra_hosts:
       - "postgres:192.168.1.1"
     ports:
-      - "4000:4000"
+      - "80:4000"
 
   redis:
     image: redis/redis-stack:latest
     container_name: redis-stack
     restart: unless-stopped
     volumes:
-        - ./internal/config/redis/:/usr/local/etc/redis
+      - ./internal/config/redis/:/usr/local/etc/redis
     ports:
       - "6379:6379"
       - "8001:8001"
@@ -35,7 +35,7 @@ services:
     extra_hosts:
       - "postgres:192.168.1.1"
     ports:
-     - '3000:3000'
+      - '3000:3000'
 
   prometheus:
     image: prom/prometheus:latest
@@ -70,9 +70,12 @@ services:
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter
     container_name: postgres-exporter
+    volumes:
+      - ./internal/config/postgres-exporter/:/etc/postgres-exporter/
     ports:
       - "9187:9187"
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:RalphDeadwave562208@91.215.21.236:5432/kinogo_db?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:56228478@192.168.1.1:5432/kinogo_db?sslmode=disable"
     links:
       - prometheus
+    command: --config.file=/etc/postgres-exporter/postgres_exporter.yml

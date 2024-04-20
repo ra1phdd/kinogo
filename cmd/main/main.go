@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"kinogo/cmd/server"
 	"kinogo/cmd/websocket"
 	"kinogo/internal/config"
@@ -12,13 +10,14 @@ import (
 	"kinogo/pkg/logger"
 
 	"github.com/robfig/cron"
+	"go.uber.org/zap"
 )
 
 func main() {
 	// Подгрузка конфигурации
 	config, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("%+v\n", err)
+		panic(err)
 	}
 
 	// Инициализация логгепа
@@ -27,7 +26,7 @@ func main() {
 	// Подключение к БД
 	err = db.Init(config.DBUser, config.DBPassword, config.DBHost, config.DBName)
 	if err != nil {
-		logger.Error("Ошибка при подключении к БД", err)
+		logger.Fatal("Ошибка при подключении к БД", zap.Error(err))
 	}
 
 	// Инициализация кэша Redis

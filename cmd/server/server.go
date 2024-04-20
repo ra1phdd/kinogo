@@ -1,13 +1,15 @@
 package server
 
 import (
-	"fmt"
-	"kinogo/cmd/metrics"
 	"kinogo/internal/handlers"
 	"kinogo/internal/services"
 	"kinogo/pkg/logger"
+	"kinogo/pkg/metrics"
+	"kinogo/pkg/telegram"
 	"net/http"
 	"strconv"
+
+	"go.uber.org/zap"
 )
 
 func Start() {
@@ -21,23 +23,26 @@ func Start() {
 		r.ParseForm()
 		id, err := strconv.Atoi(r.Form.Get("like"))
 		if err != nil {
-			fmt.Println("Invalid ID")
-			return
+			logger.Error("Ошибка парсинга ID фильма для постановки лайка")
 		}
+		logger.Debug("Постановка лайка", zap.Int("id", id))
 		services.HandleLike(r, int64(id))
 	})
 	mux.HandleFunc("/dislike", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		id, err := strconv.Atoi(r.Form.Get("dislike"))
 		if err != nil {
-			fmt.Println("Invalid ID")
-			return
+			logger.Error("Ошибка парсинга ID фильма для постановки дизлайка")
 		}
+		logger.Debug("Постановка дизлайка", zap.Int("id", id))
 		services.HandleDislike(r, int64(id))
 	})
 
 	// Фильтры
 	mux.HandleFunc("/filter", handlers.FilterIndexHandler)
+
+	// Авторизация в TG
+	mux.HandleFunc("/auth/telegram/callback", telegram.TelegramCallbackHandler)
 
 	// Поиск
 	mux.HandleFunc("/searchpage", services.SearchHandler)
@@ -70,6 +75,7 @@ func Start() {
 
 	err := http.ListenAndServe(":4000", mux)
 	if err != nil {
-		logger.Error("Ошибка при запуске HTTP-сервера", err)
+		logger.Fatal("Ошибка при запуске HTTP-сервера", zap.Error(err))
 	}
+	logger.Debug("HTTP-сервер запущен")
 }

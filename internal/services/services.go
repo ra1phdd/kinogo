@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net"
 	"net/http"
@@ -27,6 +26,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/tidwall/gjson"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
+	"go.uber.org/zap"
 )
 
 type Progress struct {
@@ -105,14 +105,15 @@ func ResultMovieHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	movieName := r.Form.Get("movieName")
 	if err := ValidateInput(movieName); err != nil {
-		logger.Warn("Ошибка валидации входных данных", err)
+		logger.Error("Ошибка валидации входных данных", zap.Error(err), zap.String("movieName", movieName))
 		return
 	}
+	logger.Debug("Получение названия фильма из формы", zap.String("movieName", movieName))
 
 	url := "https://api.kinopoisk.dev/v1.4/movie/search?query=" + url.QueryEscape(movieName) + "&limit=4"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		logger.Warn("Ошибка GET-запроса к API КиноПоиска", err)
+		logger.Error("Ошибка GET-запроса к API КиноПоиска", zap.Error(err))
 		return
 	}
 
@@ -120,21 +121,21 @@ func ResultMovieHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logger.Warn("Ошибка отправки HTTP-запроса к API КиноПоиска", err)
+		logger.Error("Ошибка отправки HTTP-запроса к API КиноПоиска", zap.Error(err))
 		return
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		logger.Warn("Ошибка чтения ответа от API КиноПоиска", err)
+		logger.Error("Ошибка чтения ответа от API КиноПоиска", zap.Error(err))
 		return
 	}
 
 	var sb strings.Builder
 	err = json.Unmarshal(body, &movies)
 	if err != nil {
-		logger.Warn("Ошибка декодирования JSON", err)
+		logger.Error("Ошибка декодирования JSON", zap.Error(err))
 		return
 	}
 
@@ -156,13 +157,15 @@ func ResultMovieHandler(w http.ResponseWriter, r *http.Request) {
 func AddMovieHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	radioButtonValue := r.URL.Query().Get("id")
+	logger.Debug("Получение id фильма из формы", zap.String("radioButtonValue", radioButtonValue))
 
 	file, _, err := r.FormFile("send-video")
 	if err != nil {
-		logger.Error("Ошибка при парсинге видео из формы", err)
+		logger.Error("Ошибка при парсинге видео из формы", zap.Error(err))
 		return
 	}
 	defer file.Close()
+	logger.Debug("Парсинг видео из формы завершен")
 
 	for _, doc := range movies.Docs {
 		ID := fmt.Sprint(doc.ID)
@@ -186,9 +189,13 @@ func AddMovieHandler(w http.ResponseWriter, r *http.Request) {
 			var idMovie int
 			err := db.Conn.QueryRow(`INSERT INTO movies (title, description, country, releasedate, timemovie, scorekp, scoreimdb, poster, typemovie) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`, title, description, country, releaseDate, timeMovie, scoreKP, scoreIMDb, poster, typeMovie).Scan(&idMovie)
 			if err != nil {
-				logger.Error("Ошибка добавления фильма в таблицу movies", err)
+				logger.Error("Ошибка добавления фильма в таблицу movies", zap.Error(err))
 				return
 			}
+			logger.Debug("Добавление фильма в таблицу movies", zap.Int("idMovie", idMovie), zap.String("title", title),
+				zap.String("description", description), zap.String("country", country), zap.Int("releasedate", releaseDate),
+				zap.Int("timemovie", timeMovie), zap.Float64("scorekp", scoreKP), zap.Float64("scoreimdb", scoreIMDb),
+				zap.String("poster", poster), zap.String("typemovie", typeMovie))
 
 			for _, genre := range doc.Genres {
 				var idGenre int
@@ -196,25 +203,28 @@ func AddMovieHandler(w http.ResponseWriter, r *http.Request) {
 
 				rows, err := db.Conn.Query("SELECT * FROM genres")
 				if err != nil {
-					logger.Warn("Ошибка выборки жанров из таблицы genres", err)
+					logger.Error("Ошибка выборки жанров из таблицы genres", zap.Error(err))
 				}
 				defer rows.Close()
 
 				for rows.Next() {
 					err := rows.Scan(&idGenre, &nameGenre)
 					if err != nil {
-						logger.Warn("Ошибка чтения строки из результата SQL-запроса", err)
+						logger.Error("Ошибка чтения строки из результата SQL-запроса", zap.Error(err))
 					}
 					if nameGenre == genre.Name {
 						_, err := db.Conn.Exec(`INSERT INTO MoviesGenres (idmovie, idgenre) VALUES ($1, $2)`, idMovie, idGenre)
 						if err != nil {
-							logger.Warn("Ошибка добавления связи фильма-жанров в таблицу MoviesGenres", err)
+							logger.Error("Ошибка добавления связи фильма-жанров в таблицу MoviesGenres", zap.Error(err))
+							return
 						}
+						logger.Debug("Добавление связи фильма-жанра", zap.Int("idMovie", idMovie), zap.Int("idGenre", idGenre))
 					}
 				}
 
 				if err = rows.Err(); err != nil {
-					logger.Warn("Ошибка rows.Err() в функции AddMovieHandler", err)
+					logger.Error("Ошибка rows.Err() в функции AddMovieHandler", zap.Error(err))
+					return
 				}
 			}
 
@@ -230,7 +240,7 @@ func AddMovieHandler(w http.ResponseWriter, r *http.Request) {
 			filePath := dirPath + "/" + fmt.Sprint(idMovie) + ".mp4"
 			out, err := os.Create(filePath)
 			if err != nil {
-				logger.Error("Ошибка создания файла фильма", err)
+				logger.Error("Ошибка создания файла фильма", zap.Error(err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -238,15 +248,17 @@ func AddMovieHandler(w http.ResponseWriter, r *http.Request) {
 
 			_, err = io.Copy(out, file)
 			if err != nil {
-				logger.Error("Ошибка копирования файла фильма из формы на диск", err)
+				logger.Error("Ошибка копирования файла фильма из формы на диск", zap.Error(err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			logger.Debug("Копирование файла фильма из формы на диск завершено", zap.Int("idMovie", idMovie))
 
 			var wg sync.WaitGroup
 			wg.Add(1)
 			go ProcessingFile(idMovie, &wg)
 			wg.Wait()
+			logger.Debug("Обработка файла фильма завершена", zap.Int("idMovie", idMovie))
 		}
 	}
 
@@ -259,10 +271,11 @@ func ProcessingFile(idMovie int, wg *sync.WaitGroup) {
 		GlobalArgs().
 		OverWriteOutput().
 		Run()
-
 	if err != nil {
-		fmt.Println("Ошибка при выполнении команды ffmpeg:", err)
+		logger.Error("Ошибка при выполнении команды ffmpeg для преобразования mp4 в mkv", zap.Error(err))
+		return
 	}
+	logger.Debug("Преобразование mp4 в mkv завершено", zap.Int("idMovie", idMovie))
 
 	os.Remove(fmt.Sprintf("media/%s/%s.mp4", fmt.Sprint(idMovie), fmt.Sprint(idMovie)))
 
@@ -298,6 +311,8 @@ func ProcessingFile(idMovie int, wg *sync.WaitGroup) {
 		progresses[i] = &Progress{}
 	}
 
+	logger.Debug("Запуск обработки видео на разных качествах", zap.Int("idMovie", idMovie))
+
 	wg.Add(len(commands))
 	for i, cmdArgs := range commands {
 		go ExecuteCommand(cmdArgs, progresses[i], wg)
@@ -313,10 +328,15 @@ func ExecuteCommand(args []string, progress *Progress, wg *sync.WaitGroup) {
 
 	a, err := ffmpeg.Probe(inFileName)
 	if err != nil {
-		fmt.Println("Ошибка при выполнении команды ffmpeg:", err)
+		logger.Error("Ошибка при получении метаданных о файле", zap.Error(err), zap.String("inFileName", inFileName))
 		return
 	}
 	totalDuration := gjson.Get(a, "format.duration").Float()
+
+	sockFileName := TempSock(totalDuration, progress)
+	if sockFileName == "" {
+		return
+	}
 
 	err = ffmpeg.Input(inFileName).
 		Output(outFileName, ffmpeg.KwArgs{
@@ -327,12 +347,11 @@ func ExecuteCommand(args []string, progress *Progress, wg *sync.WaitGroup) {
 			"map": "0",
 			"s":   args[2],
 			"f":   "dash",
-		}).GlobalArgs("-progress", "unix://"+TempSock(totalDuration, progress)).
+		}).GlobalArgs("-progress", "unix://"+sockFileName).
 		OverWriteOutput().
 		Run()
-
 	if err != nil {
-		fmt.Println("Ошибка при выполнении команды ffmpeg:", err)
+		logger.Error("Ошибка при выполнении команды ffmpeg", zap.Error(err))
 	}
 }
 
@@ -343,20 +362,23 @@ func TempSock(totalDuration float64, progress *Progress) string {
 	os.Remove(sockFileName)
 	l, err := net.Listen("unix", sockFileName)
 	if err != nil {
-		panic(err)
+		logger.Error("Ошибка создания сокета", zap.Error(err), zap.String("sockFileName", sockFileName))
+		return ""
 	}
 
 	go func() {
 		re := regexp.MustCompile(`out_time_ms=(\d+)`)
 		fd, err := l.Accept()
 		if err != nil {
-			log.Fatal("accept error:", err)
+			logger.Error("Ошибка принятия входящего соединения на сокете", zap.Error(err), zap.String("sockFileName", sockFileName))
+			return
 		}
 		buf := make([]byte, 16)
 		data := ""
 		for {
 			_, err := fd.Read(buf)
 			if err != nil {
+				logger.Error("Ошибка чтения данных из сокета", zap.Error(err), zap.String("sockFileName", sockFileName))
 				return
 			}
 			data += string(buf)
@@ -404,14 +426,14 @@ func PrintProgress(progresses []*Progress) {
 func SearchHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	textSearch := strings.ToLower(r.Form.Get("search"))
+	logger.Debug("Получение текста поиска из формы", zap.String("textSearch", textSearch))
 
 	movies, err := GetSearchMovies(textSearch)
 	if err != nil {
-		fmt.Println("ошибка:", err)
+		logger.Error("Ошибка получения контента по поиску", zap.Error(err), zap.Any("movies", movies))
 		return
 	}
-
-	fmt.Println(movies)
+	logger.Debug("Получен контент из БД/кэша", zap.Any("movies", movies))
 
 	var sb strings.Builder
 	for _, movie := range movies {
@@ -424,20 +446,20 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
 func ValidateInput(input string) error {
 	// Проверка на пустую строку
 	if strings.TrimSpace(input) == "" {
-		return errors.New("input cannot be empty")
+		return errors.New("входные данные пустые")
 	}
 
 	// Проверка на максимальную длину
 	const maxLength = 200
 	if len(input) > maxLength {
-		return errors.New("input is too long")
+		return errors.New("входные данные слишком длинные (больше 200 символов)")
 	}
 
 	// Проверка на специальные символы
 	specialChars := []string{"<", ">", "&", "%"}
 	for _, char := range specialChars {
 		if strings.Contains(input, char) {
-			return errors.New("input contains invalid characters")
+			return errors.New("входные данные содержат специальные символы (<, >, &, %)")
 		}
 	}
 
@@ -462,7 +484,7 @@ func GetAllMovies() ([]models.MovieData, error) {
         FROM movies JOIN moviesgenres ON movies.id = moviesgenres.idmovie
         JOIN genres ON moviesgenres.idgenre = genres.id GROUP BY movies.id ORDER BY movies.id DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при выборке данных из таблицы arrays: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -485,22 +507,20 @@ func GetAllMovies() ([]models.MovieData, error) {
 			&MoviesData.Genres,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка при обработке данных из таблицы schedulessss: %w", err)
+			return nil, err
 		}
 
 		MoviesData.Genres = strings.Replace(strings.Trim(MoviesData.Genres, "{}"), ",", ", ", -1)
 
 		MoviesData.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreKP), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		MoviesData.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreIMDB), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
-
-		fmt.Println(MoviesData)
 
 		moviesSlice = append(moviesSlice, MoviesData)
 	}
@@ -558,22 +578,20 @@ func GetBestMovie() (models.MovieData, error) {
 			&MoviesData.Genres,
 		)
 		if err != nil {
-			return moviesSlice, fmt.Errorf("ошибка при обработке данных из таблицы schedulessss: %w", err)
+			return moviesSlice, err
 		}
 
 		MoviesData.Genres = strings.Replace(strings.Trim(MoviesData.Genres, "{}"), ",", ", ", -1)
 
 		MoviesData.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreKP), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return moviesSlice, err
 		}
 
 		MoviesData.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreIMDB), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return moviesSlice, err
 		}
-
-		fmt.Println(MoviesData)
 
 		moviesSlice = MoviesData
 	}
@@ -617,7 +635,7 @@ func GetFilterMovies(idGenres []int, yearMin int, yearMax int) ([]models.MovieDa
 			WHERE genres.id = ANY($1) AND (releasedate >= $2 AND releasedate <= $3)
 			GROUP BY movies.id ORDER BY movies.id DESC`, idGenres, yearMin, yearMax)
 		if err != nil {
-			fmt.Println("ошибка при выборке данных из таблицы arrays в функци и getNextSched: ", err)
+			return nil, err
 		}
 		defer rows.Close()
 	} else {
@@ -626,7 +644,7 @@ func GetFilterMovies(idGenres []int, yearMin int, yearMax int) ([]models.MovieDa
 			JOIN genres ON moviesgenres.idgenre = genres.id WHERE
 			(releasedate >= $1 AND releasedate <= $2) GROUP BY movies.id ORDER BY movies.id DESC`, yearMin, yearMax)
 		if err != nil {
-			fmt.Println("ошибка при выборке данных из таблицы arrays в функции getNextSched: ", err)
+			return nil, err
 		}
 		defer rows.Close()
 	}
@@ -650,19 +668,19 @@ func GetFilterMovies(idGenres []int, yearMin int, yearMax int) ([]models.MovieDa
 			&MoviesData.Genres,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка при обработке данных из таблицы schedules: %w", err)
+			return nil, err
 		}
 
 		MoviesData.Genres = strings.Replace(strings.Trim(MoviesData.Genres, "{}"), ",", ", ", -1)
 
 		MoviesData.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreKP), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		MoviesData.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreIMDB), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		moviesSlice = append(moviesSlice, MoviesData)
@@ -698,7 +716,7 @@ func GetMovie(id int) (models.MovieData, error) {
 		FROM movies	JOIN moviesgenres ON movies.id = moviesgenres.idmovie
 		JOIN genres ON moviesgenres.idgenre = genres.id WHERE movies.id = $1 GROUP BY movies.id`, id)
 	if err != nil {
-		fmt.Println("ошибка при выборке данных из таблицы arrays в функции getNextSched: ", err)
+		return moviesSlice, err
 	}
 	defer rows.Close()
 
@@ -720,7 +738,7 @@ func GetMovie(id int) (models.MovieData, error) {
 			&moviesSlice.Genres,
 		)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return moviesSlice, err
 		}
 	}
 
@@ -728,12 +746,12 @@ func GetMovie(id int) (models.MovieData, error) {
 
 	moviesSlice.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", moviesSlice.ScoreKP), 64)
 	if err != nil {
-		fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+		return moviesSlice, err
 	}
 
 	moviesSlice.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", moviesSlice.ScoreIMDB), 64)
 	if err != nil {
-		fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+		return moviesSlice, err
 	}
 
 	// Сохраняем данные в Redis
@@ -767,7 +785,7 @@ func GetSearchMovies(textSearch string) ([]models.MovieData, error) {
 		JOIN moviesgenres ON movies.id = moviesgenres.idmovie JOIN genres ON moviesgenres.idgenre = genres.id
 		WHERE word_similarity(movies.title, $1) > 0.1 GROUP BY movies.id`, textSearch)
 	if err != nil {
-		fmt.Println("ошибка при выборке данных из таблицы arrays в функции getNextSched: ", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -790,19 +808,19 @@ func GetSearchMovies(textSearch string) ([]models.MovieData, error) {
 			&MoviesData.Genres,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка при обработке данных из таблицы schedules: %w", err)
+			return nil, err
 		}
 
 		MoviesData.Genres = strings.Replace(strings.Trim(MoviesData.Genres, "{}"), ",", ", ", -1)
 
 		MoviesData.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreKP), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		MoviesData.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreIMDB), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		moviesSlice = append(moviesSlice, MoviesData)
@@ -838,7 +856,7 @@ func GetAllFilms() ([]models.MovieData, error) {
         FROM movies JOIN moviesgenres ON movies.id = moviesgenres.idmovie
         JOIN genres ON moviesgenres.idgenre = genres.id WHERE movies.typemovie = 'movie' GROUP BY movies.id ORDER BY movies.id DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при выборке данных из таблицы arrays: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -861,22 +879,20 @@ func GetAllFilms() ([]models.MovieData, error) {
 			&MoviesData.Genres,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка при обработке данных из таблицы schedulessss: %w", err)
+			return nil, err
 		}
 
 		MoviesData.Genres = strings.Replace(strings.Trim(MoviesData.Genres, "{}"), ",", ", ", -1)
 
 		MoviesData.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreKP), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		MoviesData.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreIMDB), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
-
-		fmt.Println(MoviesData)
 
 		moviesSlice = append(moviesSlice, MoviesData)
 	}
@@ -911,7 +927,7 @@ func GetAllCartoons() ([]models.MovieData, error) {
         FROM movies JOIN moviesgenres ON movies.id = moviesgenres.idmovie
         JOIN genres ON moviesgenres.idgenre = genres.id WHERE movies.typemovie = 'cartoon' GROUP BY movies.id ORDER BY movies.id DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при выборке данных из таблицы arrays: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -934,22 +950,20 @@ func GetAllCartoons() ([]models.MovieData, error) {
 			&MoviesData.Genres,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка при обработке данных из таблицы schedulessss: %w", err)
+			return nil, err
 		}
 
 		MoviesData.Genres = strings.Replace(strings.Trim(MoviesData.Genres, "{}"), ",", ", ", -1)
 
 		MoviesData.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreKP), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		MoviesData.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreIMDB), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
-
-		fmt.Println(MoviesData)
 
 		moviesSlice = append(moviesSlice, MoviesData)
 	}
@@ -984,7 +998,7 @@ func GetAllTelecasts() ([]models.MovieData, error) {
         FROM movies JOIN moviesgenres ON movies.id = moviesgenres.idmovie
         JOIN genres ON moviesgenres.idgenre = genres.id WHERE movies.typemovie = 'telecast' GROUP BY movies.id ORDER BY movies.id DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка при выборке данных из таблицы arrays: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -1007,22 +1021,20 @@ func GetAllTelecasts() ([]models.MovieData, error) {
 			&MoviesData.Genres,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка при обработке данных из таблицы schedulessss: %w", err)
+			return nil, err
 		}
 
 		MoviesData.Genres = strings.Replace(strings.Trim(MoviesData.Genres, "{}"), ",", ", ", -1)
 
 		MoviesData.ScoreKP, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreKP), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
 
 		MoviesData.ScoreIMDB, err = strconv.ParseFloat(fmt.Sprintf("%.1f", MoviesData.ScoreIMDB), 64)
 		if err != nil {
-			fmt.Println("ошибка при обработке данных из таблицы schedules в функции getNextSchedule: %w", err)
+			return nil, err
 		}
-
-		fmt.Println(MoviesData)
 
 		moviesSlice = append(moviesSlice, MoviesData)
 	}
@@ -1054,7 +1066,7 @@ func HandleView(r *http.Request, contentID int64) {
 		var views int64
 		err := db.Conn.QueryRow(`SELECT views FROM movies WHERE id = $1`, contentID).Scan(&views)
 		if err != nil {
-			logger.Error("Ошибка получения значения views из базы данных", err)
+			logger.Error("Ошибка получения значения views из базы данных", zap.Error(err))
 			return
 		}
 
@@ -1063,9 +1075,7 @@ func HandleView(r *http.Request, contentID int64) {
 		cache.Rdb.SetNX(cache.Ctx, viewsKey, views+1, 0)
 		cache.Rdb.SetNX(cache.Ctx, ipViewKey, "1", 0)
 		cache.Rdb.SetNX(cache.Ctx, uaViewKey, "1", 0)
-		fmt.Println("Просмотр зарегистрирован. Общее количество просмотров: ", views+1)
-	} else {
-		fmt.Println("Вы уже просматривали этот контент")
+		logger.Debug("Просмотр зарегистрирован", zap.Int64("id", contentID), zap.String("ip", ipAddress), zap.String("user-agent", userAgent), zap.Int64("views", views+1))
 	}
 }
 
@@ -1083,7 +1093,7 @@ func HandleLike(r *http.Request, contentID int64) {
 		var likes int64
 		err := db.Conn.QueryRow(`SELECT likes FROM movies WHERE id = $1`, contentID).Scan(&likes)
 		if err != nil {
-			logger.Error("Ошибка получения значения likes из базы данных", err)
+			logger.Error("Ошибка получения значения likes из базы данных", zap.Error(err))
 			return
 		}
 
@@ -1092,9 +1102,7 @@ func HandleLike(r *http.Request, contentID int64) {
 		cache.Rdb.SetNX(cache.Ctx, likesKey, likes+1, 0)
 		cache.Rdb.SetNX(cache.Ctx, ipLikeKey, "1", 0)
 		cache.Rdb.SetNX(cache.Ctx, uaLikeKey, "1", 0)
-		fmt.Println("Лайк зарегистрирован. Общее количество лайков: ", likes+1)
-	} else {
-		fmt.Println("Вы уже оценивали этот контент")
+		logger.Debug("Лайк зарегистрирован", zap.Int64("id", contentID), zap.String("ip", ipAddress), zap.String("user-agent", userAgent), zap.Int64("likes", likes+1))
 	}
 }
 
@@ -1112,7 +1120,7 @@ func HandleDislike(r *http.Request, contentID int64) {
 		var dislikes int64
 		err := db.Conn.QueryRow(`SELECT dislikes FROM movies WHERE id = $1`, contentID).Scan(&dislikes)
 		if err != nil {
-			logger.Error("Ошибка получения значения dislikes из базы данных", err)
+			logger.Error("Ошибка получения значения dislikes из базы данных", zap.Error(err))
 			return
 		}
 
@@ -1121,9 +1129,7 @@ func HandleDislike(r *http.Request, contentID int64) {
 		cache.Rdb.SetNX(cache.Ctx, dislikesKey, dislikes+1, 0)
 		cache.Rdb.SetNX(cache.Ctx, ipDislikeKey, "1", 0)
 		cache.Rdb.SetNX(cache.Ctx, uaDislikeKey, "1", 0)
-		fmt.Println("Дизлайк зарегистрирован. Общее количество дизлайков: ", dislikes+1)
-	} else {
-		fmt.Println("Вы уже оценивали этот контент")
+		logger.Debug("Дизлайк зарегистрирован", zap.Int64("id", contentID), zap.String("ip", ipAddress), zap.String("user-agent", userAgent), zap.Int64("dislikes", dislikes+1))
 	}
 }
 
@@ -1131,22 +1137,23 @@ func SaveStatsToDB() {
 	// Получение данных из Redis
 	views, err := cache.Rdb.Keys(cache.Ctx, "views:*").Result()
 	if err != nil {
-		// Обработка ошибки
+		logger.Error("Ошибка получения данных о просмотрах из Redis", zap.Error(err))
 		return
 	}
 
 	likes, err := cache.Rdb.Keys(cache.Ctx, "likes:*").Result()
 	if err != nil {
-		// Обработка ошибки
+		logger.Error("Ошибка получения данных о лайках из Redis", zap.Error(err))
 		return
 	}
 
 	dislikes, err := cache.Rdb.Keys(cache.Ctx, "dislikes:*").Result()
 	if err != nil {
-		// Обработка ошибки
+		logger.Error("Ошибка получения данных о дизлайках из Redis", zap.Error(err))
 		return
 	}
-	fmt.Println(views, likes, dislikes)
+
+	logger.Debug("Данные из Redis получены", zap.Strings("views", views), zap.Strings("likes", likes), zap.Strings("dislikes", dislikes))
 
 	// Сохранение данных в базу данных
 	for _, viewKey := range views {
@@ -1155,7 +1162,7 @@ func SaveStatsToDB() {
 		// Обновление значения views в базе данных
 		_, err := db.Conn.Exec(`UPDATE movies SET views = $1 WHERE id = $2`, views, contentID)
 		if err != nil {
-			logger.Error("Ошибка обновления значения views в базе данных", err)
+			logger.Error("Ошибка обновления значения views в базе данных", zap.Error(err))
 			return
 		}
 	}
@@ -1166,7 +1173,7 @@ func SaveStatsToDB() {
 		// Обновление значения likes в базе данных
 		_, err := db.Conn.Exec(`UPDATE movies SET likes = $1 WHERE id = $2`, likes, contentID)
 		if err != nil {
-			logger.Error("Ошибка обновления значения likes в базе данных", err)
+			logger.Error("Ошибка обновления значения likes в базе данных", zap.Error(err))
 			return
 		}
 	}
@@ -1177,7 +1184,7 @@ func SaveStatsToDB() {
 		// Обновление значения dislikes в базе данных
 		_, err := db.Conn.Exec(`UPDATE movies SET dislikes = $1 WHERE id = $2`, dislikes, contentID)
 		if err != nil {
-			logger.Error("Ошибка обновления значения dislikes в базе данных", err)
+			logger.Error("Ошибка обновления значения dislikes в базе данных", zap.Error(err))
 			return
 		}
 	}
@@ -1201,33 +1208,30 @@ func GetStatsToDB(id int) (int64, int64, int64, error) {
 	var allLikes int64
 	var allDislikes int64
 
-	fmt.Println(id)
+	logger.Debug("Получение данных из базы данных", zap.Int("id", id))
 
 	views, err := cache.Rdb.Keys(cache.Ctx, "views:*").Result()
 	if err != nil {
-		// Обработка ошибки
-		fmt.Println("ошибка при получении данных из Redis: ", err)
+		logger.Error("Ошибка получения данных о просмотрах из Redis", zap.Error(err))
+		return 0, 0, 0, err
 	}
-
-	fmt.Println(views)
 
 	likes, err := cache.Rdb.Keys(cache.Ctx, "likes:*").Result()
 	if err != nil {
-		// Обработка ошибки
-		fmt.Println("ошибка при получении данных из Redis: ", err)
+		logger.Error("Ошибка получения данных о лайках из Redis", zap.Error(err))
+		return 0, 0, 0, err
 	}
 
 	dislikes, err := cache.Rdb.Keys(cache.Ctx, "dislikes:*").Result()
 	if err != nil {
-		// Обработка ошибки
-		fmt.Println("ошибка при получении данных из Redis: ", err)
+		logger.Error("Ошибка получения данных о дизлайках из Redis", zap.Error(err))
+		return 0, 0, 0, err
 	}
 
 	// Сохранение данных в базу данных
 	for _, viewKey := range views {
 		contentID, _ := strconv.ParseInt(strings.TrimPrefix(viewKey, "views:"), 10, 64)
 		views, _ := cache.Rdb.Get(cache.Ctx, viewKey).Int64()
-		fmt.Println(views)
 		if contentID == int64(id) {
 			allViews = views
 		}
@@ -1236,8 +1240,6 @@ func GetStatsToDB(id int) (int64, int64, int64, error) {
 	for _, likeKey := range likes {
 		contentID, _ := strconv.ParseInt(strings.TrimPrefix(likeKey, "likes:"), 10, 64)
 		likes, _ := cache.Rdb.Get(cache.Ctx, likeKey).Int64()
-
-		fmt.Println(likes)
 		if contentID == int64(id) {
 			allLikes = likes
 		}
@@ -1246,12 +1248,12 @@ func GetStatsToDB(id int) (int64, int64, int64, error) {
 	for _, dislikeKey := range dislikes {
 		contentID, _ := strconv.ParseInt(strings.TrimPrefix(dislikeKey, "dislikes:"), 10, 64)
 		dislikes, _ := cache.Rdb.Get(cache.Ctx, dislikeKey).Int64()
-
-		fmt.Println(dislikes)
 		if contentID == int64(id) {
 			allDislikes = dislikes
 		}
 	}
+
+	logger.Debug("Данные из Redis по фильму получены", zap.Int64("views", allViews), zap.Int64("likes", allLikes), zap.Int64("dislikes", allDislikes))
 
 	return allViews, allLikes, allDislikes, nil
 }

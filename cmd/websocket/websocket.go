@@ -1,11 +1,11 @@
 package websocket
 
 import (
-	"fmt"
 	"kinogo/pkg/logger"
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 var Conn *websocket.Conn
@@ -23,15 +23,15 @@ func Start() {
 	ws.HandleFunc("/progress", ProgressHandler)
 	err := http.ListenAndServe(":8080", ws)
 	if err != nil {
-		logger.Error("Ошибка при запуске WebSocket-сервера", err)
+		logger.Error("Ошибка при запуске WebSocket-сервера", zap.Error(err))
 	}
+	logger.Debug("Запуск WebSocket-сервера на порту 8080")
 }
 
 func ProgressHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	Conn, err = upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println("Ошибка при обновлении:", err)
-		return
+		logger.Error("Ошибка при обновлении прогресса", zap.Error(err))
 	}
 }

@@ -1,21 +1,23 @@
 package handlers
 
 import (
-	"fmt"
 	"html/template"
 	"kinogo/internal/models"
 	"kinogo/internal/services"
 	"kinogo/pkg/db"
+	"kinogo/pkg/logger"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"go.uber.org/zap"
 )
 
 // Главная страница
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Security-Policy", "frame-ancestors http://127.0.0.1")
 	// Вывод 404 на несуществующую страницу
 	validPaths := map[string]bool{
 		"/":          true,
@@ -38,54 +40,61 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	case "/films":
 		movies, err = services.GetAllFilms()
 		if err != nil {
-			fmt.Println("Ошибка:", err)
+			logger.Error("Ошибка при получении всех фильмов из БД/кэша", zap.Error(err), zap.Any("movies", movies))
 			return
 		}
 		streaming = false
 	case "/cartoons":
 		movies, err = services.GetAllCartoons()
 		if err != nil {
-			fmt.Println("Ошибка:", err)
+			logger.Error("Ошибка при получении всех мультфильмов из БД/кэша", zap.Error(err), zap.Any("movies", movies))
 			return
 		}
 		streaming = false
 	case "/telecasts":
 		movies, err = services.GetAllTelecasts()
 		if err != nil {
-			fmt.Println("Ошибка:", err)
+			logger.Error("Ошибка при получении всех передач из БД/кэша", zap.Error(err), zap.Any("movies", movies))
 			return
 		}
 		streaming = false
 	default:
 		movies, err = services.GetAllMovies()
 		if err != nil {
-			fmt.Println("Ошибка:", err)
+			logger.Error("Ошибка при получении всего контента из БД/кэша", zap.Error(err), zap.Any("movies", movies))
 			return
 		}
 
 		streaming, err = services.IsStreaming()
 		if err != nil {
-			fmt.Println("Ошибка:", err)
+			logger.Error("Ошибка при получении информации о наличии стрима из БД/кэша", zap.Error(err), zap.Any("streaming", streaming))
 			return
 		}
 	}
+	logger.Debug("Получен контент из БД/кэша", zap.Any("movies", movies))
+
+	var allData models.AllData
 
 	bestMovie, err = services.GetBestMovie()
 	if err != nil {
-		fmt.Println("Ошибка:", err)
-		return
+		logger.Warn("Ошибка при получении популярного фильма из БД/кэша", zap.Error(err), zap.Any("movies", movies))
+		allData.GeneralData = models.GeneralData{
+			BestMovieAside: false,
+		}
+	} else {
+		allData.GeneralData = models.GeneralData{
+			BestMovieAside: true,
+		}
+		allData.BestMovieData = bestMovie
 	}
 
-	var allData models.AllData
 	allData.GeneralData = models.GeneralData{
-		Stream:         streaming,
-		IndexHandler:   true,
-		SearchAside:    true,
-		FilterAside:    true,
-		BestMovieAside: true,
+		Stream:       streaming,
+		IndexHandler: true,
+		SearchAside:  true,
+		FilterAside:  true,
 	}
 	allData.MovieData = append(allData.MovieData, movies...)
-	allData.BestMovieData = bestMovie
 
 	ParseTemplates(w, allData)
 }
@@ -96,6 +105,8 @@ func FilterIndexHandler(w http.ResponseWriter, r *http.Request) {
 	arrayGenre := r.Form["genre"]
 	yearMinStr := r.FormValue("year__min")
 	yearMaxStr := r.FormValue("year__max")
+
+	logger.Debug("Получение данных фильтра из формы", zap.Any("Жанры", arrayGenre), zap.String("Минимальный год", yearMinStr), zap.String("Максимальный год", yearMaxStr))
 
 	yearMin, errMin := strconv.Atoi(yearMinStr)
 	if errMin != nil {
@@ -119,25 +130,27 @@ func FilterIndexHandler(w http.ResponseWriter, r *http.Request) {
 		query := `SELECT id FROM genres WHERE name IN (?)`
 		query, args, err := sqlx.In(query, nameGenres)
 		if err != nil {
-			fmt.Println("ошибка при подготовке запроса: ", err)
+			logger.Error("ошибка при создании запроса для получения id жанров по названию: ", zap.Error(err), zap.Any("Названия жанров", nameGenres))
 			return
 		}
 
 		query = db.Conn.Rebind(query)
 		err = db.Conn.Select(&idGenres, query, args...)
 		if err != nil {
-			fmt.Println("ошибка при выполнении запроса: ", err)
+			logger.Error("Ошибка при получении id жанров по названию: ", zap.Error(err), zap.Any("Запрос", query), zap.Any("Аргументы", args), zap.Any("Названия жанров", nameGenres))
 			return
 		}
 	}
 
 	movies, err := services.GetFilterMovies(idGenres, yearMin, yearMax)
 	if err != nil {
-		fmt.Println("Ошибка:", err)
+		logger.Error("Ошибка при получении контента по фильтрам", zap.Error(err), zap.Any("movies", movies))
 		return
 	}
+	logger.Debug("Получен контент из БД/кэша", zap.Any("movies", movies))
 
 	boolFilter := len(idGenres) > 0 || yearMin != 1980 || yearMax != time.Now().Year()
+	logger.Debug("Фильтр", zap.Bool("boolFilter", boolFilter))
 
 	allData := models.AllData{
 		GeneralData: models.GeneralData{
@@ -165,24 +178,25 @@ func MovieHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := parts[len(parts)-1]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		fmt.Println("Invalid ID")
 		http.NotFound(w, r)
 		return
 	}
 
 	movie, err := services.GetMovie(id)
 	if err != nil {
-		fmt.Println("ошибка", err)
+		logger.Error("Ошибка получения контента по id", zap.Error(err), zap.Any("movie", movie), zap.Int("id", id))
 		return
 	} else if movie.Id == 0 {
 		http.NotFound(w, r)
 		return
 	}
+	logger.Debug("Получен контент из БД/кэша", zap.Any("movie", movie))
 
 	movie.Views, movie.Likes, movie.Dislikes, err = services.GetStatsToDB(id)
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("Ошибка получении статистики фильма по id", zap.Error(err), zap.Int("id", id), zap.Int64("Просмотры", movie.Views), zap.Int64("Лайки", movie.Likes), zap.Int64("Дизлайки", movie.Dislikes))
 	}
+	logger.Debug("Статистика фильма", zap.Int("id", id), zap.Int64("Просмотры", movie.Views), zap.Int64("Лайки", movie.Likes), zap.Int64("Дизлайки", movie.Dislikes))
 
 	var allData models.AllData
 	allData.GeneralData = models.GeneralData{
@@ -200,12 +214,14 @@ func MovieHandler(w http.ResponseWriter, r *http.Request) {
 func SearchPageHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	textSearch := strings.ToLower(r.Form.Get("search"))
+	logger.Debug("Получение текста поиска из формы", zap.String("textSearch", textSearch))
 
 	movies, err := services.GetSearchMovies(textSearch)
 	if err != nil {
-		fmt.Println("ошибка:", err)
+		logger.Error("Ошибка получения контента по поиску", zap.Error(err), zap.Any("movies", movies))
 		return
 	}
+	logger.Debug("Получен контент из БД/кэша", zap.Any("movies", movies))
 
 	var allData models.AllData
 	allData.GeneralData = models.GeneralData{
@@ -219,6 +235,7 @@ func SearchPageHandler(w http.ResponseWriter, r *http.Request) {
 	ParseTemplates(w, allData)
 }
 
+// Легаси
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, err := template.ParseFiles("web/admin/templates/index.html")
 	if err != nil {
@@ -244,14 +261,14 @@ func ParseTemplates(w http.ResponseWriter, allData models.AllData) {
 		"web/main/templates/bestmovieaside.html",
 	)
 	if err != nil {
-		fmt.Println("ошибка:", err)
+		logger.Error("Ошибка парсинга шаблонов", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.Execute(w, allData)
 	if err != nil {
-		fmt.Println("ошибка:", err)
+		logger.Error("Ошибка выполнения шаблонов", zap.Error(err), zap.Any("allData", allData))
 		return
 	}
 }

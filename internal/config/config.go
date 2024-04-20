@@ -1,10 +1,11 @@
 package config
 
 import (
-	"log"
+	"kinogo/pkg/logger"
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 type Configuration struct {
@@ -22,9 +23,8 @@ type Configuration struct {
 
 func NewConfig(files ...string) (*Configuration, error) {
 	err := godotenv.Load(files...)
-
 	if err != nil {
-		log.Printf("No .env file could be found %q\n", files)
+		logger.Error("Файл .env не найден", zap.Error(err), zap.Any("Все файлы в директории", files))
 	}
 
 	cfg := Configuration{}
