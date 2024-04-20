@@ -1,8 +1,0 @@
-{"level":"info","ts":"2024-04-19T05:36:55.084Z","caller":"logger/logger.go:47","msg":"hui"}
-{"level":"info","ts":"2024-04-19T05:40:43.268Z","caller":"logger/logger.go:47","msg":"hui"}
-{"level":"info","ts":"2024-04-19T05:41:40.097Z","caller":"logger/logger.go:47","msg":"hui"}
-{"level":"info","ts":"2024-04-19T05:42:25.323Z","caller":"logger/logger.go:47","msg":"hui"}
-{"level":"info","ts":"2024-04-19T05:45:24.993Z","caller":"logger/logger.go:47","msg":"hui"}
-{"level":"info","ts":"2024-04-19T05:45:59.864Z","caller":"logger/logger.go:47","msg":"hui"}
-{"level":"info","ts":"2024-04-19T05:47:09.736Z","caller":"logger/logger.go:47","msg":"hui"}
-{"level":"info","ts":"2024-04-19T05:52:43.524Z","caller":"logger/logger.go:47","msg":"hui"}
