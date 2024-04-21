@@ -76,10 +76,45 @@
 }
 .section__player {
     @include glassphormism();
+    margin-bottom: 25px;
     display: none;
     div {
         --plyr-color-main: #d61e92 !important;
         --plyr-menu-background: black !important;
         border-radius: 15px;
+    }
+}
+.section__comments {
+    @include glassphormism();
+    .comment {
+        .comment-data {
+            display: flex;
+            .comment-img img {
+                width: 40px;
+                height: 40px;
+                border-radius: 7.5px;
+                margin-right: 15px;
+            }
+            .comment-user {
+                display: block;
+                .user-name {
+                    margin: 0 0 5px 0;
+                }
+                .user-date {
+                    color: #d4d4d4;
+                    margin: 0;
+                }
+            }
+        }
+        .comments-info {
+            display: block;
+            .comments-footer {
+                display: flex;
+                p {
+                    margin: 0 15px 0 0;
+                }
+            }
+        }
+        margin-bottom: 25px;
     }
 }

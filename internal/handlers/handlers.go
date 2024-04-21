@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"kinogo/internal/models"
 	"kinogo/internal/services"
+	"kinogo/pkg/auth"
 	"kinogo/pkg/db"
 	"kinogo/pkg/logger"
 	"net/http"
@@ -30,6 +31,13 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	if _, ok := validPaths[r.URL.Path]; !ok {
 		http.NotFound(w, r)
 		return
+	}
+
+	verify := auth.VerifyTelegramData(&auth.Auth, auth.BotToken)
+	if !verify {
+		logger.Warn("Зафиксирована попытка поддельной авторизации")
+	} else {
+		logger.Info("Пользователь авторизован")
 	}
 
 	var streaming bool
@@ -90,13 +98,15 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	allData.GeneralData = models.GeneralData{
 		Stream:       streaming,
+		Auth:         verify,
 		IndexHandler: true,
 		SearchAside:  true,
 		FilterAside:  true,
 	}
 	allData.MovieData = append(allData.MovieData, movies...)
+	allData.UserData = auth.Auth
 
-	ParseTemplates(w, allData)
+	ParseTemplatesMain(w, allData)
 }
 
 // Страница фильтра
@@ -123,6 +133,13 @@ func FilterIndexHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		nameGenres = append(nameGenres, genre)
+	}
+
+	verify := auth.VerifyTelegramData(&auth.Auth, auth.BotToken)
+	if !verify {
+		logger.Warn("Зафиксирована попытка поддельной авторизации")
+	} else {
+		logger.Info("Пользователь авторизован")
 	}
 
 	var idGenres []int
@@ -154,6 +171,7 @@ func FilterIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	allData := models.AllData{
 		GeneralData: models.GeneralData{
+			Auth:          verify,
 			FilterHandler: true,
 			SearchAside:   true,
 			FilterAside:   true,
@@ -166,8 +184,9 @@ func FilterIndexHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	allData.MovieData = append(allData.MovieData, movies...)
+	allData.UserData = auth.Auth
 
-	ParseTemplates(w, allData)
+	ParseTemplatesMain(w, allData)
 }
 
 func MovieHandler(w http.ResponseWriter, r *http.Request) {
@@ -180,6 +199,13 @@ func MovieHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.NotFound(w, r)
 		return
+	}
+
+	verify := auth.VerifyTelegramData(&auth.Auth, auth.BotToken)
+	if !verify {
+		logger.Warn("Зафиксирована попытка поддельной авторизации")
+	} else {
+		logger.Info("Пользователь авторизован")
 	}
 
 	movie, err := services.GetMovie(id)
@@ -198,23 +224,41 @@ func MovieHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.Debug("Статистика фильма", zap.Int("id", id), zap.Int64("Просмотры", movie.Views), zap.Int64("Лайки", movie.Likes), zap.Int64("Дизлайки", movie.Dislikes))
 
+	comments, err := services.GetCommentsFromDB(id)
+	if err != nil {
+		logger.Error("Ошибка получения комментариев по id", zap.Error(err), zap.Any("comments", comments), zap.Int("id", id))
+		return
+	}
+	logger.Debug("Получены комментарии из БД/кэш", zap.Any("comments", comments), zap.Int("id", id))
+	allComm := services.BuildCommentTree(comments)
+
 	var allData models.AllData
 	allData.GeneralData = models.GeneralData{
+		Auth:         verify,
 		MovieHandler: true,
 		SearchAside:  true,
 		FilterAside:  true,
 	}
 	allData.MovieData = append(allData.MovieData, movie)
+	allData.UserData = auth.Auth
+	allData.CommentsData = allComm
 
 	services.HandleView(r, movie.Id)
 
-	ParseTemplates(w, allData)
+	ParseTemplatesMain(w, allData)
 }
 
 func SearchPageHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	textSearch := strings.ToLower(r.Form.Get("search"))
 	logger.Debug("Получение текста поиска из формы", zap.String("textSearch", textSearch))
+
+	verify := auth.VerifyTelegramData(&auth.Auth, auth.BotToken)
+	if !verify {
+		logger.Warn("Зафиксирована попытка поддельной авторизации")
+	} else {
+		logger.Info("Пользователь авторизован")
+	}
 
 	movies, err := services.GetSearchMovies(textSearch)
 	if err != nil {
@@ -225,31 +269,24 @@ func SearchPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	var allData models.AllData
 	allData.GeneralData = models.GeneralData{
+		Auth:          verify,
 		TextSearch:    textSearch,
 		SearchHandler: true,
 		SearchAside:   true,
 		FilterAside:   true,
 	}
 	allData.MovieData = append(allData.MovieData, movies...)
+	allData.UserData = auth.Auth
 
-	ParseTemplates(w, allData)
+	ParseTemplatesMain(w, allData)
 }
 
 // Легаси
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("web/admin/templates/index.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.Execute(w, nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	ParseTemplatesAdmin(w, models.AllData{})
 }
 
-func ParseTemplates(w http.ResponseWriter, allData models.AllData) {
+func ParseTemplatesMain(w http.ResponseWriter, allData models.AllData) {
 	tmpl, err := template.ParseFiles(
 		"web/main/templates/index.html",
 		"web/main/templates/twitch.html",
@@ -259,6 +296,24 @@ func ParseTemplates(w http.ResponseWriter, allData models.AllData) {
 		"web/main/templates/filter.html",
 		"web/main/templates/movie.html",
 		"web/main/templates/bestmovieaside.html",
+		"web/main/templates/comments.html",
+	)
+	if err != nil {
+		logger.Error("Ошибка парсинга шаблонов", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, allData)
+	if err != nil {
+		logger.Error("Ошибка выполнения шаблонов", zap.Error(err), zap.Any("allData", allData))
+		return
+	}
+}
+
+func ParseTemplatesAdmin(w http.ResponseWriter, allData models.AllData) {
+	tmpl, err := template.ParseFiles(
+		"web/admin/templates/index.html",
 	)
 	if err != nil {
 		logger.Error("Ошибка парсинга шаблонов", zap.Error(err))

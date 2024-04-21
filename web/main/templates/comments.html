@@ -1,0 +1,24 @@
+{{define "comments"}}
+        {{range .}}
+            <div class="comments__item-{{.ID}} comment" style="padding-left: calc({{.ParentID}}*15px);">
+                <div class="comment-data">
+                    <div class="comment-img">
+                        <img src="{{.User.PhotoURL}}" alt="">
+                    </div>
+                    <div class="comment-user">
+                        <p class="user-name">{{.User.FirstName}}</p>
+                        <p class="user-date">вчера</p>
+                    </div>
+                </div>
+                <div class="comments-info">
+                    <p class="comments-text">{{.Text}}</p>
+                    <div class="comments-footer">
+                        <p>Ответить</p>
+                    </div>
+                </div>
+            </div>
+            {{if .Children}}
+                {{template "comments" .Children}}
+            {{end}}
+        {{end}}
+{{end}}

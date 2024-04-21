@@ -3,9 +3,9 @@ package server
 import (
 	"kinogo/internal/handlers"
 	"kinogo/internal/services"
+	"kinogo/pkg/auth"
 	"kinogo/pkg/logger"
 	"kinogo/pkg/metrics"
-	"kinogo/pkg/telegram"
 	"net/http"
 	"strconv"
 
@@ -42,7 +42,8 @@ func Start() {
 	mux.HandleFunc("/filter", handlers.FilterIndexHandler)
 
 	// Авторизация в TG
-	mux.HandleFunc("/auth/telegram/callback", telegram.TelegramCallbackHandler)
+	mux.HandleFunc("/auth/telegram/callback", auth.TelegramCallbackHandler)
+	mux.HandleFunc("/auth/telegram/logout", auth.TelegramLogoutHandler)
 
 	// Поиск
 	mux.HandleFunc("/searchpage", services.SearchHandler)

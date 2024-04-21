@@ -25,171 +25,188 @@
           <a href="/telecasts">Передачи</a>
         </nav>
         <div class="header__auth">
-            <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="kinogolang_bot" data-size="large" data-radius="15" data-auth-url="http://127.0.0.1/auth/telegram/callback" data-request-access="write"></script>
+			{{if .GeneralData.Auth}}
+			<div class="widget_frame_base tgme_widget body_widget_login">
+				<div class="tgme_widget_login large" id="widget_login">
+					<button class="btn tgme_widget_login_button" onclick="return logout();">
+						<i class="tgme_widget_login_button_icon"></i>Выйти
+					</button>
+					<i class="tgme_widget_login_user_photo bgcolor5" data-content="r" onclick="return logout();">
+						<img src="{{.UserData.PhotoURL}}">
+					</i>
+				</div>
+			</div>
+			<link rel="stylesheet" href="https://telegram.org/css/widget-frame.css?67">
+			<script>
+				function logout() {
+                    location.href = 'http://127.0.0.1//auth/telegram/logout?id={{.UserData.ID}}&first_name={{.UserData.FirstName}}&last_name={{.UserData.LastName}}&username={{.UserData.Username}}&photo_url={{.UserData.PhotoURL}}&auth_date={{.UserData.AuthDate}}&hash={{.UserData.Hash}}';
+                }
+			</script>
+			{{else}}
+			<script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="kinogolang_bot" data-size="large"
+			data-radius="15" data-auth-url="http://127.0.0.1/auth/telegram/callback" data-request-access="write"></script>
+			<script>
+				// Создаем наблюдатель за изменениями в DOM
+				var observer = new MutationObserver(function(mutations) {
+					mutations.forEach(function(mutation) {
+						mutation.addedNodes.forEach(function(node) {
+							// Если добавленный узел является iframe с нужным id
+							if (node.nodeName === 'IFRAME' && node.id === 'telegram-login-kinogolang_bot') {
+								var iframe = node;
+								iframe.style.visibility = 'hidden';
+								iframe.addEventListener('load', function() {
+									iframe.style.visibility = 'visible';
+								});
+								// Отключаем наблюдатель, так как iframe уже найден
+								observer.disconnect();
+							}
+						});
+					});
+				});
+
+				// Начинаем наблюдение за изменениями в body
+				observer.observe(document.body, { childList: true, subtree: true });
+			</script>
+          	{{end}}
         </div>
       </header>
       <main>
         <div class="sections">
-          {{if .GeneralData.Stream}} {{ template "twitch" . }} {{end}} {{if or
-          (eq .GeneralData.IndexHandler true) (eq .GeneralData.SearchHandler
-          true) (eq .GeneralData.FilterHandler true)}}
-          <div class="section__videos">
-            {{if .FilterData.BoolFilter}} {{ template "filter" . }} {{end}}
-            {{range .MovieData}} {{ template "moviecard" . }} {{end}}
-          </div>
-          {{end}} {{if .GeneralData.MovieHandler}} {{ template "movie" . }}
-          {{end}}
+			{{if .GeneralData.Stream}} {{ template "twitch" . }} {{end}} {{if or
+			(eq .GeneralData.IndexHandler true) (eq .GeneralData.SearchHandler
+			true) (eq .GeneralData.FilterHandler true)}}
+			<div class="section__videos">
+				{{if .FilterData.BoolFilter}} {{ template "filter" . }} {{end}}
+				{{range .MovieData}} {{ template "moviecard" . }} {{end}}
+			</div>
+			{{end}} {{if .GeneralData.MovieHandler}}
+			{{ template "movie" . }}
+			<div class="section__comments">{{template "comments" .CommentsData}}</div>
+			{{end}}
         </div>
         <aside>
-          {{if .GeneralData.SearchAside}} {{template "searchaside" .}} {{end}}
-          {{if .GeneralData.FilterAside}} {{template "filteraside" .}} {{end}}
-          {{if .GeneralData.BestMovieAside}} {{template "bestmovieaside" .}}
-          {{end}}
+			{{if .GeneralData.SearchAside}} {{template "searchaside" .}} {{end}}
+			{{if .GeneralData.FilterAside}} {{template "filteraside" .}} {{end}}
+			{{if .GeneralData.BestMovieAside}} {{template "bestmovieaside" .}}
+			{{end}}
         </aside>
       </main>
     </div>
     {{if .GeneralData.SearchAside}}
     <script async>
-      document.addEventListener("DOMContentLoaded", function () {
-        var timer;
+      	document.addEventListener("DOMContentLoaded", function () {
+			var timer;
 
-        document
-          .getElementById("aside__search-input")
-          .addEventListener("keyup", function () {
-            clearTimeout(timer);
-            let movieName = this.value;
-            if (movieName !== "") {
-              timer = setTimeout(function () {
-                let xhr = new XMLHttpRequest();
-                xhr.open("POST", "/searchpage", true);
-                xhr.setRequestHeader(
-                  "Content-Type",
-                  "application/x-www-form-urlencoded"
-                );
-                xhr.onload = function () {
-                  if (this.status === 200) {
-                    let oldList = document.getElementById(
-                      "aside__search-results"
-                    );
-                    while (oldList.firstChild) {
-                      oldList.removeChild(oldList.firstChild);
-                    }
-                    oldList.classList.add("enabled");
-                    oldList.innerHTML = this.responseText;
-                  }
-                };
-                xhr.send("search=" + encodeURIComponent(movieName));
-              }, 500);
-            }
-          });
-      });
+			document.getElementById("aside__search-input").addEventListener("keyup", function () {
+				clearTimeout(timer);
+				let movieName = this.value;
+				if (movieName !== "") {
+				timer = setTimeout(function () {
+					let xhr = new XMLHttpRequest();
+					xhr.open("POST", "/searchpage", true);
+					xhr.setRequestHeader(
+					"Content-Type",
+					"application/x-www-form-urlencoded"
+					);
+					xhr.onload = function () {
+					if (this.status === 200) {
+						let oldList = document.getElementById(
+						"aside__search-results"
+						);
+						while (oldList.firstChild) {
+						oldList.removeChild(oldList.firstChild);
+						}
+						oldList.classList.add("enabled");
+						oldList.innerHTML = this.responseText;
+					}
+					};
+					xhr.send("search=" + encodeURIComponent(movieName));
+				}, 500);
+				}
+			});
+		});
     </script>
     {{end}} {{if .GeneralData.FilterAside}}
     <script src="/web/main/assets/js/src/custom-select.js" async></script>
     <link href="/web/main/assets/css/src/nouislider.css" rel="stylesheet" />
     <script src="/web/main/assets/js/dist/nouislider.min.js"></script>
     <script>
-      var slider = document.getElementById("slider");
-      var sliderValueMin = document.getElementById("slider-min");
-      var sliderValueMax = document.getElementById("slider-max");
+		var slider = document.getElementById("slider");
+		var sliderValueMin = document.getElementById("slider-min");
+		var sliderValueMax = document.getElementById("slider-max");
 
-      noUiSlider.create(slider, {
-        start: [1980, 2024],
-        connect: false,
-        step: 1,
-        range: {
-          min: 1980,
-          max: 2024,
-        },
-      });
+		noUiSlider.create(slider, {
+			start: [1980, 2024],
+			connect: false,
+			step: 1,
+			range: {
+			min: 1980,
+			max: 2024,
+			},
+		});
 
-      slider.noUiSlider.on("update", function (values, handle) {
-        sliderValueMin.value = parseInt(values[0]);
-        sliderValueMax.value = parseInt(values[1]);
-      });
+		slider.noUiSlider.on("update", function (values, handle) {
+			sliderValueMin.value = parseInt(values[0]);
+			sliderValueMax.value = parseInt(values[1]);
+		});
 
-      sliderValueMin.addEventListener("input", function () {
-        if (this.value > 1980) {
-          slider.noUiSlider.set([this.value, null]);
-        }
-      });
+		sliderValueMin.addEventListener("input", function () {
+			if (this.value > 1980) {
+			slider.noUiSlider.set([this.value, null]);
+			}
+		});
 
-      sliderValueMax.addEventListener("input", function () {
-        if (this.value < 2024) {
-          slider.noUiSlider.set([null, this.value]);
-        }
-      });
+		sliderValueMax.addEventListener("input", function () {
+			if (this.value < 2024) {
+			slider.noUiSlider.set([null, this.value]);
+			}
+		});
 
-      sliderValueMin.addEventListener("change", function () {
-        slider.noUiSlider.set([this.value, null]);
-      });
+		sliderValueMin.addEventListener("change", function () {
+			slider.noUiSlider.set([this.value, null]);
+		});
 
-      sliderValueMax.addEventListener("change", function () {
-        slider.noUiSlider.set([null, this.value]);
-      });
+		sliderValueMax.addEventListener("change", function () {
+			slider.noUiSlider.set([null, this.value]);
+		});
     </script>
     {{end}}
     <script>
-      function animateElement(element, animation, delay) {
-        setTimeout(function () {
-          if (element == document.querySelector(".section__movie")) {
-            element.style.display = "flex";
-          } else element.style.display = "block";
-          element.classList.add(
-            "animate__animated",
-            animation,
-            "animate__faster"
-          );
-        }, delay);
-      }
+		function animateElement(element, animation, delay) {
+			setTimeout(function () {
+			if (element == document.querySelector(".section__movie")) {
+				element.style.display = "flex";
+			} else element.style.display = "block";
+				element.classList.add("animate__animated", animation, "animate__faster");
+			}, delay);
+		}
     </script>
-    {{if or (eq .GeneralData.IndexHandler true) (eq .GeneralData.SearchHandler
-    true) (eq .GeneralData.FilterHandler true)}}
+    {{if or (eq .GeneralData.IndexHandler true) (eq .GeneralData.SearchHandler true) (eq .GeneralData.FilterHandler true)}}
     <script>
-      const cards = document.querySelectorAll(".card");
-      let delay = 0;
+		const cards = document.querySelectorAll(".card");
+		let delay = 0;
 
-      cards.forEach((card) => {
-        animateElement(card, "animate__fadeInLeft", delay);
-        delay += 150;
-      });
+		cards.forEach((card) => {
+			animateElement(card, "animate__fadeInLeft", delay);
+			delay += 150;
+		});
     </script>
     {{end}} {{if (eq .GeneralData.MovieHandler true) }}
     <script>
-      animateElement(
-        document.querySelector(".section__movie"),
-        "animate__fadeInLeft",
-        0
-      );
-      animateElement(
-        document.querySelector(".section__player"),
-        "animate__fadeInLeft",
-        150
-      );
+		animateElement(document.querySelector(".section__movie"), "animate__fadeInLeft", 0);
+		animateElement(document.querySelector(".section__player"), "animate__fadeInLeft", 150);
     </script>
     {{end}} {{if .GeneralData.SearchAside}}
     <script>
-      animateElement(
-        document.querySelector(".aside__search"),
-        "animate__fadeInRight",
-        0
-      );
+      	animateElement(document.querySelector(".aside__search"), "animate__fadeInRight", 0);
     </script>
     {{end}} {{if .GeneralData.FilterAside}}
     <script>
-      animateElement(
-        document.querySelector(".aside__filter"),
-        "animate__fadeInRight",
-        150
-      );
+		animateElement(document.querySelector(".aside__filter"), "animate__fadeInRight", 150);
     </script>
     {{end}} {{if .GeneralData.FilterAside}}
     <script>
-      animateElement(
-        document.querySelector(".aside__bestmovie"),
-        "animate__fadeInRight",
-        300
-      );
+      	animateElement(document.querySelector(".aside__bestmovie"), "animate__fadeInRight", 300);
     </script>
     {{end}} {{if .GeneralData.MovieHandler}} {{range .MovieData}}
     <link rel="stylesheet" href="/web/main/assets/css/src/movie.css" />
@@ -197,137 +214,137 @@
     <script src="/web/main/assets/js/dist/plyr.min.js"></script>
     <link rel="stylesheet" href="/web/main/assets/css/dist/plyr.min.css" />
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const sources = {
-          1080: "/media/{{ .Id }}/1080p/{{ .Id }}_1080p.mpd",
-          720: "/media/{{ .Id }}/720p/{{ .Id }}_720p.mpd",
-          480: "/media/{{ .Id }}/480p/{{ .Id }}_480p.mpd",
-          360: "/media/{{ .Id }}/360p/{{ .Id }}_360p.mpd",
-        };
+		document.addEventListener("DOMContentLoaded", () => {
+			const sources = {
+			1080: "/media/{{ .Id }}/1080p/{{ .Id }}_1080p.mpd",
+			720: "/media/{{ .Id }}/720p/{{ .Id }}_720p.mpd",
+			480: "/media/{{ .Id }}/480p/{{ .Id }}_480p.mpd",
+			360: "/media/{{ .Id }}/360p/{{ .Id }}_360p.mpd",
+			};
 
-        const video = document.querySelector("video");
-        const dash = dashjs.MediaPlayer().create();
-        dash.initialize(video, sources[1080], false);
+			const video = document.querySelector("video");
+			const dash = dashjs.MediaPlayer().create();
+			dash.initialize(video, sources[1080], false);
 
-        const player = new Plyr(video, {
-          autoplay: false,
-          settings: {
-            captions: false,
-            quality: true,
-            speed: true,
-            loop: true,
-          },
-          captions: {
-            active: true,
-            update: true,
-          },
-          quality: {
-            default: 1080,
-            options: [1080, 720, 480, 360],
-            forced: true,
-            onChange: (e) => changeQuality(e),
-          },
-          i18n: {
-            restart: "Перезагрузка",
-            rewind: "Rewind {seektime}s",
-            play: "Пуск",
-            pause: "Пауза",
-            fastForward: "Forward {seektime}s",
-            seek: "Seek",
-            seekLabel: "{currentTime} of {duration}",
-            played: "Played",
-            buffered: "Буферизация",
-            currentTime: "Текущее время",
-            duration: "Длительность",
-            volume: "Громкость",
-            mute: "Выключить звук",
-            unmute: "Включить звук",
-            enableCaptions: "Включить субтитры",
-            disableCaptions: "Выключить субтитры",
-            download: "Скачать",
-            enterFullscreen: "Войти в полноэкранный режим",
-            exitFullscreen: "Выйти из полноэкранного режима",
-            frameTitle: "Плеер для {title}",
-            captions: "Субтитры",
-            settings: "Настройки",
-            pip: "Картинка в картинке",
-            menuBack: "Go back to previous menu",
-            speed: "Скорость",
-            normal: "Нормальная",
-            quality: "Качество",
-            loop: "Повтор",
-            start: "Начало",
-            end: "Конец",
-            all: "All",
-            reset: "Сброс",
-            disabled: "Disabled",
-            enabled: "Enabled",
-            advertisement: "Реклама",
-            qualityBadge: {
-              1080: "FullHD",
-              720: "HD",
-              480: "SD",
-              360: "ShitSD",
-            },
-          },
-        });
+			const player = new Plyr(video, {
+			autoplay: false,
+			settings: {
+				captions: false,
+				quality: true,
+				speed: true,
+				loop: true,
+			},
+			captions: {
+				active: true,
+				update: true,
+			},
+			quality: {
+				default: 1080,
+				options: [1080, 720, 480, 360],
+				forced: true,
+				onChange: (e) => changeQuality(e),
+			},
+			i18n: {
+				restart: "Перезагрузка",
+				rewind: "Rewind {seektime}s",
+				play: "Пуск",
+				pause: "Пауза",
+				fastForward: "Forward {seektime}s",
+				seek: "Seek",
+				seekLabel: "{currentTime} of {duration}",
+				played: "Played",
+				buffered: "Буферизация",
+				currentTime: "Текущее время",
+				duration: "Длительность",
+				volume: "Громкость",
+				mute: "Выключить звук",
+				unmute: "Включить звук",
+				enableCaptions: "Включить субтитры",
+				disableCaptions: "Выключить субтитры",
+				download: "Скачать",
+				enterFullscreen: "Войти в полноэкранный режим",
+				exitFullscreen: "Выйти из полноэкранного режима",
+				frameTitle: "Плеер для {title}",
+				captions: "Субтитры",
+				settings: "Настройки",
+				pip: "Картинка в картинке",
+				menuBack: "Go back to previous menu",
+				speed: "Скорость",
+				normal: "Нормальная",
+				quality: "Качество",
+				loop: "Повтор",
+				start: "Начало",
+				end: "Конец",
+				all: "All",
+				reset: "Сброс",
+				disabled: "Disabled",
+				enabled: "Enabled",
+				advertisement: "Реклама",
+				qualityBadge: {
+				1080: "FullHD",
+				720: "HD",
+				480: "SD",
+				360: "ShitSD",
+				},
+			},
+			});
 
-        function changeQuality(e) {
-          dash.reset();
-          dash.initialize(video, sources[e], true);
-        }
+			function changeQuality(e) {
+			dash.reset();
+			dash.initialize(video, sources[e], true);
+			}
 
-        window.player = player;
-        window.dash = dash;
-      });
+			window.player = player;
+			window.dash = dash;
+		});
     </script>
     <script>
-      const likeButton = document.querySelector(".likeButton");
-      const dislikeButton = document.querySelector(".dislikeButton");
-      const likeValue = document.querySelector(".likeValue");
-      const dislikeValue = document.querySelector(".dislikeValue");
+		const likeButton = document.querySelector(".likeButton");
+		const dislikeButton = document.querySelector(".dislikeButton");
+		const likeValue = document.querySelector(".likeValue");
+		const dislikeValue = document.querySelector(".dislikeValue");
 
-      likeButton.addEventListener("click", function (e) {
-        e.preventDefault();
+		likeButton.addEventListener("click", function (e) {
+			e.preventDefault();
 
-        let id = likeValue.value;
+			let id = likeValue.value;
 
-        if (id !== "") {
-          let xhr = new XMLHttpRequest();
-          xhr.open("POST", "/like", true);
-          xhr.setRequestHeader(
-            "Content-Type",
-            "application/x-www-form-urlencoded"
-          );
-          xhr.onload = function () {
-            if (this.status === 200) {
-              likeButton.innerHTML = "{{ .Likes }} лайков";
-            }
-          };
-          xhr.send("like=" + encodeURIComponent(id));
-        }
-      });
+			if (id !== "") {
+			let xhr = new XMLHttpRequest();
+			xhr.open("POST", "/like", true);
+			xhr.setRequestHeader(
+				"Content-Type",
+				"application/x-www-form-urlencoded"
+			);
+			xhr.onload = function () {
+				if (this.status === 200) {
+				likeButton.innerHTML = "{{ .Likes }} лайков";
+				}
+			};
+			xhr.send("like=" + encodeURIComponent(id));
+			}
+		});
 
-      dislikeButton.addEventListener("click", function (e) {
-        e.preventDefault();
+		dislikeButton.addEventListener("click", function (e) {
+			e.preventDefault();
 
-        let id = dislikeValue.value;
+			let id = dislikeValue.value;
 
-        if (id !== "") {
-          let xhr = new XMLHttpRequest();
-          xhr.open("POST", "/dislike", true);
-          xhr.setRequestHeader(
-            "Content-Type",
-            "application/x-www-form-urlencoded"
-          );
-          xhr.onload = function () {
-            if (this.status === 200) {
-              dislikeButton.innerHTML = "{{ .Dislikes }} дизлайков";
-            }
-          };
-          xhr.send("dislike=" + encodeURIComponent(id));
-        }
-      });
+			if (id !== "") {
+			let xhr = new XMLHttpRequest();
+			xhr.open("POST", "/dislike", true);
+			xhr.setRequestHeader(
+				"Content-Type",
+				"application/x-www-form-urlencoded"
+			);
+			xhr.onload = function () {
+				if (this.status === 200) {
+				dislikeButton.innerHTML = "{{ .Dislikes }} дизлайков";
+				}
+			};
+			xhr.send("dislike=" + encodeURIComponent(id));
+			}
+		});
     </script>
     {{end}} {{end}}
   </body>
