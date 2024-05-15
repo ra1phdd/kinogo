@@ -72,14 +72,16 @@
       </header>
       <main>
         <div class="sections">
-			{{if .GeneralData.Stream}} {{ template "twitch" . }} {{end}} {{if or
-			(eq .GeneralData.IndexHandler true) (eq .GeneralData.SearchHandler
-			true) (eq .GeneralData.FilterHandler true)}}
+			{{if .GeneralData.Stream}}
+				{{ template "twitch" . }}
+			{{end}}
+			{{if or	(eq .GeneralData.IndexHandler true) (eq .GeneralData.SearchHandler true) (eq .GeneralData.FilterHandler true)}}
 			<div class="section__videos">
 				{{if .FilterData.BoolFilter}} {{ template "filter" . }} {{end}}
 				{{range .MovieData}} {{ template "moviecard" . }} {{end}}
 			</div>
-			{{end}} {{if .GeneralData.MovieHandler}}
+			{{end}}
+			{{if .GeneralData.MovieHandler}}
 			{{ template "movie" . }}
 			<div class="section__comments">{{template "comments" .CommentsData}}</div>
 			{{end}}

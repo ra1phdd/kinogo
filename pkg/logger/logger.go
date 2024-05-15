@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"log"
 	"os"
 
 	"go.uber.org/zap"
@@ -19,7 +20,7 @@ func Init(loggerLevel string) {
 	consoleEncoder := zapcore.NewConsoleEncoder(config)
 	logFile, err := os.OpenFile("logs/golog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		logger.Error("Ошибка создания файла golog", zap.Error(err))
+		log.Fatal("Ошибка создания файла golog", err)
 	}
 	writer := zapcore.AddSync(logFile)
 
