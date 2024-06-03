@@ -5,11 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"kinogo/internal/app/models"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"kinogo/internal/models"
 	"kinogo/pkg/logger"
 
 	"go.uber.org/zap"

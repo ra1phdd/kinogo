@@ -1,15 +1,13 @@
 package main
 
 import (
-	"kinogo/cmd/server"
 	"kinogo/cmd/websocket"
-	"kinogo/internal/config"
-	"kinogo/internal/services"
+	"kinogo/internal/app/config"
+	"kinogo/internal/pkg/app"
 	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
 	"kinogo/pkg/logger"
 
-	"github.com/robfig/cron"
 	"go.uber.org/zap"
 )
 
@@ -34,9 +32,12 @@ func main() {
 
 	go websocket.Start()
 
-	c := cron.New()
-	c.AddFunc("0 */1 * * * *", services.SaveStatsToDB)
-	c.Start()
+	//c := cron.New()
+	//c.AddFunc("0 */1 * * * *", services.SaveStatsToDB)
+	//c.Start()
 
-	server.Start()
+	_, err = app.New()
+	if err != nil {
+		return
+	}
 }

@@ -1,19 +1,13 @@
 package server
 
 import (
-	"kinogo/internal/handlers"
-	"kinogo/internal/services"
-	"kinogo/pkg/auth"
-	"kinogo/pkg/logger"
-	"kinogo/pkg/metrics"
-	"net/http"
-	"strconv"
-
 	"go.uber.org/zap"
+	"kinogo/pkg/logger"
+	"net/http"
 )
 
 func Start() {
-	mux := http.NewServeMux()
+	/*mux := http.NewServeMux()
 
 	// Добавление видео
 	mux.HandleFunc("/resultmovie", services.ResultMovieHandler)
@@ -72,7 +66,7 @@ func Start() {
 	mux.HandleFunc("/telecasts", handlers.IndexHandler)
 	mux.HandleFunc("/", handlers.IndexHandler)
 
-	metrics.Init(mux)
+	metrics.Init(mux)*/
 
 	err := http.ListenAndServe(":4000", mux)
 	if err != nil {
