@@ -1,2 +1,4 @@
 media/
 logs/
+.env
+docker-compose.yml

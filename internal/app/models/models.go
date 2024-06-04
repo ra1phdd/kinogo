@@ -136,4 +136,12 @@ type (
 		User     User
 		Children []*Comment
 	}
+
+	QueryParams struct {
+		MovieID    int
+		NameGenres []string
+		YearMin    string
+		YearMax    string
+		SearchText string
+	}
 )

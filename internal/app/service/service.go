@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Service struct {
@@ -47,27 +48,66 @@ func (s *Service) ParseTemplatesMain(w http.ResponseWriter, allData models.AllDa
 	return nil
 }
 
-func (s *Service) GetMoviesFromDB(query string, args ...string) ([]models.MovieData, error) {
+func (s *Service) GetMoviesFromDB(query string, args models.QueryParams) ([]models.MovieData, error) {
 	var moviesSlice []models.MovieData
 
 	var rows *sqlx.Rows
 	var err error
-	if args[0] == "" {
-		rows, err = db.Conn.Queryx(query)
-	} else {
-		id, err := strconv.Atoi(args[0])
-		if err != nil {
-			rows, err = db.Conn.Queryx(query, args)
+	switch {
+	case args.MovieID != 0:
+		rows, err = db.Conn.Queryx(query, args.MovieID)
+	case args.YearMin != "" && args.YearMax != "":
+		yearMin, errMin := strconv.Atoi(args.YearMin)
+		if errMin != nil {
+			yearMin = 1980
 		}
+		yearMax, errMax := strconv.Atoi(args.YearMax)
+		if errMax != nil {
+			yearMax = time.Now().Year()
+		}
+
+		if len(args.NameGenres) > 0 {
+			var idGenres []int
+			queryGenres := `SELECT id FROM genres WHERE name IN (?)`
+			queryGenres, argsList, err := sqlx.In(queryGenres, args.NameGenres)
+			if err != nil {
+				logger.Error("ошибка при создании запроса для получения id жанров по названию: ", zap.Error(err), zap.Any("Названия жанров", args.NameGenres))
+				return nil, err
+			}
+
+			queryGenres = db.Conn.Rebind(queryGenres)
+			err = db.Conn.Select(&idGenres, queryGenres, argsList...)
+			if err != nil {
+				logger.Error("Ошибка при получении id жанров по названию: ", zap.Error(err), zap.Any("Запрос", query), zap.Any("Аргументы", argsList), zap.Any("Названия жанров", args.NameGenres))
+				return nil, err
+			}
+
+			argsQuery := []interface{}{idGenres, yearMin, yearMax}
+			rows, err = db.Conn.Queryx(query, argsQuery...)
+			if err != nil {
+				fmt.Println("хуй", err)
+				return []models.MovieData{}, errors.New("error retrieving contents")
+			}
+		} else {
+			argsQuery := []interface{}{yearMin, yearMax}
+			rows, err = db.Conn.Queryx(query, argsQuery...)
+		}
+	case args.SearchText != "":
+		rows, err = db.Conn.Queryx(query, args.SearchText)
+	default:
+		rows, err = db.Conn.Queryx(query)
 	}
 	if err != nil {
 		fmt.Println(err)
 		return []models.MovieData{}, errors.New("error retrieving contents")
 	}
-	defer rows.Close()
+	defer func() {
+		if rows != nil {
+			rows.Close()
+		}
+	}()
 
 	found := false
-
 	for rows.Next() {
 		found = true
 

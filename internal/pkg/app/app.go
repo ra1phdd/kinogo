@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/gin-gonic/gin"
 	"kinogo/internal/app/endpoint"
+	"kinogo/internal/app/middleware"
 	"kinogo/internal/app/service"
 )
 
@@ -16,6 +17,8 @@ func New() (*App, error) {
 
 	router := gin.Default()
 	v1 := router.Group("/api/v1")
+
+	v1.Use(middleware.CORSPolicy())
 
 	a.s = service.New()
 	a.e = endpoint.New(a.s)
@@ -36,6 +39,52 @@ func New() (*App, error) {
 
 	// Эндпоинт для получения информации о конкретном фильме по его идентификатору
 	v1.GET("/movies/:id", a.e.GetMovieByID)
+
+	v1.GET("/stream/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		filename := "media/" + id + "/stream.m3u8"
+
+		// Установка заголовков
+		c.Header("Content-Type", "application/vnd.apple.mpegurl")
+		c.Header("Content-Disposition", "attachment; filename=stream.m3u8")
+
+		// Отправка файла
+		c.File(filename)
+	})
+
+	v1.HEAD("/stream/:id", func(c *gin.Context) {
+		c.Header("Content-Type", "application/vnd.apple.mpegurl")
+		c.Header("Content-Disposition", "attachment; filename=stream.m3u8")
+
+		c.Status(200) // Возвращаем только статус-код 200 OK без тела ответа
+	})
+
+	v1.GET("/stream/:id/:quality/stream.m3u8", func(c *gin.Context) {
+		quality := c.Param("quality")
+		id := c.Param("id")
+		filename := "media/" + id + "/stream_" + quality + ".m3u8"
+
+		// Установка заголовков
+		c.Header("Content-Type", "application/vnd.apple.mpegurl")
+		c.Header("Content-Disposition", "attachment; filename=stream.m3u8")
+
+		// Отправка файла
+		c.File(filename)
+	})
+
+	v1.GET("/stream/:id/:quality/:file", func(c *gin.Context) {
+		file := c.Param("file")
+		quality := c.Param("quality")
+		id := c.Param("id")
+		filename := "media/" + id + "/" + quality + "/" + file
+
+		// Установка заголовков
+		c.Header("Content-Type", "application/vnd.apple.mpegurl")
+		c.Header("Content-Disposition", "attachment; filename="+file)
+
+		// Отправка файла
+		c.File(filename)
+	})
 
 	//router.Use(middleware.AuthCheck())
 
