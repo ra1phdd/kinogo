@@ -1,18 +1,84 @@
 package app
 
 import (
-	"github.com/gin-gonic/gin"
-	"kinogo/internal/app/endpoint"
-	"kinogo/internal/app/middleware"
-	"kinogo/internal/app/service"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"kinogo/config"
+	"kinogo/internal/app/endpoint/grpcMovies"
+	"kinogo/internal/app/services/movies"
+	"kinogo/pkg/cache"
+	"kinogo/pkg/db"
+	"kinogo/pkg/logger"
+	pbMovies "kinogo/pkg/movies_v1"
+	"log"
+	"net"
 )
 
 type App struct {
-	e *endpoint.Endpoint
-	s *service.Service
+	movies *movies.Service
+
+	server *grpc.Server
 }
 
 func New() (*App, error) {
+	// инициализируем конфиг, логгер и кэш
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatalf("Ошибка при попытке спарсить .env файл в структуру: %v", err)
+	}
+
+	logger.Init(cfg.LoggerLevel)
+
+	a := &App{}
+
+	a.server = grpc.NewServer()
+
+	// обьявляем сервисы
+	a.movies = movies.New()
+
+	// регистрируем эндпоинты
+	serviceMovies := &grpcMovies.Endpoint{
+		Movies: a.movies,
+	}
+	pbMovies.RegisterMoviesV1Server(a.server, serviceMovies)
+
+	err = cache.Init(cfg.Redis.RedisAddr+":"+cfg.Redis.RedisPort, cfg.Redis.RedisUsername, cfg.Redis.RedisPassword, cfg.Redis.RedisDBId)
+	if err != nil {
+		logger.Error("ошибка при инициализации кэша: ", zap.Error(err))
+		return nil, err
+	}
+
+	err = db.Init(cfg.DB.DBUser, cfg.DB.DBPassword, cfg.DB.DBHost, cfg.DB.DBName)
+	if err != nil {
+		logger.Fatal("ошибка при инициализации БД: ", zap.Error(err))
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (a *App) Run() error {
+	lis, err := net.Listen("tcp", "localhost:8080")
+	if err != nil {
+		logger.Fatal("Ошибка при открытии listener: ", zap.Error(err))
+	}
+
+	err = a.server.Serve(lis)
+	if err != nil {
+		logger.Fatal("Ошибка при инициализации сервера: ", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) Stop() {
+	logger.Info("закрытие gRPC сервера")
+
+	a.server.GracefulStop()
+}
+
+/*func New() (*App, error) {
 	a := &App{}
 
 	router := gin.Default()
@@ -94,4 +160,29 @@ func New() (*App, error) {
 	}
 
 	return a, nil
-}
+}*/
+
+/*mux := http.NewServeMux()
+
+// Добавление видео
+mux.HandleFunc("/resultmovie", services.ResultMovieHandler)
+mux.HandleFunc("/addmovie", services.AddMovieHandler)
+
+mux.HandleFunc("/like", func(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	id, err := strconv.Atoi(r.Form.Get("like"))
+	if err != nil {
+		logger.Error("Ошибка парсинга ID фильма для постановки лайка")
+	}
+	logger.Debug("Постановка лайка", zap.Int("id", id))
+	services.HandleLike(r, int64(id))
+})
+mux.HandleFunc("/dislike", func(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	id, err := strconv.Atoi(r.Form.Get("dislike"))
+	if err != nil {
+		logger.Error("Ошибка парсинга ID фильма для постановки дизлайка")
+	}
+	logger.Debug("Постановка дизлайка", zap.Int("id", id))
+	services.HandleDislike(r, int64(id))
+})*/

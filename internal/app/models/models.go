@@ -1,19 +1,17 @@
 package models
 
 type (
-	GeneralData struct {
-		Stream         bool
-		Auth           bool
-		TextSearch     string
-		IndexHandler   bool
-		MovieHandler   bool
-		SearchHandler  bool
-		FilterHandler  bool
-		SearchAside    bool
-		FilterAside    bool
-		BestMovieAside bool
+	Movies struct {
+		Id          int32   `json:"id"`
+		Title       string  `json:"title"`
+		Description string  `json:"description"`
+		ReleaseDate int32   `json:"release_date"`
+		ScoreKP     float64 `json:"score_kp"`
+		ScoreIMDB   float64 `json:"score_imdb"`
+		Poster      string  `json:"poster"`
+		TypeMovie   int32   `json:"type_movie"`
+		Genres      string  `json:"genres"`
 	}
-
 	MovieData struct {
 		Id          int64
 		Title       string
@@ -38,16 +36,7 @@ type (
 		YearMax    int
 	}
 
-	AllData struct {
-		GeneralData   GeneralData
-		MovieData     []MovieData
-		FilterData    FilterData
-		BestMovieData MovieData
-		UserData      User
-		CommentsData  []Comment
-	}
-
-	Movies struct {
+	Moviess struct {
 		Docs []struct {
 			ID                int    `json:"id"`
 			Name              string `json:"name"`

@@ -1,0 +1,74 @@
+syntax = "proto3";
+package movies_v1;
+option go_package = "./movies_v1";
+
+// Запрос всех новостей
+message GetMoviesRequest {}
+
+// Запрос новости по Id
+message GetMoviesByIdRequest {
+  int32 id = 1;
+}
+
+// Запрос новостей по категориям
+message GetMoviesByCategoryRequest {
+  string categories = 1;
+}
+
+// Запрос на добавление новости
+message AddMoviesRequest {
+  string title = 2;
+  string text = 3;
+  string datetime = 4;
+  string categories = 5;
+}
+
+// Запрос на удаление новости
+message DelMoviesRequest {
+  int32 id = 1;
+}
+
+
+// Вывод всех/категоризированных новостей
+message GetMoviesResponse {
+  repeated GetMovieItem movies = 1;
+}
+message GetMovieItem {
+  int32 id = 1;
+  string title = 2;
+  string description = 3;
+  int32 releaseDate = 4;
+  double scoreKP = 5;
+  double scoreIMDB = 6;
+  string poster = 7;
+  int32 typeMovie = 8;
+  string genres = 9;
+}
+
+// Вывод новости по Id
+message GetMoviesByIdResponse {
+  int32 id = 1;
+  string title = 2;
+  string text = 3;
+  string datetime = 4;
+  string categories = 5;
+}
+
+// Добавление новости
+message AddMoviesResponse {
+  int32 id = 1;
+  string err = 2;
+}
+
+// Удаление новости
+message DelMoviesResponse {
+  string err = 1;
+}
+
+service MoviesV1 {
+  rpc GetMovies(GetMoviesRequest) returns (GetMoviesResponse);
+  rpc GetMoviesById(GetMoviesByIdRequest) returns (GetMoviesByIdResponse);
+  rpc GetMoviesByCategory(GetMoviesByCategoryRequest) returns (GetMoviesResponse);
+  rpc AddMovies(AddMoviesRequest) returns (AddMoviesResponse);
+  rpc DelMovies(DelMoviesRequest) returns (DelMoviesResponse);
+}
