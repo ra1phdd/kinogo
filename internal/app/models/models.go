@@ -12,31 +12,25 @@ type (
 		TypeMovie   int32   `json:"type_movie"`
 		Genres      string  `json:"genres"`
 	}
-	MovieData struct {
-		Id          int64
+
+	Movie struct {
+		Id          int32
 		Title       string
 		Description string
 		Country     string
-		ReleaseDate int
-		TimeMovie   int
+		ReleaseDate int32
+		TimeMovie   int32
 		ScoreKP     float64
 		ScoreIMDB   float64
 		Poster      string
-		TypeMovie   string
-		Views       int64
-		Likes       int64
-		Dislikes    int64
+		TypeMovie   int32
+		Views       int32
+		Likes       int32
+		Dislikes    int32
 		Genres      string
 	}
 
-	FilterData struct {
-		BoolFilter bool
-		Genre      []string
-		YearMin    int
-		YearMax    int
-	}
-
-	Moviess struct {
+	MovieByAPI struct {
 		Docs []struct {
 			ID                int    `json:"id"`
 			Name              string `json:"name"`
@@ -106,7 +100,6 @@ type (
 		Pages int `json:"pages"`
 	}
 
-	// Структура данных с информацией о пользователе
 	User struct {
 		ID        int64
 		FirstName string
@@ -124,13 +117,5 @@ type (
 		MovieID  int
 		User     User
 		Children []*Comment
-	}
-
-	QueryParams struct {
-		MovieID    int
-		NameGenres []string
-		YearMin    string
-		YearMax    string
-		SearchText string
 	}
 )

@@ -3,24 +3,43 @@ package movies_v1;
 option go_package = "./movies_v1";
 
 // Запрос всех новостей
-message GetMoviesRequest {}
+message GetMoviesRequest {
+  int32 limit = 1;
+  int32 page = 2;
+}
 
 // Запрос новости по Id
 message GetMoviesByIdRequest {
   int32 id = 1;
 }
 
-// Запрос новостей по категориям
-message GetMoviesByCategoryRequest {
-  string categories = 1;
+// Запрос новостей c фильтрами
+message GetMoviesByFilterRequest {
+  GetMoviesByFilterItem filters = 1;
+  int32 limit = 2;
+  int32 page = 3;
+}
+message GetMoviesByFilterItem {
+  int32 typeMovie = 1;
+  string search = 2;
+  map<int32, int32> genres = 3;
+  int32 yearMin = 4;
+  int32 yearMax = 5;
+  bool bestMovie = 6;
 }
 
 // Запрос на добавление новости
 message AddMoviesRequest {
-  string title = 2;
-  string text = 3;
-  string datetime = 4;
-  string categories = 5;
+  string title = 1;
+  string description = 2;
+  string country = 3;
+  int32 releaseDate = 4;
+  int32 timeMovie = 5;
+  double scoreKP = 6;
+  double scoreIMDB = 7;
+  string poster = 8;
+  int32 typeMovie = 9;
+  map<int32, int32> genres = 10;
 }
 
 // Запрос на удаление новости
@@ -49,9 +68,15 @@ message GetMovieItem {
 message GetMoviesByIdResponse {
   int32 id = 1;
   string title = 2;
-  string text = 3;
-  string datetime = 4;
-  string categories = 5;
+  string description = 3;
+  string country = 4;
+  int32 releaseDate = 5;
+  int32 timeMovie = 6;
+  double scoreKP = 7;
+  double scoreIMDB = 8;
+  string poster = 9;
+  int32 typeMovie = 10;
+  string genres = 11;
 }
 
 // Добавление новости
@@ -68,7 +93,7 @@ message DelMoviesResponse {
 service MoviesV1 {
   rpc GetMovies(GetMoviesRequest) returns (GetMoviesResponse);
   rpc GetMoviesById(GetMoviesByIdRequest) returns (GetMoviesByIdResponse);
-  rpc GetMoviesByCategory(GetMoviesByCategoryRequest) returns (GetMoviesResponse);
+  rpc GetMoviesByCategory(GetMoviesByFilterRequest) returns (GetMoviesResponse);
   rpc AddMovies(AddMoviesRequest) returns (AddMoviesResponse);
   rpc DelMovies(DelMoviesRequest) returns (DelMoviesResponse);
 }

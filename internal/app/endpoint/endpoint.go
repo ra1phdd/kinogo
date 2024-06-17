@@ -300,7 +300,8 @@ func (e *Endpoint) SearchMovies(c *gin.Context) {
 	}
 
 	// Данных нет в Redis, получаем их из базы данных
-	query := "SELECT movies.*, array_agg(genres.name) AS genres FROM movies JOIN moviesgenres ON movies.id = moviesgenres.idmovie JOIN genres ON moviesgenres.idgenre = genres.id\n\t\tWHERE word_similarity(movies.title, $1) > 0.1 GROUP BY movies.id"
+	query := "SELECT movies.*, array_agg(genres.name) AS genres FROM movies JOIN moviesgenres ON movies.id = moviesgenres.idmovie JOIN genres ON moviesgenres.idgenre = genres.id" +
+		"WHERE word_similarity(movies.title, $1) > 0.1 GROUP BY movies.id"
 	args := models.QueryParams{
 		SearchText: textSearch,
 	}
