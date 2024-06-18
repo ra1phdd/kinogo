@@ -3,11 +3,13 @@ package movies_v1
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lib/pq"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"kinogo/internal/app/models"
 	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
+	"kinogo/pkg/movies_v1"
 	"log"
 	"strings"
 	"time"
@@ -16,15 +18,12 @@ import (
 type Service struct {
 }
 
-func (s Service) GetMoviesService() ([]models.Movies, error) {
+func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, error) {
 	var movies []models.Movies
 
 	// Получение данных из Redis
-	moviesJSON, err := cache.Rdb.Get(cache.Ctx, "movies").Result()
-	if err != nil {
-		return nil, err
-	}
-	if moviesJSON != "" {
+	moviesJSON, err := cache.Rdb.Get(cache.Ctx, "movies_"+fmt.Sprint(limit)+"_"+fmt.Sprint(page)).Result()
+	if err == nil && moviesJSON != "" {
 		err = json.Unmarshal([]byte(moviesJSON), &movies)
 		if err != nil {
 			log.Fatalf("Ошибка десериализации: %v", err)
@@ -33,7 +32,22 @@ func (s Service) GetMoviesService() ([]models.Movies, error) {
 	}
 
 	// Data not in Redis, get from database
-	query := "SELECT movies.*, array_agg(genres.name) AS genres FROM movies JOIN moviesgenres ON movies.id = moviesgenres.idmovie JOIN genres ON moviesgenres.idgenre = genres.id GROUP BY movies.id ORDER BY movies.id DESC"
+	var limitQuery, pageQuery string
+	if limit > 0 {
+		limitQuery = fmt.Sprintf("LIMIT %d", limit)
+	}
+	if page > 0 {
+		pageQuery = fmt.Sprintf("OFFSET %d", (page-1)*limit)
+	}
+
+	query := fmt.Sprintf(`
+		  SELECT m.id, m.title, m.description, m.releasedate, m.scorekp, m.scoreimdb, m.poster, m.typemovie, array_agg(g.name)
+		  FROM movies m
+		  JOIN "moviesGenres" mg ON m.id = mg.idmovie
+		  JOIN genres g ON mg.idgenre = g.id
+		  GROUP BY m.id
+		  ORDER BY m.id DESC %s %s`, limitQuery, pageQuery)
+
 	rows, err := db.Conn.Query(query)
 	if err != nil {
 		return nil, err
@@ -43,11 +57,12 @@ func (s Service) GetMoviesService() ([]models.Movies, error) {
 	found := false
 	for rows.Next() {
 		var id, releaseDate, typeMovie int32
-		var title, description, poster, genres string
+		var title, description, poster string
 		var scoreKP, scoreIMDB float64
-		err := rows.Scan(&id, &title, &description, &releaseDate, &scoreKP, &scoreIMDB, &poster, &typeMovie, &genres)
-		if err != nil {
-			return nil, err
+		var genresArray pq.StringArray
+		errScan := rows.Scan(&id, &title, &description, &releaseDate, &scoreKP, &scoreIMDB, &poster, &typeMovie, &genresArray)
+		if errScan != nil {
+			return nil, errScan
 		}
 
 		moviesItem := models.Movies{
@@ -59,7 +74,7 @@ func (s Service) GetMoviesService() ([]models.Movies, error) {
 			ScoreIMDB:   scoreIMDB,
 			Poster:      poster,
 			TypeMovie:   typeMovie,
-			Genres:      genres,
+			Genres:      strings.Join(genresArray, ","),
 		}
 
 		movies = append(movies, moviesItem)
@@ -76,7 +91,7 @@ func (s Service) GetMoviesService() ([]models.Movies, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = cache.Rdb.Set(cache.Ctx, "movies", moviesJSONbyte, 1*time.Minute).Err()
+	err = cache.Rdb.Set(cache.Ctx, "movies_"+fmt.Sprint(limit)+"_"+fmt.Sprint(page), moviesJSONbyte, 1*time.Minute).Err()
 	if err != nil {
 		return nil, err
 	}
@@ -89,10 +104,7 @@ func (s Service) GetMovieByIdService(id int32) (models.Movie, error) {
 
 	// Получение данных из Redis
 	movieJSON, err := cache.Rdb.Get(cache.Ctx, "movies_id_"+fmt.Sprint(id)).Result()
-	if err != nil {
-		return models.Movie{}, err
-	}
-	if movieJSON != "" {
+	if err == nil && movieJSON != "" {
 		err = json.Unmarshal([]byte(movieJSON), &movie)
 		if err != nil {
 			log.Fatalf("Ошибка десериализации: %v", err)
@@ -102,11 +114,14 @@ func (s Service) GetMovieByIdService(id int32) (models.Movie, error) {
 
 	// Data not in Redis, get from database
 	query := `
-        SELECT m.*, array_agg(g.name)
+       	SELECT m.*, array_agg(DISTINCT g.name) as genres, array_agg(DISTINCT c.name) as countries
         FROM movies m
-        JOIN moviesgenres mg ON m.id = mg.idmovie
+        JOIN "moviesGenres" mg ON m.id = mg.idmovie
         JOIN genres g ON mg.idgenre = g.id
-        WHERE m.id = $1 GROUP BY m.id`
+        JOIN "moviesCountries" mc ON m.id = mc.idmovie
+        JOIN countries c ON mc.idcountry = c.id
+        WHERE m.id = $1
+        GROUP BY m.id`
 	rows, err := db.Conn.Query(query, id)
 	if err != nil {
 		return models.Movie{}, err
@@ -115,21 +130,21 @@ func (s Service) GetMovieByIdService(id int32) (models.Movie, error) {
 
 	found := false
 	for rows.Next() {
-		var id, releaseDate, timeMovie, views, likes, dislikes, typeMovie int32
-		var title, description, country, poster string
+		var movieID, releaseDate, timeMovie, views, likes, dislikes, typeMovie int32
+		var title, description, poster string
 		var scoreKP, scoreIMDB float64
-		var genresArray []string
+		var countriesArray, genresArray pq.StringArray
 
-		err := rows.Scan(&id, &title, &description, &country, &releaseDate, &timeMovie, &scoreKP, &scoreIMDB, &poster, &typeMovie, &views, &likes, &dislikes)
-		if err != nil {
-			return models.Movie{}, err
+		errScan := rows.Scan(&movieID, &title, &description, &releaseDate, &timeMovie, &scoreKP, &scoreIMDB, &poster, &typeMovie, &views, &likes, &dislikes, &genresArray, &countriesArray)
+		if errScan != nil {
+			return models.Movie{}, errScan
 		}
 
 		movie = models.Movie{
-			Id:          id,
+			Id:          movieID,
 			Title:       title,
 			Description: description,
-			Country:     country,
+			Country:     strings.Join(countriesArray, ", "),
 			ReleaseDate: releaseDate,
 			TimeMovie:   timeMovie,
 			ScoreKP:     scoreKP,
@@ -169,10 +184,7 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 
 	// Получение данных из Redis
 	movieJSON, err := cache.Rdb.Get(cache.Ctx, "movies_filter_"+stringMap).Result()
-	if err != nil {
-		return []models.Movies{}, err
-	}
-	if movieJSON != "" {
+	if err == nil && movieJSON != "" {
 		err = json.Unmarshal([]byte(movieJSON), &movies)
 		if err != nil {
 			log.Fatalf("Ошибка десериализации: %v", err)
@@ -181,88 +193,102 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 	}
 
 	// Data not in Redis, get from database
-	var baseQuery string
+	var baseQuery strings.Builder
 	var args []interface{}
 	argPos := 1
 
+	// Начинаем запрос с основной части
+	baseQuery.WriteString(`
+		SELECT m.id, m.title, m.description, m.releasedate, m.scorekp, m.scoreimdb, m.poster, m.typemovie, array_agg(g.name), COUNT(mv."movieId") AS views
+		FROM movies m
+		JOIN "moviesGenres" mg ON m.id = mg.idmovie
+		JOIN genres g ON mg.idgenre = g.id
+		LEFT JOIN "moviesViews" mv ON m.id = mv."movieId"
+		WHERE 1=1`)
+
 	// Условия для года выпуска
-	if yearMin, yearMinOk := filtersMap["yearMin"].(int); yearMinOk {
-		if yearMax, yearMaxOk := filtersMap["yearMax"].(int); yearMaxOk {
-			baseQuery += fmt.Sprintf(" AND m.releasedate BETWEEN $%d AND $%d", argPos, argPos+1)
+	yearMin, okMin := filtersMap["yearMin"].(int32)
+	yearMax, okMax := filtersMap["yearMax"].(int32)
+
+	if okMin && okMax {
+		if yearMin != 0 && yearMax == 0 {
+			baseQuery.WriteString(fmt.Sprintf(" AND m.releasedate >= $%d", argPos))
+			args = append(args, yearMin)
+			argPos += 1
+		} else if yearMin == 0 && yearMax != 0 {
+			baseQuery.WriteString(fmt.Sprintf(" AND m.releasedate <= $%d", argPos))
+			args = append(args, yearMax)
+			argPos += 1
+		} else if yearMin != 0 && yearMax != 0 {
+			baseQuery.WriteString(fmt.Sprintf(" AND m.releasedate BETWEEN $%d AND $%d", argPos, argPos+1))
 			args = append(args, yearMin, yearMax)
 			argPos += 2
 		}
 	}
 
-	genres, genresOk := filtersMap["genres"].([]int)
-	if !genresOk {
-		return []models.Movies{}, fmt.Errorf("error: value is not a []int")
-	}
-
 	// Условия для жанров
-	if len(genres) > 0 {
-		genrePlaceholders := make([]string, len(genres))
+	if genres, ok := filtersMap["genres"].([]*movies_v1.Genres); ok && len(genres) > 0 {
+		genreNames := make([]string, len(genres))
 		for i, genre := range genres {
+			genreNames[i] = genre.Name
+		}
+
+		genrePlaceholders := make([]string, len(genreNames))
+		for i := range genreNames {
 			genrePlaceholders[i] = fmt.Sprintf("$%d", argPos)
-			args = append(args, genre)
+			args = append(args, genreNames[i])
 			argPos++
 		}
-		baseQuery += fmt.Sprintf(" AND g.id IN (%s)", strings.Join(genrePlaceholders, ","))
+
+		baseQuery.WriteString(fmt.Sprintf(`
+			AND m.id IN (
+				SELECT m.id
+				FROM movies m
+				JOIN "moviesGenres" mg ON m.id = mg.idmovie
+				JOIN genres g ON mg.idgenre = g.id
+				WHERE g.name IN (%s)
+				GROUP BY m.id
+			)`, strings.Join(genrePlaceholders, ",")))
 	}
 
 	// Условия для типа фильма
-	if typeMovie, typeMovieOk := filtersMap["typeMovie"].(string); typeMovieOk && typeMovie != "" {
-		baseQuery += fmt.Sprintf(" AND m.typemovie = $%d", argPos)
+	if typeMovie, ok := filtersMap["typeMovie"].(int32); ok && typeMovie != 0 {
+		baseQuery.WriteString(fmt.Sprintf(" AND m.typemovie = $%d", argPos))
 		args = append(args, typeMovie)
 		argPos++
 	}
 
-	if search, searchOk := filtersMap["search"].(string); searchOk && search != "" {
-		baseQuery += " AND word_similarity(m.title, $1) > 0.1"
+	// Условия для поиска по названию
+	if search, ok := filtersMap["search"].(string); ok && search != "" {
+		baseQuery.WriteString(fmt.Sprintf(" AND word_similarity(m.title, $%d) > 0.1", argPos))
 		args = append(args, search)
 		argPos++
 	}
 
 	// Условия для лучшего фильма
-	var bestMovieQuery string
-	if bestMovie, bestMovieOk := filtersMap["bestMovie"].(bool); bestMovieOk && bestMovie {
-		bestMovieQuery = " ORDER BY m.views"
+	orderBy := ""
+	if bestMovie, ok := filtersMap["bestMovie"].(bool); ok && bestMovie {
+		orderBy = "ORDER BY views DESC"
 	}
 
-	var offset, page, limit int32
-	if pageIntf, ok := filtersMap["page"]; ok {
-		if page, ok = pageIntf.(int32); !ok {
-			page = 0
+	// Устанавливаем LIMIT и OFFSET
+	limit, limitOk := filtersMap["limit"].(int32)
+	page, pageOk := filtersMap["page"].(int32)
+
+	limitOffset := ""
+	if limitOk && limit > 0 {
+		offset := int32(0)
+		if pageOk && page > 0 {
+			offset = (page - 1) * limit
 		}
+
+		limitOffset = fmt.Sprintf("LIMIT $%d OFFSET $%d", argPos, argPos+1)
+		args = append(args, limit, offset)
+		argPos += 2
 	}
 
-	// Извлекаем значение limit и проверяем его тип
-	if limitIntf, ok := filtersMap["limit"]; ok {
-		if limit, ok = limitIntf.(int32); !ok {
-			limit = 0
-		}
-	}
-
-	// Рассчитываем offset на основе page и limit
-	if page > 0 && limit > 0 {
-		offset = (page - 1) * limit
-	} else {
-		offset = 0
-		limit = 0
-	}
-
-	// Модифицируем строку запроса, чтобы включить LIMIT и OFFSET
-	query := fmt.Sprintf(`
-		SELECT m.id, m.title, m.description, m.releasedate, m.scorekp, m.scoreimdb, m.poster, m.typemovie, array_agg(g.name)
-		FROM movies m
-		JOIN moviesgenres mg ON m.id = mg.idmovie
-		JOIN genres g ON mg.idgenre = g.id
-		WHERE 1=1 %s
-		GROUP BY m.id %s
-		LIMIT $%d OFFSET $%d`, baseQuery, bestMovieQuery, argPos, argPos+1)
-
-	// Добавляем значения limit и offset в массив аргументов (args)
-	args = append(args, limit, offset)
+	// Завершаем запрос и возвращаем его вместе с аргументами
+	query := fmt.Sprintf("%s GROUP BY m.id %s %s", baseQuery.String(), orderBy, limitOffset)
 
 	rows, err := db.Conn.Query(query, args...)
 	if err != nil {
@@ -272,14 +298,14 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 
 	found := false
 	for rows.Next() {
-		var id, releaseDate, typeMovie int32
+		var id, releaseDate, typeMovie, views int32
 		var title, description, poster string
 		var scoreKP, scoreIMDB float64
-		var genresArray []string
+		var genresArray pq.StringArray
 
-		err := rows.Scan(&id, &title, &description, &releaseDate, &scoreKP, &scoreIMDB, &poster, &typeMovie)
-		if err != nil {
-			return []models.Movies{}, err
+		errScan := rows.Scan(&id, &title, &description, &releaseDate, &scoreKP, &scoreIMDB, &poster, &typeMovie, &genresArray, &views)
+		if errScan != nil {
+			return []models.Movies{}, errScan
 		}
 
 		moviesItem := models.Movies{
@@ -317,9 +343,14 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 }
 
 func (s Service) AddMoviesService(moviesMap map[string]interface{}) (int32, error) {
-	genres, genresOk := moviesMap["genres"].([]int)
-	if !genresOk {
-		return 0, fmt.Errorf("error: value is not a []int")
+	var countries []string
+	for _, country := range moviesMap["countries"].([]*movies_v1.Countries) {
+		countries = append(countries, country.Name)
+	}
+
+	var genres []string
+	for _, genre := range moviesMap["genres"].([]*movies_v1.Genres) {
+		genres = append(genres, genre.Name)
 	}
 
 	tx, err := db.Conn.Begin()
@@ -328,41 +359,71 @@ func (s Service) AddMoviesService(moviesMap map[string]interface{}) (int32, erro
 	}
 
 	// Добавление фильма в таблицу movies
-	insertMovieSQL := `INSERT INTO movies (title, description, country, releasedate, timemovie, scorekp, scoreimdb, poster, typemovie, views, likes, dislikes)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`
+	insertMovieSQL := `INSERT INTO movies (title, description, releasedate, timemovie, scorekp, scoreimdb, poster, typemovie, views, likes, dislikes) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
 	var movieID int
-	err = tx.QueryRow(insertMovieSQL, moviesMap["title"], moviesMap["description"], moviesMap["country"], moviesMap["releaseDate"], moviesMap["timeMovie"], moviesMap["scoreKP"], moviesMap["scoreIMDB"], moviesMap["poster"], moviesMap["typeMovie"], moviesMap["views"], moviesMap["likes"], moviesMap["dislikes"]).Scan(&movieID)
+	err = tx.QueryRow(insertMovieSQL, moviesMap["title"], moviesMap["description"], moviesMap["releaseDate"], moviesMap["timeMovie"], moviesMap["scoreKP"], moviesMap["scoreIMDB"], moviesMap["poster"], moviesMap["typeMovie"], 1, 1, 1).Scan(&movieID)
 	if err != nil {
-		tx.Rollback()
 		return 0, fmt.Errorf("failed to insert movie: %v", err)
 	}
 
+	// Добавление стран в таблицу moviesCountries
+	insertCountriesSQL := `INSERT INTO "moviesCountries" (idmovie, idcountry) VALUES ($1, $2)`
+	for _, countryName := range countries {
+		// Получение ID страны из таблицы countries
+		var countryID int
+		err = tx.QueryRow(`SELECT id FROM countries WHERE name = $1`, countryName).Scan(&countryID)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get country ID: %v", err)
+		}
+
+		// Вставка связи фильма и страны
+		_, err = tx.Exec(insertCountriesSQL, movieID, countryID)
+		if err != nil {
+			return 0, fmt.Errorf("failed to insert movie country: %v", err)
+		}
+	}
+
 	// Добавление жанров в таблицу moviesgenres
-	insertGenresSQL := `INSERT INTO moviesgenres (idmovie, idgenre) VALUES ($1, $2)`
-	for _, genreID := range genres {
+	insertGenresSQL := `INSERT INTO "moviesGenres" (idmovie, idgenre) VALUES ($1, $2)`
+	for _, genreName := range genres {
+		// Получение ID жанра из таблицы genres
+		var genreID int
+		err = tx.QueryRow(`SELECT id FROM genres WHERE name = $1`, genreName).Scan(&genreID)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get genre ID: %v", err)
+		}
+
+		// Вставка связи фильма и жанра
 		_, err = tx.Exec(insertGenresSQL, movieID, genreID)
 		if err != nil {
-			tx.Rollback()
 			return 0, fmt.Errorf("failed to insert movie genre: %v", err)
 		}
 	}
 
 	// Фиксация транзакции
-	if err := tx.Commit(); err != nil {
-		return 0, fmt.Errorf("failed to commit transaction: %v", err)
+	if errCommit := tx.Commit(); errCommit != nil {
+		return 0, fmt.Errorf("failed to commit transaction: %v", errCommit)
 	}
 
 	return int32(movieID), nil
 }
 
-func (s Service) DelMoviesService(id int32) error {
+func (s Service) DeleteMoviesService(id int32) error {
 	tx, err := db.Conn.Begin()
 	if err != nil {
 		return err
 	}
 
+	// Удаление связей фильма и стран
+	deleteCountriesSQL := `DELETE FROM "moviesCountries" WHERE idmovie = $1`
+	_, err = tx.Exec(deleteCountriesSQL, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete movie countries: %v", err)
+	}
+
 	// Удаление записей из таблицы moviesgenres связанных с movieID
-	deleteMoviesGenresSQL := `DELETE FROM moviesgenres WHERE idmovie = $1`
+	deleteMoviesGenresSQL := `DELETE FROM "moviesGenres" WHERE idmovie = $1`
 	_, err = tx.Exec(deleteMoviesGenresSQL, id)
 	if err != nil {
 		tx.Rollback()

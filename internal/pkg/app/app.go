@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"kinogo/config"
@@ -28,6 +29,8 @@ func New() (*App, error) {
 	}
 
 	logger.Init(cfg.LoggerLevel)
+
+	fmt.Println("хуй")
 
 	a := &App{}
 
@@ -58,7 +61,7 @@ func New() (*App, error) {
 }
 
 func (a *App) Run() error {
-	lis, err := net.Listen("tcp", "localhost:8080")
+	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		logger.Fatal("Ошибка при открытии listener: ", zap.Error(err))
 	}

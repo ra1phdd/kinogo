@@ -1,5 +1,6 @@
 package services
 
+/*
 import (
 	"encoding/json"
 	"fmt"
@@ -17,7 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"kinogo/cmd/websocket"
 	"kinogo/pkg/db"
 	"kinogo/pkg/logger"
 
@@ -385,3 +385,4 @@ func (s *Service) ParseTemplatesAdmin(w http.ResponseWriter, allData models.AllD
 		return
 	}
 }
+*/

@@ -3,16 +3,19 @@ package grpcMovies
 import (
 	"context"
 	"errors"
+	"fmt"
+	"go.uber.org/zap"
 	"kinogo/internal/app/models"
+	"kinogo/pkg/logger"
 	pb "kinogo/pkg/movies_v1"
 )
 
 type Movies interface {
-	GetMoviesService() ([]models.Movies, error)
+	GetMoviesService(int32, int32) ([]models.Movies, error)
 	GetMovieByIdService(int32) (models.Movie, error)
 	GetMoviesByFilterService(map[string]interface{}) ([]models.Movies, error)
 	AddMoviesService(map[string]interface{}) (int32, error)
-	DelMoviesService(int32) error
+	DeleteMoviesService(int32) error
 }
 
 type Endpoint struct {
@@ -20,9 +23,12 @@ type Endpoint struct {
 	pb.UnimplementedMoviesV1Server
 }
 
-func (e *Endpoint) GetMovies(_ context.Context, _ *pb.GetMoviesRequest) (*pb.GetMoviesResponse, error) {
-	movies, err := e.Movies.GetMoviesService()
+func (e *Endpoint) GetMovies(_ context.Context, req *pb.GetMoviesRequest) (*pb.GetMoviesResponse, error) {
+	fmt.Println("фиксация попытки")
+
+	movies, err := e.Movies.GetMoviesService(req.Limit, req.Page)
 	if err != nil {
+		logger.Error("Ошибка в работе функции GetMoviesService", zap.Error(err))
 		return &pb.GetMoviesResponse{}, err
 	}
 
@@ -45,13 +51,14 @@ func (e *Endpoint) GetMovies(_ context.Context, _ *pb.GetMoviesRequest) (*pb.Get
 	return &pb.GetMoviesResponse{Movies: pbMovies}, nil
 }
 
-func (e *Endpoint) GetMoviesById(_ context.Context, req *pb.GetMoviesByIdRequest) (*pb.GetMoviesByIdResponse, error) {
+func (e *Endpoint) GetMovieById(_ context.Context, req *pb.GetMoviesByIdRequest) (*pb.GetMoviesByIdResponse, error) {
 	if req.Id == 0 {
 		return nil, errors.New("id новости не указан")
 	}
 
 	movie, err := e.Movies.GetMovieByIdService(req.Id)
 	if err != nil {
+		logger.Error("Ошибка в работе функции GetMovieByIdService", zap.Error(err))
 		return &pb.GetMoviesByIdResponse{}, err
 	}
 
@@ -59,7 +66,9 @@ func (e *Endpoint) GetMoviesById(_ context.Context, req *pb.GetMoviesByIdRequest
 		Id:          movie.Id,
 		Title:       movie.Title,
 		Description: movie.Description,
+		Country:     movie.Country,
 		ReleaseDate: movie.ReleaseDate,
+		TimeMovie:   movie.TimeMovie,
 		ScoreKP:     movie.ScoreKP,
 		ScoreIMDB:   movie.ScoreIMDB,
 		Poster:      movie.Poster,
@@ -73,6 +82,7 @@ func (e *Endpoint) GetMoviesById(_ context.Context, req *pb.GetMoviesByIdRequest
 func (e *Endpoint) GetMoviesByFilter(_ context.Context, req *pb.GetMoviesByFilterRequest) (*pb.GetMoviesResponse, error) {
 	filtersMap := map[string]interface{}{
 		"typeMovie": req.Filters.TypeMovie,
+		"search":    req.Filters.Search,
 		"genres":    req.Filters.Genres,
 		"yearMin":   req.Filters.YearMin,
 		"yearMax":   req.Filters.YearMax,
@@ -103,13 +113,13 @@ func (e *Endpoint) GetMoviesByFilter(_ context.Context, req *pb.GetMoviesByFilte
 	}
 
 	return &pb.GetMoviesResponse{Movies: pbMovies}, nil
-}
+} // Не тестировано
 
 func (e *Endpoint) AddMovies(_ context.Context, req *pb.AddMoviesRequest) (*pb.AddMoviesResponse, error) {
 	moviesMap := map[string]interface{}{
 		"title":       req.Title,
 		"description": req.Description,
-		"country":     req.Country,
+		"countries":   req.Countries,
 		"releaseDate": req.ReleaseDate,
 		"timeMovie":   req.TimeMovie,
 		"scoreKP":     req.ScoreKP,
@@ -127,15 +137,15 @@ func (e *Endpoint) AddMovies(_ context.Context, req *pb.AddMoviesRequest) (*pb.A
 	return &pb.AddMoviesResponse{Id: id}, nil
 }
 
-func (e *Endpoint) DelMovies(_ context.Context, req *pb.DelMoviesRequest) (*pb.DelMoviesResponse, error) {
+func (e *Endpoint) DeleteMovies(_ context.Context, req *pb.DeleteMoviesRequest) (*pb.DeleteMoviesResponse, error) {
 	if req.Id == 0 {
 		return nil, errors.New("id новости не указан")
 	}
 
-	err := e.Movies.DelMoviesService(req.Id)
+	err := e.Movies.DeleteMoviesService(req.Id)
 	if err != nil {
-		return &pb.DelMoviesResponse{Err: error.Error(err)}, err
+		return &pb.DeleteMoviesResponse{Err: error.Error(err)}, err
 	}
 
-	return &pb.DelMoviesResponse{Err: ""}, nil
+	return &pb.DeleteMoviesResponse{Err: ""}, nil
 }
