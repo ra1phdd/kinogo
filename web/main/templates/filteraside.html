@@ -1,0 +1,51 @@
+{{ define "filteraside" }}
+<div class="aside__filter">
+    <h3>Сортировка</h3>
+    <form action="/filter" method="POST">
+        <select class="custom-select" name="genre" multiple>
+            <option value="выбрать" selected="selected">Выберите жанр</option>
+            <option value="аниме">Аниме</option>
+            <option value="биография">Биография</option>
+            <option value="боевик">Боевик</option>
+            <option value="вестерн">Вестерн</option>
+            <option value="военный">Военный</option>
+            <option value="детектив">Детектив</option>
+            <option value="детский">Детский</option>
+            <option value="документальный">Документальный</option>
+            <option value="драма">Драма</option>
+            <option value="игра">Игра</option>
+            <option value="история">История</option>
+            <option value="комедия">Комедия</option>
+            <option value="концерт">Концерт</option>
+            <option value="короткометражка">Короткометражка</option>
+            <option value="криминал">Криминал</option>
+            <option value="мелодрама">Мелодрама</option>
+            <option value="музыка">Музыка</option>
+            <option value="мультфильм">Мультфильм</option>
+            <option value="мюзикл">Мюзикл</option>
+            <option value="новости">Новости</option>
+            <option value="приключения">Приключения</option>
+            <option value="семейный">Семейный</option>
+            <option value="спорт">Спорт</option>
+            <option value="ток-шоу">Ток-шоу</option>
+            <option value="триллер">Триллер</option>
+            <option value="ужасы">Ужасы</option>
+            <option value="фантастика">Фантастика</option>
+            <option value="фэнтези">Фэнтези</option>
+        </select>
+        <div class="select-wrapper"></div>
+        <div class="slider__year">
+            <h4>Выберите год</h4>
+            <div id="slider"></div>
+            <div class="slider__value">
+                <input type="text" id="slider-min" name="year__min">
+                <input type="text" id="slider-max" name="year__max">
+            </div>
+        </div>
+        <button type="submit">
+            <div id="circle"></div>
+            <a href="#">Отправить</a>
+        </button>
+    </form>
+</div>
+{{ end }}

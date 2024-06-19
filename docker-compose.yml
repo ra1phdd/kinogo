@@ -1,0 +1,22 @@
+services:
+  kinogo:
+    container_name: kinogo
+    build:
+      context: backend/
+      target: dev
+      network: host
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8080:8080"
+
+  envoy:
+    image: envoyproxy/envoy:v1.30-latest
+    container_name: envoy
+    ports:
+      - "10000:10000"
+      - "9901:9901"
+    volumes:
+      - ./backend/config/envoy.yaml:/etc/envoy/envoy.yaml
+    links:
+      - kinogo

@@ -1,0 +1,233 @@
+@font-face {
+  font-family: "Comfortaa", sans-serif;
+  src: url("/web/main/assets/fonts/Comfortaa-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+html {
+  background-color: #27247b;
+  background-image: url("/web/main/assets/images/background.svg");
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+body {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  font-family: "Arian2", Helvetica, sans-serif;
+  margin: 0;
+  overflow-x: hidden;
+}
+body * {
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.container {
+  width: 90rem;
+  margin: 0 auto;
+  padding: 25px 0;
+}
+.container header {
+  display: flex;
+  margin-bottom: 25px;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.container header .header__logotype h1 {
+  font-size: 24px;
+  padding: 0;
+  margin: 0;
+}
+.container header .header__logotype h1 a {
+  text-decoration: none;
+}
+.container header nav {
+  margin: auto;
+}
+.container header nav a {
+  margin: 0 7.5px;
+  vertical-align: middle;
+  text-decoration: none;
+  transition: 0.3s;
+}
+.container header nav a:hover {
+  color: #b30e76;
+  transition: 0.3s;
+}
+.container header .header__auth {
+  margin: -6px 0;
+}
+.container main {
+  display: flex;
+}
+.container main .sections {
+  width: 100%;
+  margin-right: 25px;
+}
+.container main aside {
+  max-width: 20rem;
+  width: 100%;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.section__movies .section__movies-add {
+  text-align: center;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.section__movies .section__movies-add input {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 16px;
+  width: 380px;
+  height: 54px;
+  padding: 7.5px 12.5px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+.section__movies .section__movies-add input::-moz-placeholder {
+  color: #d4d4d4;
+}
+.section__movies .section__movies-add input::placeholder {
+  color: #d4d4d4;
+}
+.section__movies .section__movies-add input:focus {
+  outline: none;
+}
+.section__movies .section__movies-add form {
+  display: block;
+}
+.section__movies .section__movies-add form #section__movies-list {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 380px;
+  display: none;
+  margin: 0 auto 15px auto;
+}
+.section__movies .section__movies-add form #section__movies-list input {
+  display: none;
+}
+.section__movies .section__movies-add form #section__movies-list input:checked + label {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 12.5px;
+}
+.section__movies .section__movies-add form #section__movies-list label {
+  display: block;
+  font-size: 16px;
+  border-radius: 10px;
+  padding: 10px 12.5px;
+}
+.section__movies .section__movies-add form #section__movies-list label:hover {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 12.5px;
+  cursor: pointer;
+}
+.section__movies .section__movies-add form .section__movies-send {
+  width: 380px;
+  margin: 0 auto 15px auto;
+}
+.section__movies .section__movies-add form .section__movies-send #drop_zone {
+  cursor: pointer;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.section__movies .section__movies-add form .section__movies-send #send_video {
+  display: none;
+}
+.section__movies .section__movies-add form #progress-bar {
+  width: 0%;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #b30e76;
+}
+.section__movies .section__movies-add form .enabled {
+  display: block !important;
+}
+.section__movies .section__movies-add form .btnPointer {
+  cursor: pointer;
+}
+.section__movies .section__movies-add form button {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 16px;
+  width: 380px;
+  height: 54px;
+  padding: 7.5px 12.5px;
+  border-radius: 10px;
+  border-left: 0;
+}
+
+.hystmodal__window {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 480px;
+  height: 360px;
+  background: none !important;
+}
+.hystmodal__window .progress-bar {
+  background-color: #b30e76;
+  border-radius: 15px;
+  height: 24px;
+}
+.hystmodal__window #progress__processing {
+  display: none;
+}
+.hystmodal__window #progress__processing #progress__processing-bar {
+  width: 0.1%;
+}/*# sourceMappingURL=admin.css.map */

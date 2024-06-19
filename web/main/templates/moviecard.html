@@ -1,0 +1,24 @@
+{{ define "moviecard" }}
+<div class="card-{{ .Id }} card">
+    <a href="/id/{{ .Id }}" data-tilt>
+        <div class="card__poster">
+            <img src="{{ .Poster }}" alt="Постер">
+        </div>
+        <div class="card__info">
+            <h2 class="card__info-title">{{ .Title }} ({{ .ReleaseDate }})</h2>
+            <p class="card__info-description">{{ .Description }}</p>
+            <div class="card__info-ratings">
+                <div class="rating__kinopoisk rating">
+                    <p>Кинопоиск {{ .ScoreKP }}</p>
+                </div>
+                <div class="rating__imdb rating">
+                    <p>IMDb {{ .ScoreIMDB }}</p>
+                </div>
+            </div>
+            <div class="card__info-genres">
+                <p>{{ .Genres }}</p>
+            </div>
+        </div>
+    </a>
+</div>
+{{ end }}

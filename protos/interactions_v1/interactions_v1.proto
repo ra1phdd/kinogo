@@ -1,0 +1,29 @@
+syntax = "proto3";
+package interactions_v1;
+option go_package = "./interactions_v1";
+
+// Запрос на добавление/удаление просмотра/лайка/дизлайка
+message InteractionsRequest {
+  int32 id = 1;
+}
+
+// Добавление/удаление просмотра/лайка/дизлайка
+message InteractionsResponse {
+  string err = 1;
+}
+
+service MoviesV1 {
+  rpc IncrementView(InteractionsRequest) returns (InteractionsResponse);
+  rpc IncrementLike(InteractionsRequest) returns (InteractionsResponse);
+  rpc IncrementDislike(InteractionsRequest) returns (InteractionsResponse);
+  rpc DecrementView(InteractionsRequest) returns (InteractionsResponse);
+  rpc DecrementLike(InteractionsRequest) returns (InteractionsResponse);
+  rpc DecrementDislike(InteractionsRequest) returns (InteractionsResponse);
+}
+
+service CommentsV1 {
+  rpc IncrementLike(InteractionsRequest) returns (InteractionsResponse);
+  rpc IncrementDislike(InteractionsRequest) returns (InteractionsResponse);
+  rpc DecrementLike(InteractionsRequest) returns (InteractionsResponse);
+  rpc DecrementDislike(InteractionsRequest) returns (InteractionsResponse);
+}
