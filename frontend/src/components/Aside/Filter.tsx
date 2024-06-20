@@ -2,9 +2,16 @@ import '../../assets/css/src/nouislider.css';
 import noUiSlider from 'nouislider';
 import customSelect from '../../assets/js/src/custom-select';
 import React, {useEffect} from "react";
+import AnimateElement from "@components/AnimateElement.tsx";
 
 const FilterAside = React.memo(() => {
     useEffect(() => {
+        const asideFilter = document.querySelector<HTMLElement>(".aside__filter");
+
+        if (asideFilter !== null) {
+            AnimateElement(asideFilter, "animate__fadeInRight", 300);
+        }
+
         customSelect();
 
         var slider: any = document.getElementById("slider");

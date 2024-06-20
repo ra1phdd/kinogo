@@ -6,25 +6,7 @@ import FilterAside from '@components/Aside/Filter';
 import BestMovieAside from '@components/Aside/BestMovie';
 import '@assets/css/src/movie.css'
 import VideoPlayer from "@components/HLSPlayer.tsx";
-import {getMovieById} from "@components/gRPC.tsx";
-
-// Интерфейс для данных фильма
-interface Movie {
-    id: number;
-    title: string;
-    description: string;
-    country: string;
-    releaseDate: number;
-    timeMovie: number;
-    scoreKP: number;
-    scoreIMDB: number;
-    poster: string;
-    typeMovie: string;
-    views: number;
-    likes: number;
-    dislikes: number;
-    genres: string;
-}
+import { Movie, getMovieById } from "@components/gRPC.tsx";
 
 // Пропсы для компонента MovieCard
 interface MovieCardProps {
@@ -106,26 +88,15 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 };
 
 // Компонент Movie
-const Movie: React.FC = () => {
-    const {idString} = useParams<{ idString: string }>();
+const GetMovie: React.FC = () => {
+    const { id } = useParams<{ id: string }>(); // Изменяем тип id на string
+    const idNumber = Number(id);
     const [movie, setMovie] = useState<Movie | null>(null);
-
-    let id: number
-    if (idString != undefined){
-        id = +idString
-    }
-
-    useEffect(() => {
-        fetch(`http://localhost:4000/api/v1/movies/${id}`)
-            .then(response => response.json())
-            .then(data => setMovie(data))
-            .catch(error => console.error('Ошибка загрузки данных:', error));
-    }, []);
 
     useEffect(() => {
         const fetchMovieById = async () => {
             try {
-                const moviesResponse = await getMovieById(id);
+                const moviesResponse = await getMovieById(idNumber);
                 setMovie(moviesResponse);
             } catch (error) {
                 console.error('Error fetching movie:', error);
@@ -133,7 +104,7 @@ const Movie: React.FC = () => {
         };
 
         fetchMovieById();
-    }, []);
+    }, [idNumber]);
 
     // Анимация
     useEffect(() => {
@@ -180,4 +151,4 @@ const Movie: React.FC = () => {
     );
 };
 
-export default Movie;
+export default GetMovie;

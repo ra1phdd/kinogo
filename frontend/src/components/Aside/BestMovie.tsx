@@ -1,70 +1,65 @@
-// Интерфейс для данных фильма
-import React, {useEffect, useRef, useState} from "react";
-
-interface Movie {
-    Id: number;
-    Title: string;
-    Description: string;
-    Country: string;
-    ReleaseDate: number;
-    TimeMovie: number;
-    ScoreKP: number;
-    ScoreIMDB: number;
-    Poster: string;
-    TypeMovie: string;
-    Views: number;
-    Likes: number;
-    Dislikes: number;
-    Genres: string;
-}
+import React, { useEffect, useState } from "react";
+import { BestMovie, getBestMovie } from "@components/gRPC.tsx";
+import AnimateElement from "@components/AnimateElement.tsx";
 
 // Пропсы для компонента MovieCard
 interface MovieCardProps {
-    movie: Movie;
+    movie: BestMovie;
 }
 
 // Компонент MovieCard
 const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
-    const cardRef = useRef<HTMLDivElement>(null);
-
     useEffect(() => {
-        if (cardRef.current) {
-            cardRef.current.classList.add("animate__animated", "animate__fadeInLeft", "animate__faster");
+        const asideBestMovie = document.querySelector<HTMLElement>(".aside__bestmovie");
+
+        if (asideBestMovie !== null) {
+            AnimateElement(asideBestMovie, "animate__fadeInRight", 450);
         }
     }, []);
 
     return (
-        <div ref={cardRef} className="aside__bestmovie">
+        <>
             <h3>Популярный фильм</h3>
             <div className="bestmovie__item">
-                <img src={movie.Poster} alt=""/>
-                <p>{movie.Title} ({movie.ReleaseDate})</p>
+                <img src={movie.poster} alt=""/>
+                <p>{movie.title} ({movie.releaseDate})</p>
                 <button>
                     <div id="circle"></div>
-                    <a href={`/id/${movie.Id}`}>Смотреть</a>
+                    <a href={`/id/${movie.id}`}>Смотреть</a>
                 </button>
             </div>
-        </div>
+        </>
     );
 };
 
-const BestMovieAside: React.FC = () =>  {
-    const [movie, setMovies] = useState<Movie | null>(null);
+// Компонент BestMovieAside
+const BestMovieAside: React.FC = () => {
+    const [movies, setMovies] = useState<BestMovie[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:4000/api/v1/content/best')
-            .then(response => response.json())
-            .then(data => setMovies(data))
-            .catch(error => console.error('Ошибка загрузки данных:', error));
+        const fetchMovies = async () => {
+            try {
+                const moviesResponse = await getBestMovie();
+                setMovies(moviesResponse);
+            } catch (error) {
+                console.error('Ошибка при получении фильмов:', error);
+            }
+        };
+
+        fetchMovies();
     }, []);
 
-    if (!movie) {
+    if (movies.length === 0) {
         return <div>Загрузка...</div>;
     }
 
     return (
-        <MovieCard key={movie.Id} movie={movie} />
-    )
+        <div className="aside__bestmovie">
+            {movies.map((movie: BestMovie) => (
+                <MovieCard key={movie.id} movie={movie} />
+            ))}
+        </div>
+    );
 }
 
-export default BestMovieAside
+export default BestMovieAside;

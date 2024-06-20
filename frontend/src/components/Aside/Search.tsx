@@ -1,4 +1,15 @@
+import {useEffect} from "react";
+import AnimateElement from "@components/AnimateElement.tsx";
+
 function SearchAside() {
+    useEffect(() => {
+        const asideSearch = document.querySelector<HTMLElement>(".aside__search");
+
+        if (asideSearch !== null) {
+            AnimateElement(asideSearch, "animate__fadeInRight", 150);
+        }
+    }, []);
+
     return (
         <div className="aside__search">
             <h3>Поиск</h3>

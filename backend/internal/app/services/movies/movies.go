@@ -130,12 +130,12 @@ func (s Service) GetMovieByIdService(id int32) (models.Movie, error) {
 
 	found := false
 	for rows.Next() {
-		var movieID, releaseDate, timeMovie, views, likes, dislikes, typeMovie int32
+		var movieID, releaseDate, timeMovie, typeMovie int32
 		var title, description, poster string
 		var scoreKP, scoreIMDB float64
 		var countriesArray, genresArray pq.StringArray
 
-		errScan := rows.Scan(&movieID, &title, &description, &releaseDate, &timeMovie, &scoreKP, &scoreIMDB, &poster, &typeMovie, &views, &likes, &dislikes, &genresArray, &countriesArray)
+		errScan := rows.Scan(&movieID, &title, &description, &releaseDate, &timeMovie, &scoreKP, &scoreIMDB, &poster, &typeMovie, &genresArray, &countriesArray)
 		if errScan != nil {
 			return models.Movie{}, errScan
 		}
@@ -151,9 +151,9 @@ func (s Service) GetMovieByIdService(id int32) (models.Movie, error) {
 			ScoreIMDB:   scoreIMDB,
 			Poster:      poster,
 			TypeMovie:   typeMovie,
-			Views:       views,
-			Likes:       likes,
-			Dislikes:    dislikes,
+			Views:       0,
+			Likes:       0,
+			Dislikes:    0,
 			Genres:      strings.Join(genresArray, ", "),
 		}
 

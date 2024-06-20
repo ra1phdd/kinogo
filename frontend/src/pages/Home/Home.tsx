@@ -3,24 +3,11 @@ import AnimateElement from "@components/AnimateElement.tsx";
 import SearchAside from "@components/Aside/Search.tsx";
 import FilterAside from "@components/Aside/Filter.tsx";
 import BestMovieAside from "@components/Aside/BestMovie.tsx";
-import { getMovies } from '@components/gRPC.tsx';
-
-// Интерфейс для данных фильма
-interface Movie {
-    id: number;
-    title: string;
-    description: string;
-    releaseDate: number;
-    scoreKP: number;
-    scoreIMDB: number;
-    poster: string;
-    typeMovie: number;
-    genres: string;
-}
+import { Movies, getMovies } from '@components/gRPC.tsx';
 
 // Пропсы для компонента MovieCard
 interface MovieCardProps {
-    movie: Movie;
+    movie: Movies;
 }
 
 // Компонент MovieCard
@@ -61,7 +48,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 
 // Компонент Home
 const Home: React.FC = () => {
-    const [movies, setMovies] = useState<Movie[]>([]);
+    const [movies, setMovies] = useState<Movies[]>([]);
 
     useEffect(() => {
         const fetchMovies = async () => {
@@ -86,20 +73,6 @@ const Home: React.FC = () => {
                 AnimateElement(card, "animate__fadeInLeft", delay);
                 delay += 150;
             });
-
-            const asideSearch = document.querySelector<HTMLElement>(".aside__search");
-            const asideFilter = document.querySelector<HTMLElement>(".aside__filter");
-            const asideBestMovie = document.querySelector<HTMLElement>(".aside__bestmovie");
-
-            if (asideSearch !== null) {
-                AnimateElement(asideSearch, "animate__fadeInRight", 0);
-            }
-            if (asideFilter !== null) {
-                AnimateElement(asideFilter, "animate__fadeInRight", 150);
-            }
-            if (asideBestMovie !== null) {
-                AnimateElement(asideBestMovie, "animate__fadeInRight", 300);
-            }
         };
 
         animateElements(); // Initial animation on component mount
