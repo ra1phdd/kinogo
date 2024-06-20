@@ -1,8 +1,8 @@
-import './components/Navigation.tsx'
+import '@components/Navigation.tsx'
 import {BrowserRouter, Routes, Route} from "react-router-dom";
-import './assets/css/src/main.css'
-import './assets/css/dist/animate.min.css'
-import Navigation from "./components/Navigation.tsx";
+import '@assets/css/src/main.css'
+//import '@assets/css/dist/animate.min.css'
+import Navigation from "@components/Navigation.tsx";
 import Home from "./pages/Home/Home.tsx"
 import Movie from "./pages/Movie/Movie.tsx"
 

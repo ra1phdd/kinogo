@@ -1,28 +1,29 @@
 import React, {useEffect, useRef, useState} from 'react';
 import { useParams } from 'react-router-dom';
-import AnimateElement from '../../components/AnimateElement';
-import SearchAside from '../../components/Aside/Search';
-import FilterAside from '../../components/Aside/Filter';
-import BestMovieAside from '../../components/Aside/BestMovie';
-import '../../assets/css/src/movie.css'
-import VideoPlayer from "../../components/HLSPlayer.tsx";
+import AnimateElement from '@components/AnimateElement';
+import SearchAside from '@components/Aside/Search';
+import FilterAside from '@components/Aside/Filter';
+import BestMovieAside from '@components/Aside/BestMovie';
+import '@assets/css/src/movie.css'
+import VideoPlayer from "@components/HLSPlayer.tsx";
+import {getMovieById} from "@components/gRPC.tsx";
 
 // Интерфейс для данных фильма
 interface Movie {
-    Id: number;
-    Title: string;
-    Description: string;
-    Country: string;
-    ReleaseDate: number;
-    TimeMovie: number;
-    ScoreKP: number;
-    ScoreIMDB: number;
-    Poster: string;
-    TypeMovie: string;
-    Views: number;
-    Likes: number;
-    Dislikes: number;
-    Genres: string;
+    id: number;
+    title: string;
+    description: string;
+    country: string;
+    releaseDate: number;
+    timeMovie: number;
+    scoreKP: number;
+    scoreIMDB: number;
+    poster: string;
+    typeMovie: string;
+    views: number;
+    likes: number;
+    dislikes: number;
+    genres: string;
 }
 
 // Пропсы для компонента MovieCard
@@ -44,32 +45,32 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
         <>
             <div ref={cardRef} className="section__movie">
                 <div className="section__movie-img">
-                    <img src={movie.Poster} alt="Постер фильма"/>
+                    <img src={movie.poster} alt="Постер фильма"/>
                 </div>
                 <div className="section__movie-info">
-                    <h1>{movie.Title}</h1>
-                    <p>{movie.Description}</p>
+                    <h1>{movie.title}</h1>
+                    <p>{movie.description}</p>
                     <div className="section__movie-main">
                         <div className="section__movie-buttons">
                             <div className="button__like">
                                 <form action="/like" method="post">
-                                    <input type="hidden" name="id" value={movie.Id} className="likeValue"/>
+                                    <input type="hidden" name="id" value={movie.id} className="likeValue"/>
                                     <button type="submit" className="likeButton">Поставить лайк</button>
                                 </form>
                             </div>
                             <div className="button__dislike">
                                 <form action="/dislike" method="post">
-                                    <input type="hidden" name="id" value={movie.Id} className="dislikeValue"/>
+                                    <input type="hidden" name="id" value={movie.id} className="dislikeValue"/>
                                     <button type="submit" className="dislikeButton">Поставить дизлайк</button>
                                 </form>
                             </div>
                         </div>
                         <div className="section__movie-ratings">
                             <div className="rating__kinopoisk rating">
-                                <p>Кинопоиск {movie.ScoreKP}</p>
+                                <p>Кинопоиск {movie.scoreKP}</p>
                             </div>
                             <div className="rating__imdb rating">
-                                <p>IMDb {movie.ScoreIMDB}</p>
+                                <p>IMDb {movie.scoreIMDB}</p>
                             </div>
                         </div>
                     </div>
@@ -78,19 +79,19 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
                         <tbody>
                             <tr>
                                 <td className="titleInfo">Год выхода</td>
-                                <td className="itemInfo">{movie.ReleaseDate}</td>
+                                <td className="itemInfo">{movie.releaseDate}</td>
                             </tr>
                             <tr>
                                 <td className="titleInfo">Страна</td>
-                                <td className="itemInfo">{movie.Country}</td>
+                                <td className="itemInfo">{movie.country}</td>
                             </tr>
                             <tr>
                                 <td className="titleInfo">Жанр</td>
-                                <td className="itemInfo">{movie.Genres}</td>
+                                <td className="itemInfo">{movie.genres}</td>
                             </tr>
                             <tr>
                                 <td className="titleInfo">Длительность</td>
-                                <td className="itemInfo">{movie.TimeMovie} минут</td>
+                                <td className="itemInfo">{movie.timeMovie} минут</td>
                             </tr>
                         </tbody>
                     </table>
@@ -106,14 +107,32 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 
 // Компонент Movie
 const Movie: React.FC = () => {
-    let {id} = useParams<{ id: string }>();
+    const {idString} = useParams<{ idString: string }>();
     const [movie, setMovie] = useState<Movie | null>(null);
+
+    let id: number
+    if (idString != undefined){
+        id = +idString
+    }
 
     useEffect(() => {
         fetch(`http://localhost:4000/api/v1/movies/${id}`)
             .then(response => response.json())
             .then(data => setMovie(data))
             .catch(error => console.error('Ошибка загрузки данных:', error));
+    }, []);
+
+    useEffect(() => {
+        const fetchMovieById = async () => {
+            try {
+                const moviesResponse = await getMovieById(id);
+                setMovie(moviesResponse);
+            } catch (error) {
+                console.error('Error fetching movie:', error);
+            }
+        };
+
+        fetchMovieById();
     }, []);
 
     // Анимация
@@ -149,7 +168,7 @@ const Movie: React.FC = () => {
         <>
             <div className="sections">
                 <div className="section__videos">
-                    <MovieCard key={movie.Id} movie={movie} />
+                    <MovieCard key={movie.id} movie={movie} />
                 </div>
             </div>
             <aside>

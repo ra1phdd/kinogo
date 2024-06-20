@@ -19,6 +19,22 @@ export function getMovies(limit: number, page: number): Promise<any> {
     });
 }
 
+export function getMovieById(id: number): Promise<any> {
+    return new Promise((resolve, reject) => {
+        const request = new movies_v1.GetMoviesByIdRequest();
+        request.id = id;
+
+        client.GetMovieById(request, {}, (err, response) => {
+            if (err) {
+                console.error('Error fetching movie:', err);
+                reject(err);
+            } else {
+                resolve(response);
+            }
+        });
+    });
+}
+
 /*export const getMovieById = (movieId: number): Promise<GetMoviesByIdResponse> => {
     const request = new GetMoviesByIdRequest();
     request.setId(movieId);

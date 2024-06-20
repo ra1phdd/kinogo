@@ -61,7 +61,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 
 // Компонент Home
 const Home: React.FC = () => {
-    const [movies, setMovies] = useState<any[]>([]);
+    const [movies, setMovies] = useState<Movie[]>([]);
 
     useEffect(() => {
         const fetchMovies = async () => {

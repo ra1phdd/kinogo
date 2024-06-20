@@ -10,23 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@grpc/grpc-js": "^1.10.9",
-    "@improbable-eng/grpc-web": "^0.15.0",
-    "@vidstack/react": "^1.11.21",
     "google-protobuf": "^3.21.2",
     "grpc-web": "^1.5.0",
-    "hls.js": "^1.5.10",
     "nouislider": "^15.7.2",
-    "plyr-react": "^5.3.0",
-    "protoc-gen-grpc-web": "^1.5.0",
-    "protoc-gen-js": "^3.21.2",
     "protoc-gen-ts": "^0.8.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-player": "^2.16.0",
-    "react-router-dom": "^6.23.1",
-    "video.js": "^8.12.0",
-    "vidstack": "^0.6.15"
+    "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.15.12",
