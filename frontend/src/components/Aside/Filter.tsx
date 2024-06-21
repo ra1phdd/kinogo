@@ -14,9 +14,9 @@ const FilterAside = React.memo(() => {
 
         customSelect();
 
-        var slider: any = document.getElementById("slider");
-        var sliderValueMin: any = document.getElementById("slider-min");
-        var sliderValueMax: any = document.getElementById("slider-max");
+        const slider: any = document.getElementById("slider");
+        const sliderValueMin: any = document.getElementById("slider-min");
+        const sliderValueMax: any = document.getElementById("slider-max");
 
         if (slider != null) {
             if (slider.noUiSlider) {

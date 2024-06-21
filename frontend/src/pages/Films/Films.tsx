@@ -3,25 +3,13 @@ import AnimateElement from "@components/AnimateElement.tsx";
 import SearchAside from "@components/Aside/Search.tsx";
 import FilterAside from "@components/Aside/Filter.tsx";
 import BestMovieAside from "@components/Aside/BestMovie.tsx";
-import { Movies, getMovies, getMoviesByTypeMovie } from '@components/gRPC.tsx';
-import {useLocation} from "react-router-dom";
+import { Movies, getMovies } from '@components/gRPC.tsx';
 
 // Пропсы для компонента MovieCard
 interface MovieCardProps {
     movie: Movies;
     index: number;
 }
-
-type FetchFunction = () => Promise<Movies[]>;
-
-// Определите тип для объекта с функциями
-type FetchFunctions = {
-    '/': FetchFunction;
-    '/films': FetchFunction;
-    '/cartoons': FetchFunction;
-    '/telecasts': FetchFunction;
-    [key: string]: FetchFunction;
-};
 
 // Компонент MovieCard
 const MovieCard: React.FC<MovieCardProps> = React.memo(({ movie, index }) => {
@@ -67,27 +55,17 @@ const MovieCard: React.FC<MovieCardProps> = React.memo(({ movie, index }) => {
 const Home: React.FC = () => {
     const [movies, setMovies] = useState<Movies[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const location = useLocation();
 
     const fetchMovies = useCallback(async () => {
-        const fetchFunctions: FetchFunctions = {
-            '/': () => getMovies(10, 1),
-            '/films': () => getMoviesByTypeMovie(10, 1, 1),
-            '/cartoons': () => getMoviesByTypeMovie(10, 1, 2),
-            '/telecasts': () => getMoviesByTypeMovie(10, 1, 3),
-        };
-
         try {
-            const fetchFunction = fetchFunctions[location.pathname] || fetchFunctions['/'];
-            const moviesResponse = await fetchFunction();
+            const moviesResponse = await getMovies(10, 1); // Fetch first 10 movies
             setMovies(moviesResponse);
         } catch (error) {
             console.error('Error fetching movies:', error);
         } finally {
             setLoading(false);
         }
-    }, [location.pathname]);
-
+    }, []);
 
     useEffect(() => {
         fetchMovies();

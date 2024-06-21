@@ -78,14 +78,38 @@
     @include glassphormism();
     margin-bottom: 25px;
     display: none;
-    div {
-        --plyr-color-main: #d61e92 !important;
-        --plyr-menu-background: black !important;
-        border-radius: 15px;
+    [data-media-player][data-controls] .quality-selector {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .quality-selector{
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        button{
+            border: 1px solid #232323;
+            border-radius: 4px;
+            background-color: #0a0a0a;
+            padding: 7.5px;
+            margin-right: 5px;
+            transition: .1s ease-in-out;
+            &:hover{
+                background-color: #222222;
+                transition: .1s ease-in-out;
+                cursor: pointer;
+            }
+            &.active{
+                background-color: #222222;
+            }
+        }
     }
 }
 .section__comments {
     @include glassphormism();
+    display: none;
     .comment {
         .comment-data {
             display: flex;

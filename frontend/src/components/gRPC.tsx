@@ -52,6 +52,25 @@ export function getMovies(limit: number, page: number): Promise<Movies[]> {
     });
 }
 
+export function getMoviesByTypeMovie(limit: number, page: number, typeMovie: number): Promise<Movies[]> {
+    return new Promise((resolve, reject) => {
+        const request = new movies_v1.GetMoviesByFilterRequest();
+        request.filters = new movies_v1.GetMoviesByFilterItem();
+        request.filters.typeMovie = typeMovie;
+        request.limit = limit;
+        request.page = page;
+
+        client.GetMoviesByFilter(request, {}, (err, response) => {
+            if (err) {
+                console.error('Error fetching movies:', err);
+                reject(err);
+            } else {
+                resolve(response.movies);
+            }
+        });
+    });
+}
+
 export function getMovieById(id: number): Promise<Movie> {
     return new Promise((resolve, reject) => {
         const request = new movies_v1.GetMoviesByIdRequest();

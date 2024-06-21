@@ -3,7 +3,6 @@ package grpcMovies
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"kinogo/internal/app/models"
 	"kinogo/pkg/logger"
@@ -24,8 +23,6 @@ type Endpoint struct {
 }
 
 func (e *Endpoint) GetMovies(_ context.Context, req *pb.GetMoviesRequest) (*pb.GetMoviesResponse, error) {
-	fmt.Println("фиксация попытки")
-
 	movies, err := e.Movies.GetMoviesService(req.Limit, req.Page)
 	if err != nil {
 		logger.Error("Ошибка в работе функции GetMoviesService", zap.Error(err))
@@ -113,7 +110,7 @@ func (e *Endpoint) GetMoviesByFilter(_ context.Context, req *pb.GetMoviesByFilte
 	}
 
 	return &pb.GetMoviesResponse{Movies: pbMovies}, nil
-} // Не тестировано
+}
 
 func (e *Endpoint) AddMovies(_ context.Context, req *pb.AddMoviesRequest) (*pb.AddMoviesResponse, error) {
 	moviesMap := map[string]interface{}{

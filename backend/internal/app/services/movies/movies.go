@@ -2,8 +2,10 @@ package movies_v1
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"kinogo/internal/app/models"
@@ -18,6 +20,10 @@ import (
 type Service struct {
 }
 
+func New() *Service {
+	return &Service{}
+}
+
 func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, error) {
 	var movies []models.Movies
 
@@ -26,9 +32,12 @@ func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, err
 	if err == nil && moviesJSON != "" {
 		err = json.Unmarshal([]byte(moviesJSON), &movies)
 		if err != nil {
-			log.Fatalf("Ошибка десериализации: %v", err)
+			log.Printf("Ошибка десериализации: %v", err)
 		}
 		return movies, nil
+	} else if !errors.Is(err, redis.Nil) {
+		// Если ошибка не связана с отсутствием ключа, логируем её
+		log.Printf("Ошибка при получении данных из Redis: %v", err)
 	}
 
 	// Data not in Redis, get from database
@@ -36,7 +45,7 @@ func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, err
 	if limit > 0 {
 		limitQuery = fmt.Sprintf("LIMIT %d", limit)
 	}
-	if page > 0 {
+	if page > 0 && limit > 0 {
 		pageQuery = fmt.Sprintf("OFFSET %d", (page-1)*limit)
 	}
 
@@ -74,7 +83,7 @@ func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, err
 			ScoreIMDB:   scoreIMDB,
 			Poster:      poster,
 			TypeMovie:   typeMovie,
-			Genres:      strings.Join(genresArray, ","),
+			Genres:      strings.Join(genresArray, ", "),
 		}
 
 		movies = append(movies, moviesItem)
@@ -93,7 +102,7 @@ func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, err
 	}
 	err = cache.Rdb.Set(cache.Ctx, "movies_"+fmt.Sprint(limit)+"_"+fmt.Sprint(page), moviesJSONbyte, 1*time.Minute).Err()
 	if err != nil {
-		return nil, err
+		log.Printf("Ошибка при сохранении данных в Redis: %v", err)
 	}
 
 	return movies, nil
@@ -110,6 +119,9 @@ func (s Service) GetMovieByIdService(id int32) (models.Movie, error) {
 			log.Fatalf("Ошибка десериализации: %v", err)
 		}
 		return movie, nil
+	} else if !errors.Is(err, redis.Nil) {
+		// Если ошибка не связана с отсутствием ключа, логируем её
+		log.Printf("Ошибка при получении данных из Redis: %v", err)
 	}
 
 	// Data not in Redis, get from database
@@ -171,7 +183,7 @@ func (s Service) GetMovieByIdService(id int32) (models.Movie, error) {
 	}
 	err = cache.Rdb.Set(cache.Ctx, "movies_id_"+fmt.Sprint(id), movieJSONbyte, 60*time.Minute).Err()
 	if err != nil {
-		return models.Movie{}, err
+		log.Printf("Ошибка при сохранении данных в Redis: %v", err)
 	}
 
 	return movie, nil
@@ -190,6 +202,9 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 			log.Fatalf("Ошибка десериализации: %v", err)
 		}
 		return movies, nil
+	} else if !errors.Is(err, redis.Nil) {
+		// Если ошибка не связана с отсутствием ключа, логируем её
+		log.Printf("Ошибка при получении данных из Redis: %v", err)
 	}
 
 	// Data not in Redis, get from database
@@ -336,7 +351,7 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 	}
 	err = cache.Rdb.Set(cache.Ctx, "movies_filter_"+stringMap, moviesJSONbyte, 5*time.Minute).Err()
 	if err != nil {
-		return []models.Movies{}, err
+		log.Printf("Ошибка при сохранении данных в Redis: %v", err)
 	}
 
 	return movies, nil
@@ -344,13 +359,22 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 
 func (s Service) AddMoviesService(moviesMap map[string]interface{}) (int32, error) {
 	var countries []string
-	for _, country := range moviesMap["countries"].([]*movies_v1.Countries) {
-		countries = append(countries, country.Name)
+	var genres []string
+
+	if countriesInterface, ok := moviesMap["countries"]; ok {
+		if countriesSlice, ok := countriesInterface.([]*movies_v1.Countries); ok {
+			for _, country := range countriesSlice {
+				countries = append(countries, country.Name)
+			}
+		}
 	}
 
-	var genres []string
-	for _, genre := range moviesMap["genres"].([]*movies_v1.Genres) {
-		genres = append(genres, genre.Name)
+	if genresInterface, ok := moviesMap["genres"]; ok {
+		if genresSlice, ok := genresInterface.([]*movies_v1.Genres); ok {
+			for _, genre := range genresSlice {
+				genres = append(genres, genre.Name)
+			}
+		}
 	}
 
 	tx, err := db.Conn.Begin()
@@ -364,6 +388,7 @@ func (s Service) AddMoviesService(moviesMap map[string]interface{}) (int32, erro
 	var movieID int
 	err = tx.QueryRow(insertMovieSQL, moviesMap["title"], moviesMap["description"], moviesMap["releaseDate"], moviesMap["timeMovie"], moviesMap["scoreKP"], moviesMap["scoreIMDB"], moviesMap["poster"], moviesMap["typeMovie"], 1, 1, 1).Scan(&movieID)
 	if err != nil {
+		tx.Rollback()
 		return 0, fmt.Errorf("failed to insert movie: %v", err)
 	}
 
@@ -374,12 +399,14 @@ func (s Service) AddMoviesService(moviesMap map[string]interface{}) (int32, erro
 		var countryID int
 		err = tx.QueryRow(`SELECT id FROM countries WHERE name = $1`, countryName).Scan(&countryID)
 		if err != nil {
+			tx.Rollback()
 			return 0, fmt.Errorf("failed to get country ID: %v", err)
 		}
 
 		// Вставка связи фильма и страны
 		_, err = tx.Exec(insertCountriesSQL, movieID, countryID)
 		if err != nil {
+			tx.Rollback()
 			return 0, fmt.Errorf("failed to insert movie country: %v", err)
 		}
 	}
@@ -391,12 +418,14 @@ func (s Service) AddMoviesService(moviesMap map[string]interface{}) (int32, erro
 		var genreID int
 		err = tx.QueryRow(`SELECT id FROM genres WHERE name = $1`, genreName).Scan(&genreID)
 		if err != nil {
+			tx.Rollback()
 			return 0, fmt.Errorf("failed to get genre ID: %v", err)
 		}
 
 		// Вставка связи фильма и жанра
 		_, err = tx.Exec(insertGenresSQL, movieID, genreID)
 		if err != nil {
+			tx.Rollback()
 			return 0, fmt.Errorf("failed to insert movie genre: %v", err)
 		}
 	}
@@ -419,6 +448,7 @@ func (s Service) DeleteMoviesService(id int32) error {
 	deleteCountriesSQL := `DELETE FROM "moviesCountries" WHERE idmovie = $1`
 	_, err = tx.Exec(deleteCountriesSQL, id)
 	if err != nil {
+		tx.Rollback()
 		return fmt.Errorf("failed to delete movie countries: %v", err)
 	}
 
@@ -444,8 +474,4 @@ func (s Service) DeleteMoviesService(id int32) error {
 	}
 
 	return nil
-}
-
-func New() *Service {
-	return &Service{}
 }

@@ -11,6 +11,7 @@ import (
 type Configuration struct {
 	LoggerLevel string `env:"LOGGER_LEVEL" envDefault:"debug"`
 	GRPC        GRPC
+	Auth        Auth
 	DB          DB
 	Redis       Redis
 	Cache       Cache
@@ -19,6 +20,11 @@ type Configuration struct {
 type GRPC struct {
 	GRPCPort    string        `env:"GRPC_PORT" envDefault:"4000"`
 	GRPCTimeout time.Duration `env:"GRPC_TIMEOUT" envDefault:"10h"`
+}
+
+type Auth struct {
+	JWTSecret string `env:"JWT_SECRET"`
+	BotToken  string `env:"BOT_TOKEN"`
 }
 
 type Cache struct {
@@ -65,6 +71,10 @@ func NewConfig(files ...string) (*Configuration, error) {
 		return nil, err
 	}
 	err = env.Parse(&cfg.GRPC)
+	if err != nil {
+		return nil, err
+	}
+	err = env.Parse(&cfg.Auth)
 	if err != nil {
 		return nil, err
 	}

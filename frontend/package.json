@@ -4,14 +4,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 127.0.0.1 --port 80",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.10.9",
+    "@telegram-auth/react": "^1.0.3",
+    "@vidstack/react": "^1.11.24",
     "google-protobuf": "^3.21.2",
     "grpc-web": "^1.5.0",
+    "hls.js": "^1.5.11",
+    "media-icons": "^1.1.4",
     "nouislider": "^15.7.2",
     "protoc-gen-ts": "^0.8.7",
     "react": "^18.2.0",
@@ -31,6 +36,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
+    "saas": "^1.0.0",
     "typescript": "^5.4.5",
     "vite": "^5.2.0"
   }

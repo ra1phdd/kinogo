@@ -5,6 +5,7 @@ import '@assets/css/dist/animate.min.css'
 import Navigation from "@components/Navigation.tsx";
 import Home from "./pages/Home/Home.tsx"
 import Movie from "./pages/Movie/Movie.tsx"
+import Auth from "@components/TelegramAuth.tsx"
 
 function App() {
     return (
@@ -18,10 +19,16 @@ function App() {
                     <nav>
                         <Navigation/>
                     </nav>
+                    <div className="header__auth">
+                        <Auth/>
+                    </div>
                 </header>
                 <main>
                     <Routes>
                         <Route path="/" element={<Home />} />
+                        <Route path="/films" element={<Home />} />
+                        <Route path="/cartoons" element={<Home />} />
+                        <Route path="/telecasts" element={<Home />} />
                         <Route path="/id/:id" element={<Movie />} />
                     </Routes>
                 </main>

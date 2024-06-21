@@ -11,7 +11,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = application.Run()
+	go func() {
+		err = application.RunREST()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	err = application.RunGRPC()
 	if err != nil {
 		log.Fatal(err)
 	}

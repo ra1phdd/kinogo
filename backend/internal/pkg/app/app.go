@@ -1,11 +1,14 @@
 package app
 
 import (
-	"fmt"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"kinogo/config"
 	"kinogo/internal/app/endpoint/grpcMovies"
+	"kinogo/internal/app/endpoint/restAuth"
+	"kinogo/internal/app/services/auth"
 	movies "kinogo/internal/app/services/movies"
 	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
@@ -13,12 +16,15 @@ import (
 	pbMovies "kinogo/pkg/movies_v1"
 	"log"
 	"net"
+	"time"
 )
 
 type App struct {
 	movies *movies.Service
+	auth   *auth.Service
 
 	server *grpc.Server
+	router *gin.Engine
 }
 
 func New() (*App, error) {
@@ -30,20 +36,10 @@ func New() (*App, error) {
 
 	logger.Init(cfg.LoggerLevel)
 
-	fmt.Println("хуй")
-
 	a := &App{}
 
-	a.server = grpc.NewServer()
-
-	// обьявляем сервисы
-	a.movies = movies.New()
-
-	// регистрируем эндпоинты
-	serviceMovies := &grpcMovies.Endpoint{
-		Movies: a.movies,
-	}
-	pbMovies.RegisterMoviesV1Server(a.server, serviceMovies)
+	NewGRPC(a)
+	NewREST(a, cfg.Auth)
 
 	err = cache.Init(cfg.Redis.RedisAddr+":"+cfg.Redis.RedisPort, cfg.Redis.RedisUsername, cfg.Redis.RedisPassword, cfg.Redis.RedisDBId)
 	if err != nil {
@@ -60,7 +56,71 @@ func New() (*App, error) {
 	return a, nil
 }
 
-func (a *App) Run() error {
+func NewGRPC(a *App) {
+	a.server = grpc.NewServer()
+
+	// обьявляем сервисы
+	a.movies = movies.New()
+
+	// регистрируем эндпоинты
+	serviceMovies := &grpcMovies.Endpoint{
+		Movies: a.movies,
+	}
+	pbMovies.RegisterMoviesV1Server(a.server, serviceMovies)
+}
+
+func NewREST(a *App, cfgAuth config.Auth) {
+	a.router = gin.Default()
+
+	cfgCors := cors.DefaultConfig()
+	cfgCors.AllowOrigins = []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost", "http://127.0.0.1"}
+	cfgCors.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	cfgCors.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	cfgCors.AllowCredentials = true
+	cfgCors.MaxAge = 24 * time.Hour
+
+	a.router.Use(cors.New(cfgCors))
+
+	// регистрируем сервисы
+	a.auth = auth.New()
+
+	// регистрируем эндпоинты
+	serviceAuth := &restAuth.Endpoint{
+		Auth: a.auth,
+	}
+
+	// регистрируем маршруты
+	a.router.POST("/auth/telegram/callback", serviceAuth.TelegramAuthCallback(cfgAuth.JWTSecret, cfgAuth.BotToken))
+
+	a.router.GET("/stream/:id/:quality/playlist.m3u8", func(c *gin.Context) {
+		quality := c.Param("quality")
+		id := c.Param("id")
+		filename := "media/" + id + "/" + quality + "/playlist.m3u8"
+
+		// Установка заголовков
+		c.Header("Content-Type", "application/vnd.apple.mpegurl")
+		c.Header("Content-Disposition", "attachment; filename=playlist.m3u8")
+
+		// Отправка файла
+		c.File(filename)
+	})
+
+	a.router.GET("/stream/:id/:quality/:file", func(c *gin.Context) {
+		file := c.Param("file")
+		quality := c.Param("quality")
+		id := c.Param("id")
+		filename := "media/" + id + "/" + quality + "/" + file
+
+		// Установка заголовков
+		c.Header("Content-Type", "application/vnd.apple.mpegurl")
+		c.Header("Content-Disposition", "attachment; filename="+file)
+
+		// Отправка файла
+		c.File(filename)
+	})
+}
+
+func (a *App) RunGRPC() error {
 	lis, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		logger.Fatal("Ошибка при открытии listener: ", zap.Error(err))
@@ -75,68 +135,14 @@ func (a *App) Run() error {
 	return nil
 }
 
-func (a *App) Stop() {
-	logger.Info("закрытие gRPC сервера")
-
-	a.server.GracefulStop()
-}
-
-/*func New() (*App, error) {
-	v1.GET("/stream/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		filename := "media/" + id + "/stream.m3u8"
-
-		// Установка заголовков
-		c.Header("Content-Type", "application/vnd.apple.mpegurl")
-		c.Header("Content-Disposition", "attachment; filename=stream.m3u8")
-
-		// Отправка файла
-		c.File(filename)
-	})
-
-	v1.HEAD("/stream/:id", func(c *gin.Context) {
-		c.Header("Content-Type", "application/vnd.apple.mpegurl")
-		c.Header("Content-Disposition", "attachment; filename=stream.m3u8")
-
-		c.Status(200) // Возвращаем только статус-код 200 OK без тела ответа
-	})
-
-	v1.GET("/stream/:id/:quality/stream.m3u8", func(c *gin.Context) {
-		quality := c.Param("quality")
-		id := c.Param("id")
-		filename := "media/" + id + "/stream_" + quality + ".m3u8"
-
-		// Установка заголовков
-		c.Header("Content-Type", "application/vnd.apple.mpegurl")
-		c.Header("Content-Disposition", "attachment; filename=stream.m3u8")
-
-		// Отправка файла
-		c.File(filename)
-	})
-
-	v1.GET("/stream/:id/:quality/:file", func(c *gin.Context) {
-		file := c.Param("file")
-		quality := c.Param("quality")
-		id := c.Param("id")
-		filename := "media/" + id + "/" + quality + "/" + file
-
-		// Установка заголовков
-		c.Header("Content-Type", "application/vnd.apple.mpegurl")
-		c.Header("Content-Disposition", "attachment; filename="+file)
-
-		// Отправка файла
-		c.File(filename)
-	})
-
-	//router.Use(middleware.AuthCheck())
-
-	err := router.Run(":4000")
+func (a *App) RunREST() error {
+	err := a.router.Run(":4000")
 	if err != nil {
-		return a, err
+		return err
 	}
 
-	return a, nil
-}*/
+	return nil
+}
 
 /*mux := http.NewServeMux()
 

@@ -62,7 +62,19 @@ body * {
   transition: 0.3s;
 }
 .container header .header__auth {
-  margin: -6px 0;
+  margin: auto 0 auto auto;
+}
+.container header .header__auth div {
+  height: 28px;
+}
+.container header .header__auth .header__auth-logout {
+  vertical-align: middle;
+  transition: 0.3s;
+}
+.container header .header__auth .header__auth-logout:hover {
+  cursor: pointer;
+  color: #b30e76;
+  transition: 0.3s;
 }
 .container main {
   display: flex;
@@ -258,10 +270,6 @@ main aside .aside__search form input {
   padding: 15px 10px 15px 15px;
   width: 100%;
 }
-main aside .aside__search form input::-moz-placeholder {
-  color: #ffffff;
-  opacity: 0.9;
-}
 main aside .aside__search form input::placeholder {
   color: #ffffff;
   opacity: 0.9;
@@ -386,7 +394,9 @@ main aside .aside__filter form .select-wrapper .select-result span {
   top: 14px;
   right: 15px;
   display: block;
+  -webkit-transform: rotate(90deg);
   transform: rotate(90deg);
+  -webkit-transition: 0.3s;
   transition: 0.3s;
   pointer-events: none;
   font-size: 20px;
@@ -401,10 +411,13 @@ main aside .aside__filter form .select-wrapper .select-active {
   height: 100% !important;
 }
 main aside .aside__filter form .select-wrapper .select-active span {
+  -webkit-transform: rotate(0deg);
   transform: rotate(0deg);
+  -webkit-transition: 0.3s;
   transition: 0.3s;
 }
 main aside .aside__filter form .select-wrapper .select-active .select-result::after {
+  -webkit-transform: rotate(0deg);
   transform: rotate(0deg);
 }
 main aside .aside__filter form .slider__year .slider__value {
@@ -539,4 +552,6 @@ main aside .aside__bestmovie .bestmovie__item button:hover #circle {
   opacity: 1;
   top: -70px;
   left: -70px;
-}/*# sourceMappingURL=main.css.map */
+}
+
+/*# sourceMappingURL=main.css.map */

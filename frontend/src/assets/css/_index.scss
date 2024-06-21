@@ -56,8 +56,20 @@ body {
                 }
             }
         }
-        .header__auth {
-            margin: -6px 0;
+        .header__auth{
+            margin: auto 0 auto auto;
+            div{
+                height: 28px;
+            }
+            .header__auth-logout{
+                vertical-align: middle;
+                transition: 0.3s;
+                &:hover {
+                    cursor: pointer;
+                    color: $tcolor-border;
+                    transition: 0.3s;
+                }
+            }
         }
         @include glassphormism();
     }
