@@ -1,0 +1,69 @@
+syntax = "proto3";
+package comments_v1;
+option go_package = "./comments_v1";
+import "google/protobuf/timestamp.proto";
+
+// Запрос комментариев к фильму
+message GetCommentsByIdRequest {
+  int32 movieId = 1;
+  int32 limit = 2;
+  int32 page = 3;
+}
+
+// Запрос на добавление комментария
+message AddCommentRequest {
+  int32 parentId = 1;
+  int32 movieId = 2;
+  int32 userId = 3;
+  string text = 4;
+  google.protobuf.Timestamp createdAt = 5;
+}
+
+// Запрос на обновление комментария
+message UpdateCommentRequest {
+  int32 id = 1;
+  string text = 2;
+  google.protobuf.Timestamp updatedAt = 3;
+}
+
+// Запрос на удаление комментария
+message DelCommentRequest {
+  int32 id = 1;
+  int32 parentId = 2;
+}
+
+// Вывод комметариев к фильму
+message GetCommentsByIdResponse {
+  repeated GetCommentsByIdItem comments = 1;
+}
+message GetCommentsByIdItem {
+  int32 id = 1;
+  int32 parentId = 2;
+  int32 userId = 3;
+  string text = 4;
+  google.protobuf.Timestamp createdAt = 5;
+  google.protobuf.Timestamp updatedAt = 6;
+}
+
+// Добавление комментария
+message AddCommentResponse {
+  int32 id = 1;
+  string err = 2;
+}
+
+// Обновление комментария
+message UpdateCommentResponse {
+  string err = 1;
+}
+
+// Удаление комментария
+message DelCommentResponse {
+  string err = 1;
+}
+
+service CommentsV1 {
+  rpc GetCommentsById(GetCommentsByIdRequest) returns (GetCommentsByIdResponse);
+  rpc AddComment(AddCommentRequest) returns (AddCommentResponse);
+  rpc UpdateComment(UpdateCommentRequest) returns (UpdateCommentResponse);
+  rpc DelComment(DelCommentRequest) returns (DelCommentResponse);
+}

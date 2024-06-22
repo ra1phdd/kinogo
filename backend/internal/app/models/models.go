@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type (
 	Movies struct {
 		Id          int32   `json:"id"`
@@ -110,12 +112,12 @@ type (
 		Hash      string
 	}
 
-	Comment struct {
-		ID       int
-		ParentID int
-		Text     string
-		MovieID  int
-		User     User
-		Children []*Comment
+	Comments struct {
+		ID        int32
+		UserID    int32
+		ParentID  int32
+		Text      string
+		CreatedAt time.Time
+		UpdatedAt time.Time
 	}
 )

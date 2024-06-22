@@ -6,11 +6,14 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"kinogo/config"
+	"kinogo/internal/app/endpoint/grpcComments"
 	"kinogo/internal/app/endpoint/grpcMovies"
 	"kinogo/internal/app/endpoint/restAuth"
 	"kinogo/internal/app/services/auth"
+	comments "kinogo/internal/app/services/comments"
 	movies "kinogo/internal/app/services/movies"
 	"kinogo/pkg/cache"
+	pbComments "kinogo/pkg/comments_v1"
 	"kinogo/pkg/db"
 	"kinogo/pkg/logger"
 	pbMovies "kinogo/pkg/movies_v1"
@@ -20,8 +23,9 @@ import (
 )
 
 type App struct {
-	movies *movies.Service
-	auth   *auth.Service
+	movies   *movies.Service
+	comments *comments.Service
+	auth     *auth.Service
 
 	server *grpc.Server
 	router *gin.Engine
@@ -61,12 +65,17 @@ func NewGRPC(a *App) {
 
 	// обьявляем сервисы
 	a.movies = movies.New()
+	a.comments = comments.New()
 
 	// регистрируем эндпоинты
 	serviceMovies := &grpcMovies.Endpoint{
 		Movies: a.movies,
 	}
+	serviceComments := &grpcComments.Endpoint{
+		Comments: a.comments,
+	}
 	pbMovies.RegisterMoviesV1Server(a.server, serviceMovies)
+	pbComments.RegisterCommentsV1Server(a.server, serviceComments)
 }
 
 func NewREST(a *App, cfgAuth config.Auth) {
