@@ -7,6 +7,7 @@ import BestMovieAside from '@components/Aside/BestMovie';
 import '@assets/css/src/movie.css'
 import VideoPlayer from "@components/HLSPlayer.tsx";
 import { Movie, getMovieById } from "@components/gRPC.tsx";
+import CommentsComponent from "@components/Comments.tsx";
 
 // Пропсы для компонента MovieCard
 interface MovieCardProps {
@@ -100,7 +101,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
                 )}
             </div>
             <div className="section__comments">
-
+                <CommentsComponent id={movie.id} />
             </div>
         </>
     );

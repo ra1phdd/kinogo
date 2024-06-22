@@ -3,12 +3,9 @@
  * compiler version: 4.25.3
  * source: protos/interactions_v1/interactions_v1.proto
  * git: https://github.com/thesayyn/protoc-gen-ts */
-
-/* eslint-disable */
-// @ts-nocheck
-
 import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "@grpc/grpc-js";
+import * as grpc_web_1 from "grpc-web";
 export namespace interactions_v1 {
     export class InteractionsRequest extends pb_1.Message {
         #one_of_decls: number[][] = [];
@@ -144,30 +141,6 @@ export namespace interactions_v1 {
             return InteractionsResponse.deserialize(bytes);
         }
     }
-    interface GrpcUnaryServiceInterface<P, R> {
-        (message: P, metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
-        (message: P, metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
-        (message: P, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
-        (message: P, callback: grpc_1.requestCallback<R>): grpc_1.ClientUnaryCall;
-    }
-    interface GrpcStreamServiceInterface<P, R> {
-        (message: P, metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): grpc_1.ClientReadableStream<R>;
-        (message: P, options?: grpc_1.CallOptions): grpc_1.ClientReadableStream<R>;
-    }
-    interface GrpWritableServiceInterface<P, R> {
-        (metadata: grpc_1.Metadata, options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
-        (metadata: grpc_1.Metadata, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
-        (options: grpc_1.CallOptions, callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
-        (callback: grpc_1.requestCallback<R>): grpc_1.ClientWritableStream<P>;
-    }
-    interface GrpcChunkServiceInterface<P, R> {
-        (metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
-        (options?: grpc_1.CallOptions): grpc_1.ClientDuplexStream<P, R>;
-    }
-    interface GrpcPromiseServiceInterface<P, R> {
-        (message: P, metadata: grpc_1.Metadata, options?: grpc_1.CallOptions): Promise<R>;
-        (message: P, options?: grpc_1.CallOptions): Promise<R>;
-    }
     export abstract class UnimplementedMoviesV1Service {
         static definition = {
             IncrementView: {
@@ -233,28 +206,40 @@ export namespace interactions_v1 {
         abstract DecrementLike(call: grpc_1.ServerUnaryCall<InteractionsRequest, InteractionsResponse>, callback: grpc_1.sendUnaryData<InteractionsResponse>): void;
         abstract DecrementDislike(call: grpc_1.ServerUnaryCall<InteractionsRequest, InteractionsResponse>, callback: grpc_1.sendUnaryData<InteractionsResponse>): void;
     }
-    export class MoviesV1Client extends grpc_1.makeGenericClientConstructor(UnimplementedMoviesV1Service.definition, "MoviesV1", {}) {
-        constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
-            super(address, credentials, options);
+    export class MoviesV1Client {
+        private _address: string;
+        private _client: grpc_web_1.GrpcWebClientBase;
+        constructor(address: string, credentials?: Object, options?: grpc_web_1.GrpcWebClientBaseOptions) {
+            if (!options)
+                options = {};
+            options.format = options.format || "text";
+            this._address = address;
+            this._client = new grpc_web_1.GrpcWebClientBase(options);
         }
-        IncrementView: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.IncrementView(message, metadata, options, callback);
-        };
-        IncrementLike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.IncrementLike(message, metadata, options, callback);
-        };
-        IncrementDislike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.IncrementDislike(message, metadata, options, callback);
-        };
-        DecrementView: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.DecrementView(message, metadata, options, callback);
-        };
-        DecrementLike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.DecrementLike(message, metadata, options, callback);
-        };
-        DecrementDislike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.DecrementDislike(message, metadata, options, callback);
-        };
+        private static IncrementView = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.MoviesV1/IncrementView", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        IncrementView(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.MoviesV1/IncrementView", message, metadata || {}, MoviesV1Client.IncrementView, callback);
+        }
+        private static IncrementLike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.MoviesV1/IncrementLike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        IncrementLike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.MoviesV1/IncrementLike", message, metadata || {}, MoviesV1Client.IncrementLike, callback);
+        }
+        private static IncrementDislike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.MoviesV1/IncrementDislike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        IncrementDislike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.MoviesV1/IncrementDislike", message, metadata || {}, MoviesV1Client.IncrementDislike, callback);
+        }
+        private static DecrementView = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.MoviesV1/DecrementView", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        DecrementView(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.MoviesV1/DecrementView", message, metadata || {}, MoviesV1Client.DecrementView, callback);
+        }
+        private static DecrementLike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.MoviesV1/DecrementLike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        DecrementLike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.MoviesV1/DecrementLike", message, metadata || {}, MoviesV1Client.DecrementLike, callback);
+        }
+        private static DecrementDislike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.MoviesV1/DecrementDislike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        DecrementDislike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.MoviesV1/DecrementDislike", message, metadata || {}, MoviesV1Client.DecrementDislike, callback);
+        }
     }
     export abstract class UnimplementedCommentsV1Service {
         static definition = {
@@ -301,21 +286,31 @@ export namespace interactions_v1 {
         abstract DecrementLike(call: grpc_1.ServerUnaryCall<InteractionsRequest, InteractionsResponse>, callback: grpc_1.sendUnaryData<InteractionsResponse>): void;
         abstract DecrementDislike(call: grpc_1.ServerUnaryCall<InteractionsRequest, InteractionsResponse>, callback: grpc_1.sendUnaryData<InteractionsResponse>): void;
     }
-    export class CommentsV1Client extends grpc_1.makeGenericClientConstructor(UnimplementedCommentsV1Service.definition, "CommentsV1", {}) {
-        constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
-            super(address, credentials, options);
+    export class CommentsV1Client {
+        private _address: string;
+        private _client: grpc_web_1.GrpcWebClientBase;
+        constructor(address: string, credentials?: Object, options?: grpc_web_1.GrpcWebClientBaseOptions) {
+            if (!options)
+                options = {};
+            options.format = options.format || "text";
+            this._address = address;
+            this._client = new grpc_web_1.GrpcWebClientBase(options);
         }
-        IncrementLike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.IncrementLike(message, metadata, options, callback);
-        };
-        IncrementDislike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.IncrementDislike(message, metadata, options, callback);
-        };
-        DecrementLike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.DecrementLike(message, metadata, options, callback);
-        };
-        DecrementDislike: GrpcUnaryServiceInterface<InteractionsRequest, InteractionsResponse> = (message: InteractionsRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<InteractionsResponse>, callback?: grpc_1.requestCallback<InteractionsResponse>): grpc_1.ClientUnaryCall => {
-            return super.DecrementDislike(message, metadata, options, callback);
-        };
+        private static IncrementLike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.CommentsV1/IncrementLike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        IncrementLike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.CommentsV1/IncrementLike", message, metadata || {}, CommentsV1Client.IncrementLike, callback);
+        }
+        private static IncrementDislike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.CommentsV1/IncrementDislike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        IncrementDislike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.CommentsV1/IncrementDislike", message, metadata || {}, CommentsV1Client.IncrementDislike, callback);
+        }
+        private static DecrementLike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.CommentsV1/DecrementLike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        DecrementLike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.CommentsV1/DecrementLike", message, metadata || {}, CommentsV1Client.DecrementLike, callback);
+        }
+        private static DecrementDislike = new grpc_web_1.MethodDescriptor<InteractionsRequest, InteractionsResponse>("/interactions_v1.CommentsV1/DecrementDislike", grpc_web_1.MethodType.UNARY, InteractionsRequest, InteractionsResponse, (message: InteractionsRequest) => message.serialize(), InteractionsResponse.deserialize);
+        DecrementDislike(message: InteractionsRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: InteractionsResponse) => void) {
+            return this._client.rpcCall<InteractionsRequest, InteractionsResponse>(this._address + "/interactions_v1.CommentsV1/DecrementDislike", message, metadata || {}, CommentsV1Client.DecrementDislike, callback);
+        }
     }
 }

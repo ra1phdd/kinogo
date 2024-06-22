@@ -119,5 +119,6 @@ type (
 		Text      string
 		CreatedAt time.Time
 		UpdatedAt time.Time
+		Children  []Comments
 	}
 )

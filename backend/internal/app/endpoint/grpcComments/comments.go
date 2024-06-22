@@ -20,24 +20,17 @@ type Endpoint struct {
 	pb.UnimplementedCommentsV1Server
 }
 
-func (e *Endpoint) GetComments(_ context.Context, req *pb.GetCommentsByIdRequest) (*pb.GetCommentsByIdResponse, error) {
+func (e *Endpoint) GetCommentsById(_ context.Context, req *pb.GetCommentsByIdRequest) (*pb.GetCommentsByIdResponse, error) {
+	if req.MovieId == 0 {
+		return nil, errors.New("id фильма не указан")
+	}
+
 	comments, err := e.Comments.GetCommentsByIdService(req.MovieId, req.Limit, req.Page)
 	if err != nil {
 		return nil, err
 	}
 
-	var pbComments []*pb.GetCommentsByIdItem
-	for _, comment := range comments {
-		pbComment := &pb.GetCommentsByIdItem{
-			Id:        comment.ID,
-			ParentId:  comment.ParentID,
-			UserId:    comment.UserID,
-			Text:      comment.Text,
-			CreatedAt: ts.New(comment.CreatedAt),
-			UpdatedAt: ts.New(comment.UpdatedAt),
-		}
-		pbComments = append(pbComments, pbComment)
-	}
+	pbComments := convertCommentsToPb(comments)
 
 	return &pb.GetCommentsByIdResponse{Comments: pbComments}, nil
 }
@@ -91,4 +84,21 @@ func (e *Endpoint) DeleteComment(_ context.Context, req *pb.DelCommentRequest) (
 	}
 
 	return &pb.DelCommentResponse{Err: ""}, nil
+}
+
+func convertCommentsToPb(comments []models.Comments) []*pb.GetCommentsByIdItem {
+	var pbComments []*pb.GetCommentsByIdItem
+	for _, comment := range comments {
+		pbComment := &pb.GetCommentsByIdItem{
+			Id:        comment.ID,
+			ParentId:  comment.ParentID,
+			UserId:    comment.UserID,
+			Text:      comment.Text,
+			CreatedAt: ts.New(comment.CreatedAt),
+			UpdatedAt: ts.New(comment.UpdatedAt),
+			Children:  convertCommentsToPb(comment.Children),
+		}
+		pbComments = append(pbComments, pbComment)
+	}
+	return pbComments
 }

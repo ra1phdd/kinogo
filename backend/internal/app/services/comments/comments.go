@@ -1,6 +1,7 @@
 package comments_v1
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -39,54 +39,83 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 	}
 
 	// Data not in Redis, get from database
-	rows, err := db.Conn.Query(`SELECT id, "userId", content, "createdAt", "updatedAt" FROM comments WHERE "movieId" = $1`, movieID)
+	var limitQuery, pageQuery string
+	if limit > 0 {
+		limitQuery = fmt.Sprintf("LIMIT %d", limit)
+	}
+	if page > 0 && limit > 0 {
+		pageQuery = fmt.Sprintf("OFFSET %d", (page-1)*limit)
+	}
+
+	query := fmt.Sprintf(`
+		  SELECT id, "userId", "parentId", text, "createdAt", "updatedAt" FROM comments WHERE "movieId" = $1 %s %s`, limitQuery, pageQuery)
+
+	rows, err := db.Conn.Query(query, movieId)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	found := false
+	allComments := make(map[int32]models.Comments)
+	var rootComments []models.Comments
+
 	for rows.Next() {
 		var id, userId int32
-		var content string
+		var parentId sql.NullInt32
+		var text string
 		var createdAt, updatedAt time.Time
-		errScan := rows.Scan(&id, &userId, &content, &createdAt, &updatedAt)
+		errScan := rows.Scan(&id, &userId, &parentId, &text, &createdAt, &updatedAt)
 		if errScan != nil {
 			return nil, errScan
 		}
 
-		moviesItem := models.Movies{
-			Id:          id,
-			Title:       title,
-			Description: description,
-			ReleaseDate: releaseDate,
-			ScoreKP:     scoreKP,
-			ScoreIMDB:   scoreIMDB,
-			Poster:      poster,
-			TypeMovie:   typeMovie,
-			Genres:      strings.Join(genresArray, ", "),
+		comment := models.Comments{
+			ID:        id,
+			UserID:    userId,
+			ParentID:  parentId.Int32,
+			Text:      text,
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
 		}
 
-		movies = append(movies, moviesItem)
+		allComments[id] = comment
 
-		found = true
+		if !parentId.Valid || parentId.Int32 == 0 {
+			rootComments = append(rootComments, comment)
+		}
 	}
 
-	if !found {
+	if len(allComments) == 0 {
 		return nil, status.Error(codes.NotFound, "нет значений в БД")
 	}
 
+	// Построение дерева комментариев
+	comments = buildCommentTree(rootComments, allComments)
+
+	// Применение пагинации
+	if limit > 0 && page > 0 {
+		start := (page - 1) * limit
+		end := start + limit
+		if start >= int32(len(comments)) {
+			comments = []models.Comments{}
+		} else if end > int32(len(comments)) {
+			comments = comments[start:]
+		} else {
+			comments = comments[start:end]
+		}
+	}
+
 	// Save data to Redis
-	moviesJSONbyte, err := json.Marshal(movies)
+	commentsJSONbyte, err := json.Marshal(comments)
 	if err != nil {
 		return nil, err
 	}
-	err = cache.Rdb.Set(cache.Ctx, "comments_"+fmt.Sprint(movieId)+"_"+fmt.Sprint(limit)+"_"+fmt.Sprint(page), moviesJSONbyte, 1*time.Minute).Err()
+	err = cache.Rdb.Set(cache.Ctx, "comments_"+fmt.Sprint(movieId)+"_"+fmt.Sprint(limit)+"_"+fmt.Sprint(page), commentsJSONbyte, 1*time.Minute).Err()
 	if err != nil {
 		log.Printf("Ошибка при сохранении данных в Redis: %v", err)
 	}
 
-	return movies, nil
+	return comments, nil
 }
 
 func (s Service) AddCommentService(data map[string]interface{}) (int32, error) {
@@ -102,4 +131,19 @@ func (s Service) UpdateCommentService(data map[string]interface{}) error {
 func (s Service) DelCommentService(id int32, parentId int32) error {
 	//TODO implement me
 	panic("implement me")
+}
+
+func buildCommentTree(comments []models.Comments, allComments map[int32]models.Comments) []models.Comments {
+	for i, comment := range comments {
+		children := []models.Comments{}
+		for _, potentialChild := range allComments {
+			if potentialChild.ParentID == comment.ID {
+				children = append(children, potentialChild)
+			}
+		}
+		if len(children) > 0 {
+			comments[i].Children = buildCommentTree(children, allComments)
+		}
+	}
+	return comments
 }

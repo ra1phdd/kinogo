@@ -30,13 +30,13 @@ generate-backend-comments:
 generate-frontend: generate-frontend-movies generate-frontend-interactions generate-frontend-comments
 
 generate-frontend-movies:
-	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_out=frontend/src \
+	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
 		protos/movies_v1/movies_v1.proto
 
 generate-frontend-interactions:
-	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_out=frontend/src \
+	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
     		protos/interactions_v1/interactions_v1.proto
 
 generate-frontend-comments:
-	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_out=frontend/src \
+	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
     		protos/comments_v1/comments_v1.proto
