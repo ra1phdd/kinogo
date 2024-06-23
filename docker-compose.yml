@@ -1,16 +1,31 @@
-version: '3.8'
-
 services:
-  kinogo:
-    container_name: kinogo
+  backend:
+    container_name: backend
     build:
-      context: .
+      context: backend/
       target: dev
       network: host
     volumes:
-      - ./:/app
-      - ./media:/app/media
-    extra_hosts:
-      - "postgres:192.168.1.1"
+      - ./backend:/app
     ports:
-      - "80:4000"
+      - "8080:8080"
+      - "4000:4000"
+
+  envoy:
+    image: envoyproxy/envoy:v1.30-latest
+    container_name: envoy
+    ports:
+      - "10000:10000"
+      - "9901:9901"
+    volumes:
+      - ./backend/config/envoy.yaml:/etc/envoy/envoy.yaml
+
+  frontend:
+    image: nginx:stable-alpine
+    container_name: frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./backend/config/nginx.conf:/etc/nginx/conf.d/default.conf
+    restart: always

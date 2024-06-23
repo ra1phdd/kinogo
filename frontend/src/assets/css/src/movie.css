@@ -1,0 +1,162 @@
+.section__movie {
+  display: none;
+  margin-bottom: 25px;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.section__movie .section__movie-img {
+  margin-right: 1.5rem;
+}
+.section__movie .section__movie-img img {
+  width: 14rem;
+  border-radius: 15px;
+}
+.section__movie .section__movie-info h1 {
+  margin-top: 0;
+}
+.section__movie .section__movie-info p {
+  color: #d4d4d4;
+}
+.section__movie .section__movie-info .section__movie-main {
+  display: flex;
+  margin: 1.5rem 0;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-buttons {
+  display: flex;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-buttons button {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 1rem;
+  padding: 10px 15px;
+  margin-right: 15px;
+  border-radius: 15px;
+  background: #b30e76;
+  border: 3px solid #b30e76;
+  transition: 0.3s;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-buttons button a {
+  text-decoration: none;
+  vertical-align: middle;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-buttons button:hover {
+  background: none;
+  cursor: pointer;
+  border: 3px solid #b30e76;
+  transition: 0.3s;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-ratings {
+  display: flex;
+  margin-right: 0;
+  margin-left: auto;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-ratings .rating {
+  border-radius: 15px;
+  border: 3px solid #b30e76;
+  padding: 10px 15px;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-ratings .rating p {
+  padding: 0;
+  margin: 0;
+}
+.section__movie .section__movie-info .section__movie-main .section__movie-ratings .rating__kinopoisk {
+  margin-right: 1rem;
+}
+.section__movie .section__movie-info table tr .titleInfo {
+  color: #d4d4d4;
+  width: 9.5rem;
+}
+
+.section__player {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 25px;
+  display: none;
+}
+.section__player [data-media-player][data-controls] .quality-selector {
+  opacity: 1;
+  pointer-events: auto;
+}
+.section__player .quality-selector {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.section__player .quality-selector button {
+  border: 1px solid #232323;
+  border-radius: 4px;
+  background-color: #0a0a0a;
+  padding: 7.5px;
+  margin-right: 5px;
+  transition: 0.1s ease-in-out;
+}
+.section__player .quality-selector button:hover {
+  background-color: #222222;
+  transition: 0.1s ease-in-out;
+  cursor: pointer;
+}
+.section__player .quality-selector button.active {
+  background-color: #222222;
+}
+
+.section__comments {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: none;
+}
+.section__comments .comment {
+  margin-bottom: 25px;
+}
+.section__comments .comment .comment-data {
+  display: flex;
+}
+.section__comments .comment .comment-data .comment-img img {
+  width: 40px;
+  height: 40px;
+  border-radius: 7.5px;
+  margin-right: 15px;
+}
+.section__comments .comment .comment-data .comment-user {
+  display: block;
+}
+.section__comments .comment .comment-data .comment-user .user-name {
+  margin: 0 0 5px 0;
+}
+.section__comments .comment .comment-data .comment-user .user-date {
+  color: #d4d4d4;
+  margin: 0;
+}
+.section__comments .comment .comments-info {
+  display: block;
+}
+.section__comments .comment .comments-info .comments-footer {
+  display: flex;
+}
+.section__comments .comment .comments-info .comments-footer p {
+  margin: 0 15px 0 0;
+}
+
+/*# sourceMappingURL=movie.css.map */
