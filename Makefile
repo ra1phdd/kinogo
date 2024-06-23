@@ -1,4 +1,16 @@
-.PHONY: generate generate-backend generate-backend-movies generate-backend-interactions generate-backend-comments generate-frontend generate-frontend-movies generate-frontend-interactions generate-frontend-comments
+.PHONY: build build-backend build-frontend generate generate-backend generate-backend-movies generate-backend-interactions generate-backend-comments generate-frontend generate-frontend-movies generate-frontend-interactions generate-frontend-comments
+
+build: build-backend build-frontend
+
+build-backend:
+	mkdir -p backend/build
+	rm -rf build/*
+	cd backend && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/kinogo_amd64 ./cmd/main/main.go
+	cd backend && GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o build/kinogo_arm64 ./cmd/main/main.go
+build-frontend:
+	rm -rf frontend/dist
+	cd frontend && npm run build
+
 generate: generate-backend generate-frontend
 
 generate-backend: generate-backend-movies generate-backend-interactions generate-backend-comments

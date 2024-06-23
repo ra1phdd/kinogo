@@ -1,6 +1,7 @@
 web/node_modules
 
 # Backend
+backend/build/
 backend/media/
 backend/logs/
 backend/.env

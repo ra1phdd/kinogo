@@ -46,6 +46,8 @@ func (s Service) ValidateTelegramAuth(data map[string]string, botToken string) b
 	hmacHash.Write([]byte(checkStringString))
 	calculatedHash := hex.EncodeToString(hmacHash.Sum(nil))
 
+	fmt.Println(calculatedHash)
+
 	return strings.EqualFold(calculatedHash, checkHash)
 }
 
@@ -61,7 +63,7 @@ func (s Service) AddUserIfNotExists(data map[string]string) {
 
 	if exists {
 		// Пользователь уже существует
-		log.Printf("User with ID %d already exists.", id)
+		log.Printf("User with ID %s already exists.", id)
 	}
 
 	username := data["username"]
@@ -77,7 +79,7 @@ func (s Service) AddUserIfNotExists(data map[string]string) {
 		fmt.Errorf("error inserting new user: %v", err)
 	}
 
-	log.Printf("User with ID %d added successfully.", id)
+	log.Printf("User with ID %s added successfully.", id)
 	return
 }
 

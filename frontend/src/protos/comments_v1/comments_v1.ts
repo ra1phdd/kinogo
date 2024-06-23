@@ -3,6 +3,10 @@
  * compiler version: 4.25.3
  * source: protos/comments_v1/comments_v1.proto
  * git: https://github.com/thesayyn/protoc-gen-ts */
+
+/* eslint-disable */
+// @ts-nocheck
+
 import * as dependency_1 from "./../../google/protobuf/timestamp";
 import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "@grpc/grpc-js";

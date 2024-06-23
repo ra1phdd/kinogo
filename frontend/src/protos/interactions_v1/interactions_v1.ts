@@ -3,6 +3,10 @@
  * compiler version: 4.25.3
  * source: protos/interactions_v1/interactions_v1.proto
  * git: https://github.com/thesayyn/protoc-gen-ts */
+
+/* eslint-disable */
+// @ts-nocheck
+
 import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "@grpc/grpc-js";
 import * as grpc_web_1 from "grpc-web";

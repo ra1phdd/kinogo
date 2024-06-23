@@ -12,6 +12,7 @@ import (
 	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
 	"log"
+	"sort"
 	"time"
 )
 
@@ -25,7 +26,6 @@ func New() *Service {
 func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) ([]models.Comments, error) {
 	var comments []models.Comments
 
-	// Получение данных из Redis
 	commentsJSON, err := cache.Rdb.Get(cache.Ctx, "comments_"+fmt.Sprint(movieId)+"_"+fmt.Sprint(limit)+"_"+fmt.Sprint(page)).Result()
 	if err == nil && commentsJSON != "" {
 		err = json.Unmarshal([]byte(commentsJSON), &comments)
@@ -38,7 +38,6 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 		log.Printf("Ошибка при получении данных из Redis: %v", err)
 	}
 
-	// Data not in Redis, get from database
 	var limitQuery, pageQuery string
 	if limit > 0 {
 		limitQuery = fmt.Sprintf("LIMIT %d", limit)
@@ -105,7 +104,6 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 		}
 	}
 
-	// Save data to Redis
 	commentsJSONbyte, err := json.Marshal(comments)
 	if err != nil {
 		return nil, err
@@ -120,28 +118,31 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 
 func (s Service) AddCommentService(data map[string]interface{}) (int32, error) {
 	//TODO implement me
-	panic("implement me")
+	panic("implement me_" + fmt.Sprint(data))
 }
 
 func (s Service) UpdateCommentService(data map[string]interface{}) error {
 	//TODO implement me
-	panic("implement me")
+	panic("implement me_" + fmt.Sprint(data))
 }
 
 func (s Service) DelCommentService(id int32, parentId int32) error {
 	//TODO implement me
-	panic("implement me")
+	panic("implement me_" + fmt.Sprint(id) + "_" + fmt.Sprint(parentId))
 }
 
 func buildCommentTree(comments []models.Comments, allComments map[int32]models.Comments) []models.Comments {
 	for i, comment := range comments {
-		children := []models.Comments{}
+		var children []models.Comments
 		for _, potentialChild := range allComments {
 			if potentialChild.ParentID == comment.ID {
 				children = append(children, potentialChild)
 			}
 		}
 		if len(children) > 0 {
+			sort.SliceStable(children, func(i, j int) bool {
+				return children[i].ID < children[j].ID
+			})
 			comments[i].Children = buildCommentTree(children, allComments)
 		}
 	}
