@@ -45,7 +45,12 @@ export interface Timestamp {
 export interface Comments {
     id: number;
     parentId: number;
-    userId: number;
+    user: {
+        username: string;
+        photoUrl: string;
+        firstName: string;
+        lastName: string;
+    };
     text: string;
     createdAt: Timestamp;
     updatedAt: Timestamp;
@@ -146,9 +151,10 @@ export function getComments(movieId: number, limit: number, page: number): Promi
 
         clientCommentsV1.GetCommentsById(request, {}, (err, response) => {
             if (err) {
-                console.error('Error fetching movies:', err);
+                console.error('Error fetching comments:', err);
                 reject(err);
             } else if (response && response.comments) {
+                console.log(response.comments);
                 resolve(response.comments);
             } else {
                 reject(new Error('No comments found'));

@@ -47,7 +47,10 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 	}
 
 	query := fmt.Sprintf(`
-		  SELECT id, "userId", "parentId", text, "createdAt", "updatedAt" FROM comments WHERE "movieId" = $1 %s %s`, limitQuery, pageQuery)
+		  SELECT c.id, c."parentId", c.text, c."createdAt", c."updatedAt", u.username, u.photourl, u.first_name, u.last_name
+		  FROM comments c
+		  JOIN users u ON c."userId" = u.id
+		  WHERE c."movieId" = $1 %s %s`, limitQuery, pageQuery)
 
 	rows, err := db.Conn.Query(query, movieId)
 	if err != nil {
@@ -59,22 +62,28 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 	var rootComments []models.Comments
 
 	for rows.Next() {
-		var id, userId int32
+		var id int32
 		var parentId sql.NullInt32
 		var text string
 		var createdAt, updatedAt time.Time
-		errScan := rows.Scan(&id, &userId, &parentId, &text, &createdAt, &updatedAt)
+		var username, photoUrl, firstName, lastName string
+		errScan := rows.Scan(&id, &parentId, &text, &createdAt, &updatedAt, &username, &photoUrl, &firstName, &lastName)
 		if errScan != nil {
 			return nil, errScan
 		}
 
 		comment := models.Comments{
 			ID:        id,
-			UserID:    userId,
 			ParentID:  parentId.Int32,
 			Text:      text,
 			CreatedAt: createdAt,
 			UpdatedAt: updatedAt,
+			User: models.User{
+				Username:  username,
+				PhotoUrl:  photoUrl,
+				FirstName: firstName,
+				LastName:  lastName,
+			},
 		}
 
 		allComments[id] = comment

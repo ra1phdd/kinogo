@@ -107,7 +107,7 @@ type (
 		FirstName string
 		LastName  string
 		Username  string
-		PhotoURL  string
+		PhotoUrl  string
 		AuthDate  int64
 		Hash      string
 	}
@@ -119,6 +119,7 @@ type (
 		Text      string
 		CreatedAt time.Time
 		UpdatedAt time.Time
+		User      User
 		Children  []Comments
 	}
 )

@@ -6,18 +6,36 @@ interface CommentProps {
     level?: number; // Уровень вложенности комментария для отступов
 }
 
+const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+
+    const dateOptions: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+    };
+
+    const timeOptions: Intl.DateTimeFormatOptions = {
+        hour: 'numeric',
+        minute: 'numeric',
+    };
+
+    return date.toLocaleDateString(undefined, dateOptions) + ' ' + date.toLocaleTimeString(undefined, timeOptions);
+}
+
 const Comment: React.FC<CommentProps> = ({ comment, level = 0 }) => {
-    const marginLeft = 20 + level * 10; // Вычисляемый отступ в зависимости от уровня вложенности
+    const marginLeft = level * 20; // Вычисляемый отступ в зависимости от уровня вложенности
 
     return (
-        <div style={{ marginLeft, marginTop: '10px', borderLeft: '2px solid #ccc', paddingLeft: '10px' }}>
-            <div>
-                <strong>User ID: {comment.userId}</strong>
+        <div className="comment" style={{marginLeft}}>
+            <div className="comment__user-info">
+                <img src={comment.user.photoUrl}/>
+                <a href={`/user/${comment.user.username}`}>{comment.user.firstName} {comment.user.lastName}</a>
+                <p>{formatDate(comment.createdAt.seconds)}</p>
             </div>
             <div>{comment.text}</div>
-            <div>Created At: {comment.createdAt.seconds}</div>
             {comment.children && comment.children.length > 0 && (
-                <div style={{ marginTop: '10px' }}>
+                <div className="comment">
                     {comment.children.map((child) => (
                         <Comment key={child.id} comment={child} level={level + 1} />
                     ))}
@@ -31,23 +49,21 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
     const [comments, setComments] = useState<Comments[]>([]);
 
     useEffect(() => {
-        // Пример вызова функции getComments (предполагается, что getComments возвращает Promise<Comments[]>)
-        getComments(id, 10, 1) // Пример вызова функции с конкретными параметрами
+        getComments(id, 10, 1)
             .then((commentsData) => {
                 setComments(commentsData);
             })
             .catch((error) => {
                 console.error('Error fetching comments:', error);
             });
-    }, []); // Пустой массив зависимостей означает, что useEffect запустится один раз при монтировании компонента
+    }, []);
 
     return (
-        <div>
-            <h1>Comments</h1>
+        <>
             {comments.map((comment) => (
                 <Comment key={comment.id} comment={comment} />
             ))}
-        </div>
+        </>
     );
 };
 

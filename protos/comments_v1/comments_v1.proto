@@ -38,12 +38,18 @@ message GetCommentsByIdResponse {
 }
 message GetCommentsByIdItem {
   int32 id = 1;
-  int32 parentId = 2;
-  int32 userId = 3;
+  GetUserById user = 2;
+  int32 parentId = 3;
   string text = 4;
   google.protobuf.Timestamp createdAt = 5;
   google.protobuf.Timestamp updatedAt = 6;
   repeated GetCommentsByIdItem children = 7;
+}
+message GetUserById {
+  string username = 1;
+  string photoUrl = 2;
+  string firstName = 3;
+  string lastName = 4;
 }
 
 // Добавление комментария

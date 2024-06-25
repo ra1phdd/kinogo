@@ -42,13 +42,23 @@ generate-backend-comments:
 generate-frontend: generate-frontend-movies generate-frontend-interactions generate-frontend-comments
 
 generate-frontend-movies:
-	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
+	@echo "Generate file movies_v1.ts"
+	@protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
 		protos/movies_v1/movies_v1.proto
+	@echo "Adding headers to the generated file..."
+	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/protos/movies_v1/movies_v1.ts
 
 generate-frontend-interactions:
-	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
-    		protos/interactions_v1/interactions_v1.proto
+	@echo "Generate file interactions_v1.ts"
+	@protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
+        protos/interactions_v1/interactions_v1.proto
+	@echo "Adding headers to the generated file..."
+	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/protos/interactions_v1/interactions_v1.ts
 
 generate-frontend-comments:
-	protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
-    		protos/comments_v1/comments_v1.proto
+	@echo "Generate file comments_v1.ts"
+	@protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
+        protos/comments_v1/comments_v1.proto
+	@echo "Adding headers to the generated file..."
+	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/protos/comments_v1/comments_v1.ts
+	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/google/protobuf/timestamp.ts

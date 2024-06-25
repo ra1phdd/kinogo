@@ -11,6 +11,12 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.10.9",
+    "@milkdown/core": "^7.4.0",
+    "@milkdown/plugin-tooltip": "^7.4.0",
+    "@milkdown/preset-commonmark": "^7.4.0",
+    "@milkdown/react": "^7.4.0",
+    "@milkdown/theme-nord": "^7.4.0",
+    "@milkdown/utils": "^7.4.0",
     "@telegram-auth/react": "^1.0.3",
     "@vidstack/react": "^1.11.24",
     "google-protobuf": "^3.21.2",
