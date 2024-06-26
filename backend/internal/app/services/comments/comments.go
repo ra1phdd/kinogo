@@ -1,6 +1,7 @@
 package comments_v1
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -50,7 +51,7 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 		  SELECT c.id, c."parentId", c.text, c."createdAt", c."updatedAt", u.username, u.photourl, u.first_name, u.last_name
 		  FROM comments c
 		  JOIN users u ON c."userId" = u.id
-		  WHERE c."movieId" = $1 %s %s`, limitQuery, pageQuery)
+		  WHERE c."movieId" = $1 ORDER BY c.id DESC %s %s`, limitQuery, pageQuery)
 
 	rows, err := db.Conn.Query(query, movieId)
 	if err != nil {
@@ -100,19 +101,6 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 	// Построение дерева комментариев
 	comments = buildCommentTree(rootComments, allComments)
 
-	// Применение пагинации
-	if limit > 0 && page > 0 {
-		start := (page - 1) * limit
-		end := start + limit
-		if start >= int32(len(comments)) {
-			comments = []models.Comments{}
-		} else if end > int32(len(comments)) {
-			comments = comments[start:]
-		} else {
-			comments = comments[start:end]
-		}
-	}
-
 	commentsJSONbyte, err := json.Marshal(comments)
 	if err != nil {
 		return nil, err
@@ -131,7 +119,6 @@ func (s Service) AddCommentService(data map[string]interface{}) (int32, error) {
 		id := data["parentId"].(int32)
 		parentId = &id
 	}
-	fmt.Println(parentId)
 
 	var id int32
 	err := db.Conn.QueryRow(
@@ -141,17 +128,117 @@ func (s Service) AddCommentService(data map[string]interface{}) (int32, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	pattern := "comments_" + fmt.Sprint(data["movieId"].(int32)) + "_*_*"
+
+	// Получение всех ключей, соответствующих шаблону
+	keys, err := cache.Rdb.Keys(context.Background(), pattern).Result()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get keys: %w", err)
+	}
+
+	// Удаление всех ключей
+	if len(keys) > 0 {
+		if err := cache.Rdb.Del(context.Background(), keys...).Err(); err != nil {
+			return 0, fmt.Errorf("failed to delete keys: %w", err)
+		}
+	}
+
 	return id, nil
 }
 
 func (s Service) UpdateCommentService(data map[string]interface{}) error {
-	//TODO implement me
-	panic("implement me_" + fmt.Sprint(data))
+	_, err := db.Conn.Exec(
+		`UPDATE comments
+         SET text = $1, "updatedAt" = $2
+         WHERE id = $3`, data["text"], data["updatedAt"], data["id"])
+	if err != nil {
+		return fmt.Errorf("failed to update comment: %w", err)
+	}
+
+	var movieId int32
+	err = db.Conn.QueryRow(
+		`SELECT "movieId" FROM comments WHERE id = $1`, data["id"]).Scan(&movieId)
+	if err != nil {
+		return fmt.Errorf("failed to get movieId for comment: %w", err)
+	}
+
+	pattern := "comments_" + fmt.Sprint(movieId) + "_*_*"
+
+	// Получение всех ключей, соответствующих шаблону
+	keys, err := cache.Rdb.Keys(context.Background(), pattern).Result()
+	if err != nil {
+		return fmt.Errorf("failed to get keys: %w", err)
+	}
+
+	// Удаление всех ключей
+	if len(keys) > 0 {
+		if err := cache.Rdb.Del(context.Background(), keys...).Err(); err != nil {
+			return fmt.Errorf("failed to delete keys: %w", err)
+		}
+	}
+
+	return nil
 }
 
-func (s Service) DelCommentService(id int32, parentId int32) error {
-	//TODO implement me
-	panic("implement me_" + fmt.Sprint(id) + "_" + fmt.Sprint(parentId))
+func (s Service) DelCommentService(id int32) error {
+	rows, err := db.Conn.Query(
+		`SELECT id, "movieId" FROM comments WHERE "parentId" >= $1 ORDER BY id DESC`, id)
+	if err != nil {
+		return fmt.Errorf("failed to fetch children IDs: %w", err)
+	}
+	defer rows.Close()
+
+	var movieId int32
+	var childIds []int32
+	for rows.Next() {
+		var childId int32
+		if errScan := rows.Scan(&childId, &movieId); errScan != nil {
+			return fmt.Errorf("failed to scan children IDs: %w", errScan)
+		}
+		childIds = append(childIds, childId)
+	}
+
+	allIds := append(childIds, id)
+
+	fmt.Println(allIds)
+
+	// Delete all comments in a single transaction for consistency
+	tx, err := db.Conn.BeginTx(cache.Ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+
+	// Delete comments
+	for _, commentId := range allIds {
+		_, errExec := tx.Exec(`DELETE FROM comments WHERE id = $1`, commentId)
+		if errExec != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed to delete comment %d: %w", commentId, errExec)
+		}
+	}
+
+	// Commit the transaction
+	if errCommit := tx.Commit(); errCommit != nil {
+		return fmt.Errorf("failed to commit transaction: %w", errCommit)
+	}
+
+	pattern := "comments_" + fmt.Sprint(movieId) + "_*_*"
+
+	// Получение всех ключей, соответствующих шаблону
+	keys, err := cache.Rdb.Keys(context.Background(), pattern).Result()
+	if err != nil {
+		return fmt.Errorf("failed to get keys: %w", err)
+	}
+
+	// Удаление всех ключей
+	if len(keys) > 0 {
+		if err := cache.Rdb.Del(context.Background(), keys...).Err(); err != nil {
+			return fmt.Errorf("failed to delete keys: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func buildCommentTree(comments []models.Comments, allComments map[int32]models.Comments) []models.Comments {

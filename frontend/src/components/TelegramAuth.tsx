@@ -33,6 +33,7 @@ function Auth() {
 
             if (result.success) {
                 localStorage.setItem('token', result.token);
+                localStorage.setItem('userid', result.userid);
                 setIsAuthenticated(true);
                 setShowLoginButton(false);
                 window.location.reload()
@@ -46,6 +47,7 @@ function Auth() {
 
     const handleLogout = useCallback(() => {
         localStorage.removeItem('token');
+        localStorage.removeItem('userid');
         setIsAuthenticated(false);
         setShowLoginButton(true);
         setKey(prevKey => prevKey + 1);

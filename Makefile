@@ -1,4 +1,14 @@
-.PHONY: build build-backend build-frontend generate generate-backend generate-backend-movies generate-backend-interactions generate-backend-comments generate-frontend generate-frontend-movies generate-frontend-interactions generate-frontend-comments
+.PHONY: test cover
+
+test:
+	cd backend && go test -race -count 1 ./...
+
+cover:
+	cd backend && go test -short -race -count 1 -coverprofile=coverage.out ./...
+	cd backend && go tool cover -html=coverage.out
+	rm backend/coverage.out
+
+.PHONY: build build-backend build-frontend
 
 build: build-backend build-frontend
 
@@ -10,6 +20,8 @@ build-backend:
 build-frontend:
 	rm -rf frontend/dist
 	cd frontend && npm run build
+
+.PHONY: generate generate-backend generate-backend-movies generate-backend-interactions generate-backend-comments generate-frontend generate-frontend-movies generate-frontend-interactions generate-frontend-comments
 
 generate: generate-backend generate-frontend
 

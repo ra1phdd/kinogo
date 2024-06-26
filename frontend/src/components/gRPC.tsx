@@ -1,5 +1,6 @@
 import { movies_v1 } from '@protos/movies_v1/movies_v1';
 import { comments_v1 } from '@protos/comments_v1/comments_v1'
+import {google} from "@/google/protobuf/timestamp.ts";
 
 const clientMoviesV1 = new movies_v1.MoviesV1Client('http://localhost:10000');
 const clientCommentsV1 = new comments_v1.CommentsV1Client('http://localhost:10000');
@@ -65,7 +66,6 @@ export function getMovies(limit: number, page: number): Promise<Movies[]> {
 
         clientMoviesV1.GetMovies(request, {}, (err, response) => {
             if (err) {
-                console.error('Error fetching movies:', err);
                 reject(err);
             } else if (response && response.movies) {
                 resolve(response.movies);
@@ -86,7 +86,6 @@ export function getMoviesByTypeMovie(limit: number, page: number, typeMovie: num
 
         clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
             if (err) {
-                console.error('Error fetching movies:', err);
                 reject(err);
             } else if (response && response.movies) {
                 resolve(response.movies);
@@ -104,7 +103,6 @@ export function getMovieById(id: number): Promise<Movie> {
 
         clientMoviesV1.GetMovieById(request, {}, (err, response) => {
             if (err) {
-                console.error('Error fetching movie:', err);
                 reject(err);
             } else if (response) {
                 resolve(response);
@@ -125,7 +123,6 @@ export function getBestMovie(): Promise<BestMovie[]> {
 
         clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
             if (err) {
-                console.error('Ошибка при получении фильма:', err);
                 reject(err);
             }  else if (response && response.movies) {
                 const bestMovies: BestMovie[] = response.movies.map(movie => ({
@@ -151,13 +148,74 @@ export function getComments(movieId: number, limit: number, page: number): Promi
 
         clientCommentsV1.GetCommentsById(request, {}, (err, response) => {
             if (err) {
-                console.error('Error fetching comments:', err);
                 reject(err);
             } else if (response && response.comments) {
-                console.log(response.comments);
                 resolve(response.comments);
             } else {
                 reject(new Error('No comments found'));
+            }
+        });
+    });
+}
+
+export function addComment(parentId: number | null, movieId: number, userId: number, text: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+        const request = new comments_v1.AddCommentRequest();
+        const now = new Date();
+        const timestamp = new google.protobuf.Timestamp({ seconds: Math.floor(now.getTime() / 1000), nanos: now.getMilliseconds() * 1e6 });
+
+        request.parentId = parentId ?? 0; // Set to 0 if parentId is null
+        request.movieId = movieId;
+        request.userId = userId;
+        request.text = text;
+        request.createdAt = timestamp;
+
+        clientCommentsV1.AddComment(request, {}, (err, response) => {
+            if (err) {
+                reject(err);
+            } else if (response && response.err == "") {
+                resolve(response.id);
+            } else {
+                reject(new Error('Failed to add comment'));
+            }
+        });
+    });
+}
+
+export function updateComment(id: number, text: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const request = new comments_v1.UpdateCommentRequest();
+        const now = new Date();
+        const timestamp = new google.protobuf.Timestamp({ seconds: Math.floor(now.getTime() / 1000), nanos: now.getMilliseconds() * 1e6 });
+
+        request.id = id;
+        request.text = text;
+        request.updatedAt = timestamp;
+
+        clientCommentsV1.UpdateComment(request, {}, (err, response) => {
+            if (err) {
+                reject(err);
+            } else if (response && response.err == "") {
+                resolve("");
+            } else {
+                reject(new Error('Failed to add comment'));
+            }
+        });
+    });
+}
+
+export function deleteComment(id: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const request = new comments_v1.DelCommentRequest();
+        request.id = id;
+
+        clientCommentsV1.DelComment(request, {}, (err, response) => {
+            if (err) {
+                reject(err);
+            } else if (response && response.err == "") {
+                resolve("");
+            } else {
+                reject(new Error('Failed to add comment'));
             }
         });
     });

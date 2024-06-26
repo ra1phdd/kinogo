@@ -798,28 +798,28 @@ export namespace comments_v1 {
             }
         }
         get username() {
-            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
-        }
-        set username(value: string) {
-            pb_1.Message.setField(this, 1, value);
-        }
-        get photoUrl() {
             return pb_1.Message.getFieldWithDefault(this, 2, "") as string;
         }
-        set photoUrl(value: string) {
+        set username(value: string) {
             pb_1.Message.setField(this, 2, value);
         }
-        get firstName() {
+        get photoUrl() {
             return pb_1.Message.getFieldWithDefault(this, 3, "") as string;
         }
-        set firstName(value: string) {
+        set photoUrl(value: string) {
             pb_1.Message.setField(this, 3, value);
         }
-        get lastName() {
+        get firstName() {
             return pb_1.Message.getFieldWithDefault(this, 4, "") as string;
         }
-        set lastName(value: string) {
+        set firstName(value: string) {
             pb_1.Message.setField(this, 4, value);
+        }
+        get lastName() {
+            return pb_1.Message.getFieldWithDefault(this, 5, "") as string;
+        }
+        set lastName(value: string) {
+            pb_1.Message.setField(this, 5, value);
         }
         static fromObject(data: {
             username?: string;
@@ -868,13 +868,13 @@ export namespace comments_v1 {
         serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
             const writer = w || new pb_1.BinaryWriter();
             if (this.username.length)
-                writer.writeString(1, this.username);
+                writer.writeString(2, this.username);
             if (this.photoUrl.length)
-                writer.writeString(2, this.photoUrl);
+                writer.writeString(3, this.photoUrl);
             if (this.firstName.length)
-                writer.writeString(3, this.firstName);
+                writer.writeString(4, this.firstName);
             if (this.lastName.length)
-                writer.writeString(4, this.lastName);
+                writer.writeString(5, this.lastName);
             if (!w)
                 return writer.getResultBuffer();
         }
@@ -884,16 +884,16 @@ export namespace comments_v1 {
                 if (reader.isEndGroup())
                     break;
                 switch (reader.getFieldNumber()) {
-                    case 1:
+                    case 2:
                         message.username = reader.readString();
                         break;
-                    case 2:
+                    case 3:
                         message.photoUrl = reader.readString();
                         break;
-                    case 3:
+                    case 4:
                         message.firstName = reader.readString();
                         break;
-                    case 4:
+                    case 5:
                         message.lastName = reader.readString();
                         break;
                     default: reader.skipField();

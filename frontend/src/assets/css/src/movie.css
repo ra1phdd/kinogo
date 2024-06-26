@@ -134,6 +134,42 @@
   display: block;
   margin-bottom: 25px;
 }
+.section__comments .editor .editor__comment {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 15px 5px 15px;
+  width: 700px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+.section__comments .editor .editor__comment .editor__comment-answer {
+  color: #d4d4d4;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+.section__comments .editor .editor__comment .editor__comment-answer img {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+}
+.section__comments .editor .editor__comment .editor__comment-cancel {
+  cursor: pointer;
+  font-size: 24px;
+  color: white;
+}
+.section__comments .editor .editor__comment .editor__comment-cancel:hover {
+  color: #b30e76;
+}
+.section__comments .editor .editor__comment .editor__comment-text {
+  margin-top: 5px;
+}
 .section__comments .editor textarea {
   padding: 25px;
   background: rgba(255, 255, 255, 0.07);
@@ -167,8 +203,12 @@
 .section__comments .editor button:hover {
   cursor: pointer;
 }
+.section__comments .level-0 {
+  margin-left: 0 !important;
+}
 .section__comments .comment {
   margin-top: 10px;
+  margin-left: 20px;
 }
 .section__comments .comment .comment__user-info {
   display: flex;
@@ -186,6 +226,15 @@
 }
 .section__comments .comment .comment__user-info p {
   font-size: 13px;
+  color: #d4d4d4;
+}
+.section__comments .comment p {
+  margin: 10px 0;
+}
+.section__comments .comment .reply-button {
+  display: block;
+  cursor: pointer;
+  font-size: 14px;
   color: #d4d4d4;
 }
 

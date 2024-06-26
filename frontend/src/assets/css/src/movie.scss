@@ -116,6 +116,36 @@
     .editor {
         display: block;
         margin-bottom: 25px;
+        .editor__comment{
+            @include glassphormism();
+            padding: 0 15px 5px 15px;
+            width: 700px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            .editor__comment-answer{
+                color: #d4d4d4;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                margin-bottom: 5px;
+                img{
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 5px;
+                }
+            }
+            .editor__comment-cancel{
+                cursor: pointer;
+                font-size: 24px;
+                color: white;
+                &:hover{
+                    color: #b30e76;
+                }
+            }
+            .editor__comment-text{
+                margin-top: 5px;
+            }
+        }
         textarea {
             @include glassphormism();
             width: 700px !important;
@@ -138,8 +168,12 @@
             }
         }
     }
+    .level-0{
+        margin-left: 0 !important;
+    }
     .comment {
         margin-top: 10px;
+        margin-left: 20px;
         .comment__user-info{
             display: flex;
             align-items: center;
@@ -157,6 +191,15 @@
                 font-size: 13px;
                 color: #d4d4d4;
             }
+        }
+        p{
+            margin: 10px 0;
+        }
+        .reply-button{
+            display: block;
+            cursor: pointer;
+            font-size: 14px;
+            color: #d4d4d4;
         }
     }
 }

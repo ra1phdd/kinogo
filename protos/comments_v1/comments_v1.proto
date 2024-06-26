@@ -46,10 +46,10 @@ message GetCommentsByIdItem {
   repeated GetCommentsByIdItem children = 7;
 }
 message GetUserById {
-  string username = 1;
-  string photoUrl = 2;
-  string firstName = 3;
-  string lastName = 4;
+  string username = 2;
+  string photoUrl = 3;
+  string firstName = 4;
+  string lastName = 5;
 }
 
 // Добавление комментария

@@ -8,7 +8,6 @@ import '@assets/css/src/movie.css'
 import VideoPlayer from "@components/HLSPlayer.tsx";
 import { Movie, getMovieById } from "@components/gRPC.tsx";
 import CommentsComponent from "@components/Comments.tsx";
-import Editor from "@components/Editor.tsx";
 
 // Пропсы для компонента MovieCard
 interface MovieCardProps {
@@ -103,9 +102,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
             </div>
             <div className="section__comments">
                 <h2>Комментарии</h2>
-                {hasToken && (
-                    <Editor/>
-                )}
                 <CommentsComponent id={movie.id}/>
             </div>
         </>

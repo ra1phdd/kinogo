@@ -12,7 +12,7 @@ type Comments interface {
 	GetCommentsByIdService(movieId int32, limit int32, page int32) ([]models.Comments, error)
 	AddCommentService(data map[string]interface{}) (int32, error)
 	UpdateCommentService(data map[string]interface{}) error
-	DelCommentService(id int32, parentId int32) error
+	DelCommentService(id int32) error
 }
 
 type Endpoint struct {
@@ -73,12 +73,12 @@ func (e *Endpoint) UpdateComment(_ context.Context, req *pb.UpdateCommentRequest
 	return &pb.UpdateCommentResponse{Err: ""}, nil
 }
 
-func (e *Endpoint) DeleteComment(_ context.Context, req *pb.DelCommentRequest) (*pb.DelCommentResponse, error) {
+func (e *Endpoint) DelComment(_ context.Context, req *pb.DelCommentRequest) (*pb.DelCommentResponse, error) {
 	if req.Id == 0 {
 		return nil, errors.New("id новости не указан")
 	}
 
-	err := e.Comments.DelCommentService(req.Id, req.ParentId)
+	err := e.Comments.DelCommentService(req.Id)
 	if err != nil {
 		return &pb.DelCommentResponse{Err: err.Error()}, err
 	}
