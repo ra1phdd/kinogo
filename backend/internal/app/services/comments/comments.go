@@ -126,8 +126,22 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 }
 
 func (s Service) AddCommentService(data map[string]interface{}) (int32, error) {
-	//TODO implement me
-	panic("implement me_" + fmt.Sprint(data))
+	var parentId *int32 = nil
+	if data["parentId"].(int32) != 0 {
+		id := data["parentId"].(int32)
+		parentId = &id
+	}
+	fmt.Println(parentId)
+
+	var id int32
+	err := db.Conn.QueryRow(
+		`INSERT INTO comments ("userId", "movieId", "parentId", text, "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, $4, $5, $5)
+         RETURNING id`, data["userId"], data["movieId"], parentId, data["text"], data["createdAt"]).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (s Service) UpdateCommentService(data map[string]interface{}) error {
