@@ -7,6 +7,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"kinogo/internal/app/models"
 	"kinogo/internal/app/services/testutil"
 	"kinogo/pkg/cache"
@@ -25,10 +26,12 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 
 	s := Service{}
 
-	query := `SELECT c.id, c.\"parentId\", c.text, c.\"createdAt\", c.\"updatedAt\", u.username, u.photourl, u.first_name, u.last_name\
-			FROM comments c
-			JOIN users u ON c.\"userId\" = u.id
-			WHERE c.\"movieId\" = \$1 LIMIT 10 OFFSET 0`
+	query := `
+		SELECT c.id, c.\"parentId\", c.text, c.\"createdAt\", c.\"updatedAt\", u.username, u.photourl, u.first_name, u.last_name
+		FROM comments c
+		JOIN users u ON c.\"userId\" = u.id
+		WHERE c."movieId" = \$1
+		ORDER BY c.id DESC LIMIT \$2 OFFSET \$3`
 
 	t.Run("Data from Redis", func(t *testing.T) {
 		// Подготавливаем данные для Redis
@@ -67,9 +70,10 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error mr set")
 		}
+		require.NoError(t, err)
 
 		result, err := s.GetCommentsByIdService(10, 10, 1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, comments, result)
 	})
 
@@ -81,11 +85,11 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 			AddRow(2, sql.NullInt32{Int32: 1, Valid: true}, "Comment 2", time.Now().Round(time.Second), time.Now().Round(time.Second), "user2", "url2", "First2", "Last2")
 
 		mock.ExpectQuery(query).
-			WithArgs(10).
+			WithArgs(10, 10, 0).
 			WillReturnRows(rows)
 
 		result, err := s.GetCommentsByIdService(10, 10, 1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, result, 1)
 		assert.Equal(t, "Comment 1", result[0].Text)
 		assert.Equal(t, "Comment 2", result[0].Children[0].Text)
@@ -97,24 +101,24 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 		mr.FlushAll()
 
 		mock.ExpectQuery(query).
-			WithArgs(10).
+			WithArgs(10, 10, 0).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "parentId", "text", "createdAt", "updatedAt", "username", "photourl", "first_name", "last_name"}))
 
 		result, err := s.GetCommentsByIdService(10, 10, 1)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, result)
-		assert.Contains(t, err.Error(), "нет значений в БД")
+		assert.Contains(t, err.Error(), "Нет значений в БД")
 	})
 
 	t.Run("Database Error", func(t *testing.T) {
 		mr.FlushAll()
 
 		mock.ExpectQuery(query).
-			WithArgs(10).
+			WithArgs(10, 10, 0).
 			WillReturnError(errors.New("database error"))
 
 		result, err := s.GetCommentsByIdService(10, 10, 1)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, result)
 		assert.Contains(t, err.Error(), "database error")
 	})
@@ -128,11 +132,11 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 			AddRow(1, sql.NullInt32{Int32: 0, Valid: true}, "Comment 1", time.Now().Round(time.Second), time.Now().Round(time.Second), "user1", "url1", "First1", "Last1")
 
 		mock.ExpectQuery(query).
-			WithArgs(10).
+			WithArgs(10, 10, 0).
 			WillReturnRows(rows)
 
 		result, err := s.GetCommentsByIdService(10, 10, 1)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, result, 1)
 		assert.Equal(t, "Comment 1", result[0].Text)
 		assert.Equal(t, "user1", result[0].User.Username)

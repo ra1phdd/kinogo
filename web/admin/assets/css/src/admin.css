@@ -109,9 +109,6 @@ body * {
   border-radius: 10px;
   margin-bottom: 15px;
 }
-.section__movies .section__movies-add input::-moz-placeholder {
-  color: #d4d4d4;
-}
 .section__movies .section__movies-add input::placeholder {
   color: #d4d4d4;
 }
@@ -230,4 +227,6 @@ body * {
 }
 .hystmodal__window #progress__processing #progress__processing-bar {
   width: 0.1%;
-}/*# sourceMappingURL=admin.css.map */
+}
+
+/*# sourceMappingURL=admin.css.map */
