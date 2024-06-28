@@ -6,6 +6,8 @@ import Navigation from "@components/Navigation.tsx";
 import Home from "./pages/Home/Home.tsx"
 import Movie from "./pages/Movie/Movie.tsx"
 import Auth from "@components/TelegramAuth.tsx"
+import Search from "@/pages/Search/Search.tsx";
+import Filter from "@/pages/Filter/Filter.tsx";
 
 function App() {
     return (
@@ -30,6 +32,8 @@ function App() {
                         <Route path="/cartoons" element={<Home />} />
                         <Route path="/telecasts" element={<Home />} />
                         <Route path="/id/:id" element={<Movie />} />
+                        <Route path="/search" element={<Search />} />
+                        <Route path="/filter" element={<Filter />} />
                     </Routes>
                 </main>
             </div>

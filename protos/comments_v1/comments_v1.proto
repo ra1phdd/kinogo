@@ -46,6 +46,7 @@ message GetCommentsByIdItem {
   repeated GetCommentsByIdItem children = 7;
 }
 message GetUserById {
+  int32 id = 1;
   string username = 2;
   string photoUrl = 3;
   string firstName = 4;

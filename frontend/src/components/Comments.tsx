@@ -134,7 +134,7 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
             {comments.map((comment) => (
                 <Comment key={comment.id} comment={comment} onReply={handleReply} onEdit={handleEdit} refreshComments={refreshComments} />
             ))}
-            {loading && <p>Loading...</p>}
+            {loading && <p>Загрузка...</p>}
             {!loading && comments.length === 0 && <p>No comments found.</p>}
         </>
     );
@@ -142,6 +142,8 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
 
 const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onEdit, refreshComments }) => {
     const showReplyButton = level < 7;
+    const [userCheck, setUserCheck] = useState(false);
+    let userId: number | null = null;
 
     const handleReplyClick = () => {
         onReply(comment.id, comment);
@@ -158,8 +160,21 @@ const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onE
         } catch (error) {
             console.error('Failed to add comment:', error);
         }
-        console.log("заявка на делит")
     };
+
+    useEffect(() => {
+        const storedUserId = localStorage.getItem('userid');
+        if (storedUserId !== null) {
+            userId = Number(storedUserId);
+        } else {
+            console.error('User ID is not available.');
+            return;
+        }
+
+        if (userId == comment.user.id){
+            setUserCheck(true);
+        }
+    }, []);
 
     return (
         <div className={`comment level-${level} id-${comment.id}`}>
@@ -176,11 +191,15 @@ const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onE
                     Ответить
                 </span>
             )}
-            <button onClick={handleEditClick}>Edit</button>
-            <button onClick={handleDeleteClick}>Delete</button>
+            {userCheck && (
+                <span className="edit-button" onClick={handleEditClick}>Edit</span>
+            )}
+            {userCheck && (
+                <span className="delete-button" onClick={handleDeleteClick}>Delete</span>
+            )}
             {comment.children && comment.children.length > 0 && (
-                <div className="comment">
-                    {comment.children.map((child) => (
+            <div className="comment">
+            {comment.children.map((child) => (
                         <Comment
                             key={child.id}
                             comment={child}

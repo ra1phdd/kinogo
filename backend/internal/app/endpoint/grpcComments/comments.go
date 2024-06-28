@@ -93,6 +93,7 @@ func convertCommentsToPb(comments []models.Comments) []*pb.GetCommentsByIdItem {
 			Id:       comment.ID,
 			ParentId: comment.ParentID,
 			User: &pb.GetUserById{
+				Id:        comment.User.ID,
 				Username:  comment.User.Username,
 				PhotoUrl:  comment.User.PhotoUrl,
 				FirstName: comment.User.FirstName,

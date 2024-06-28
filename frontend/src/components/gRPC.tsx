@@ -1,6 +1,7 @@
-import { movies_v1 } from '@protos/movies_v1/movies_v1';
-import { comments_v1 } from '@protos/comments_v1/comments_v1'
+import {movies_v1} from '@protos/movies_v1/movies_v1';
+import {comments_v1} from '@protos/comments_v1/comments_v1'
 import {google} from "@/google/protobuf/timestamp.ts";
+import Genres = movies_v1.Genres;
 
 const clientMoviesV1 = new movies_v1.MoviesV1Client('http://localhost:10000');
 const clientCommentsV1 = new comments_v1.CommentsV1Client('http://localhost:10000');
@@ -47,6 +48,7 @@ export interface Comments {
     id: number;
     parentId: number;
     user: {
+        id: number;
         username: string;
         photoUrl: string;
         firstName: string;
@@ -132,6 +134,53 @@ export function getBestMovie(): Promise<BestMovie[]> {
                     poster: movie.poster
                 }));
                 resolve(bestMovies);
+            } else {
+                reject(new Error('No comments found'));
+            }
+        });
+    });
+}
+
+export function getSearchMovies(text: string, limit: number, page: number): Promise<Movies[]> {
+    return new Promise((resolve, reject) => {
+        const request = new movies_v1.GetMoviesByFilterRequest();
+        request.filters = new movies_v1.GetMoviesByFilterItem();
+        request.filters.search = text;
+        request.limit = limit;
+        request.page = page;
+
+        clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
+            if (err) {
+                reject(err);
+            }  else if (response && response.movies) {
+                resolve(response.movies);
+            } else {
+                reject(new Error('No comments found'));
+            }
+        });
+    });
+}
+
+export function getFilterMovies(genres: string, yearMin: number, yearMax: number, limit: number, page: number): Promise<Movies[]> {
+    return new Promise((resolve, reject) => {
+        const request = new movies_v1.GetMoviesByFilterRequest();
+        request.filters = new movies_v1.GetMoviesByFilterItem();
+
+        request.filters.genres = genres.split(',').map((genre) => {
+            const genreObj = new Genres();
+            genreObj.name = genre.trim();
+            return genreObj;
+        });
+        request.filters.yearMin = yearMin;
+        request.filters.yearMax = yearMax
+        request.limit = limit;
+        request.page = page;
+
+        clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
+            if (err) {
+                reject(err);
+            }  else if (response && response.movies) {
+                resolve(response.movies);
             } else {
                 reject(new Error('No comments found'));
             }

@@ -775,6 +775,7 @@ export namespace comments_v1 {
     export class GetUserById extends pb_1.Message {
         #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
+            id?: number;
             username?: string;
             photoUrl?: string;
             firstName?: string;
@@ -783,6 +784,9 @@ export namespace comments_v1 {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
+                if ("id" in data && data.id != undefined) {
+                    this.id = data.id;
+                }
                 if ("username" in data && data.username != undefined) {
                     this.username = data.username;
                 }
@@ -796,6 +800,12 @@ export namespace comments_v1 {
                     this.lastName = data.lastName;
                 }
             }
+        }
+        get id() {
+            return pb_1.Message.getFieldWithDefault(this, 1, 0) as number;
+        }
+        set id(value: number) {
+            pb_1.Message.setField(this, 1, value);
         }
         get username() {
             return pb_1.Message.getFieldWithDefault(this, 2, "") as string;
@@ -822,12 +832,16 @@ export namespace comments_v1 {
             pb_1.Message.setField(this, 5, value);
         }
         static fromObject(data: {
+            id?: number;
             username?: string;
             photoUrl?: string;
             firstName?: string;
             lastName?: string;
         }): GetUserById {
             const message = new GetUserById({});
+            if (data.id != null) {
+                message.id = data.id;
+            }
             if (data.username != null) {
                 message.username = data.username;
             }
@@ -844,11 +858,15 @@ export namespace comments_v1 {
         }
         toObject() {
             const data: {
+                id?: number;
                 username?: string;
                 photoUrl?: string;
                 firstName?: string;
                 lastName?: string;
             } = {};
+            if (this.id != null) {
+                data.id = this.id;
+            }
             if (this.username != null) {
                 data.username = this.username;
             }
@@ -867,6 +885,8 @@ export namespace comments_v1 {
         serialize(w: pb_1.BinaryWriter): void;
         serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
             const writer = w || new pb_1.BinaryWriter();
+            if (this.id != 0)
+                writer.writeInt32(1, this.id);
             if (this.username.length)
                 writer.writeString(2, this.username);
             if (this.photoUrl.length)
@@ -884,6 +904,9 @@ export namespace comments_v1 {
                 if (reader.isEndGroup())
                     break;
                 switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.id = reader.readInt32();
+                        break;
                     case 2:
                         message.username = reader.readString();
                         break;

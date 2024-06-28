@@ -40,7 +40,7 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 	}
 
 	query := `
-		SELECT c.id, c."parentId", c.text, c."createdAt", c."updatedAt", u.username, u.photourl, u.first_name, u.last_name
+		SELECT c.id, c."parentId", c.text, c."createdAt", c."updatedAt", c."userId", u.username, u.photourl, u.first_name, u.last_name
 		FROM comments c
 		JOIN users u ON c."userId" = u.id
 		WHERE c."movieId" = $1
@@ -71,12 +71,12 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 	var rootComments []models.Comments
 
 	for rows.Next() {
-		var id int32
+		var id, userId int32
 		var parentId sql.NullInt32
 		var text string
 		var createdAt, updatedAt time.Time
 		var username, photoUrl, firstName, lastName string
-		errScan := rows.Scan(&id, &parentId, &text, &createdAt, &updatedAt, &username, &photoUrl, &firstName, &lastName)
+		errScan := rows.Scan(&id, &parentId, &text, &createdAt, &updatedAt, &userId, &username, &photoUrl, &firstName, &lastName)
 		if errScan != nil {
 			logger.Error("Ошибка сканирования строки результата запроса")
 			return nil, errScan
@@ -89,6 +89,7 @@ func (s Service) GetCommentsByIdService(movieId int32, limit int32, page int32) 
 			CreatedAt: createdAt,
 			UpdatedAt: updatedAt,
 			User: models.User{
+				ID:        userId,
 				Username:  username,
 				PhotoUrl:  photoUrl,
 				FirstName: firstName,

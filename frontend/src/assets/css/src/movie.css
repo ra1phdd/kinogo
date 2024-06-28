@@ -209,6 +209,7 @@
 .section__comments .comment {
   margin-top: 10px;
   margin-left: 20px;
+  position: relative;
 }
 .section__comments .comment .comment__user-info {
   display: flex;
@@ -231,11 +232,21 @@
 .section__comments .comment p {
   margin: 10px 0;
 }
-.section__comments .comment .reply-button {
+.section__comments .comment .reply-button, .section__comments .comment .edit-button, .section__comments .comment .delete-button {
   display: block;
   cursor: pointer;
   font-size: 14px;
   color: #d4d4d4;
+}
+.section__comments .comment .edit-button {
+  position: absolute;
+  top: 5px;
+  right: 65px;
+}
+.section__comments .comment .delete-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
 }
 
 /*# sourceMappingURL=movie.css.map */

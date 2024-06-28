@@ -27,7 +27,7 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 	s := Service{}
 
 	query := `
-		SELECT c.id, c.\"parentId\", c.text, c.\"createdAt\", c.\"updatedAt\", u.username, u.photourl, u.first_name, u.last_name
+		SELECT c.id, c.\"parentId\", c.text, c.\"createdAt\", c.\"updatedAt\", c.\"userId\", u.username, u.photourl, u.first_name, u.last_name
 		FROM comments c
 		JOIN users u ON c.\"userId\" = u.id
 		WHERE c."movieId" = \$1
@@ -38,12 +38,12 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 		comments := []models.Comments{
 			{
 				ID:        1,
-				UserID:    1,
 				ParentID:  0,
 				Text:      "Comment 1",
 				CreatedAt: time.Now().Round(time.Second),
 				UpdatedAt: time.Now().Round(time.Second),
 				User: models.User{
+					ID:        1,
 					Username:  "user1",
 					PhotoUrl:  "url1",
 					FirstName: "First1",
@@ -52,12 +52,12 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 			},
 			{
 				ID:        2,
-				UserID:    2,
 				ParentID:  1,
 				Text:      "Comment 2",
 				CreatedAt: time.Now().Round(time.Second),
 				UpdatedAt: time.Now().Round(time.Second),
 				User: models.User{
+					ID:        2,
 					Username:  "user2",
 					PhotoUrl:  "url2",
 					FirstName: "First2",
@@ -80,9 +80,9 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 	t.Run("Data from Database", func(t *testing.T) {
 		mr.FlushAll()
 
-		rows := sqlmock.NewRows([]string{"id", "parentId", "text", "createdAt", "updatedAt", "username", "photourl", "first_name", "last_name"}).
-			AddRow(1, sql.NullInt32{Int32: 0, Valid: true}, "Comment 1", time.Now().Round(time.Second), time.Now().Round(time.Second), "user1", "url1", "First1", "Last1").
-			AddRow(2, sql.NullInt32{Int32: 1, Valid: true}, "Comment 2", time.Now().Round(time.Second), time.Now().Round(time.Second), "user2", "url2", "First2", "Last2")
+		rows := sqlmock.NewRows([]string{"id", "parentId", "text", "createdAt", "updatedAt", "userId", "username", "photourl", "first_name", "last_name"}).
+			AddRow(1, sql.NullInt32{Int32: 0, Valid: true}, "Comment 1", time.Now().Round(time.Second), time.Now().Round(time.Second), 1, "user1", "url1", "First1", "Last1").
+			AddRow(2, sql.NullInt32{Int32: 1, Valid: true}, "Comment 2", time.Now().Round(time.Second), time.Now().Round(time.Second), 2, "user2", "url2", "First2", "Last2")
 
 		mock.ExpectQuery(query).
 			WithArgs(10, 10, 0).
@@ -102,7 +102,7 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 
 		mock.ExpectQuery(query).
 			WithArgs(10, 10, 0).
-			WillReturnRows(sqlmock.NewRows([]string{"id", "parentId", "text", "createdAt", "updatedAt", "username", "photourl", "first_name", "last_name"}))
+			WillReturnRows(sqlmock.NewRows([]string{"id", "parentId", "text", "createdAt", "updatedAt", "userId", "username", "photourl", "first_name", "last_name"}))
 
 		result, err := s.GetCommentsByIdService(10, 10, 1)
 		require.Error(t, err)
@@ -128,8 +128,8 @@ func TestService_GetCommentsByIdService(t *testing.T) {
 			Addr: "localhost:6379",
 		})
 
-		rows := sqlmock.NewRows([]string{"id", "parentId", "text", "createdAt", "updatedAt", "username", "photourl", "first_name", "last_name"}).
-			AddRow(1, sql.NullInt32{Int32: 0, Valid: true}, "Comment 1", time.Now().Round(time.Second), time.Now().Round(time.Second), "user1", "url1", "First1", "Last1")
+		rows := sqlmock.NewRows([]string{"id", "parentId", "text", "createdAt", "updatedAt", "userId", "username", "photourl", "first_name", "last_name"}).
+			AddRow(1, sql.NullInt32{Int32: 0, Valid: true}, "Comment 1", time.Now().Round(time.Second), time.Now().Round(time.Second), 1, "user1", "url1", "First1", "Last1")
 
 		mock.ExpectQuery(query).
 			WithArgs(10, 10, 0).

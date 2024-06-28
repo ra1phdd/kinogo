@@ -1,10 +1,42 @@
 import '../../assets/css/src/nouislider.css';
 import noUiSlider from 'nouislider';
 import customSelect from '../../assets/js/src/custom-select';
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import AnimateElement from "@components/AnimateElement.tsx";
+import { useNavigate } from 'react-router-dom';
 
 const FilterAside = React.memo(() => {
+    const [formData, setFormData] = useState<{ genre: string[], year__min: string, year__max: string }>({
+        genre: [],
+        year__min: '',
+        year__max: ''
+    });
+    const navigate = useNavigate();
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+
+        if (name === 'genre') {
+            const selectedOptions = (e.target as HTMLSelectElement).selectedOptions;
+            const selectedGenres = Array.from(selectedOptions).map(option => option.value);
+            setFormData(prevState => ({
+                ...prevState,
+                genre: selectedGenres,
+            }));
+        } else {
+            setFormData({
+                ...formData,
+                [name]: value,
+            });
+        }
+    };
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        console.log(formData)
+        e.preventDefault();
+        navigate('/filter', { state: formData });
+    };
+
     useEffect(() => {
         const asideFilter = document.querySelector<HTMLElement>(".aside__filter");
 
@@ -65,8 +97,8 @@ const FilterAside = React.memo(() => {
     return (
         <div className="aside__filter">
             <h3>Сортировка</h3>
-            <form action="/filter" method="POST">
-                <select className="custom-select" name="genre" multiple>
+            <form onSubmit={handleSubmit}>
+                <select className="custom-select" name="genre" multiple onChange={handleChange}>
                     <option value="выбрать">Выберите жанр</option>
                     <option value="аниме">Аниме</option>
                     <option value="биография">Биография</option>
@@ -102,8 +134,10 @@ const FilterAside = React.memo(() => {
                     <h4>Выберите год</h4>
                     <div id="slider"></div>
                     <div className="slider__value">
-                        <input type="text" id="slider-min" name="year__min"/>
-                        <input type="text" id="slider-max" name="year__max"/>
+                        <input type="text" id="slider-min" name="year__min" value={formData.year__min}
+                               onChange={handleChange}/>
+                        <input type="text" id="slider-max" name="year__max" value={formData.year__max}
+                               onChange={handleChange}/>
                     </div>
                 </div>
                 <button type="submit">
