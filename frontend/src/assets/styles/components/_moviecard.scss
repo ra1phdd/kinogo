@@ -1,0 +1,35 @@
+.card{
+  display: none;
+  text-align: center;
+  width: 15rem;
+  margin: 0 auto;
+  a{
+    text-decoration: none;
+    .card__poster img{
+      width: 15rem;
+      border-radius: 1rem;
+    }
+    .card__info{
+      .card__info-title{
+        text-align: center;
+        margin: 0.75rem 0;
+      }
+      .card__info-rating {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.375rem;
+        border-radius: 0.625rem;
+        p{
+          margin: 0;
+        }
+      }
+      .card__info-genres {
+        p {
+          margin: 0 0 0.5rem 0;
+          color: $text-secondary-color;
+        }
+      }
+    }
+  }
+}

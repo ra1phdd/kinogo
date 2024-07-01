@@ -1,54 +1,75 @@
-import '../../assets/css/src/nouislider.css';
-import noUiSlider from 'nouislider';
-import customSelect from '../../assets/js/src/custom-select';
-import React, {useEffect, useState} from "react";
-import AnimateElement from "@components/AnimateElement.tsx";
-import { useNavigate } from 'react-router-dom';
+import '../../assets/styles/vendor/nouislider.min.css';
+import noUiSlider, { API } from 'nouislider';
+import CustomSelect from '@components/CustomSelect';
+import React, { useEffect, useState } from "react";
+import AnimateElement from "@components/AnimateElement";
+import { useNavigate } from "react-router-dom";
 
+interface HTMLElementWithNoUiSlider extends HTMLElement {
+    noUiSlider?: API;
+}
 const FilterAside = React.memo(() => {
-    const [formData, setFormData] = useState<{ genre: string[], year__min: string, year__max: string }>({
-        genre: [],
+    const [formData, setFormData] = useState<{ genres: string[], year__min: string, year__max: string }>({
+        genres: [],
         year__min: '',
         year__max: ''
     });
     const navigate = useNavigate();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+    const handleSelectChange = (selected: string[]) => {
+        setFormData(prevState => ({
+            ...prevState,
+            genres: selected
+        }));
+    };
 
-        if (name === 'genre') {
-            const selectedOptions = (e.target as HTMLSelectElement).selectedOptions;
-            const selectedGenres = Array.from(selectedOptions).map(option => option.value);
+    const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(e.target.value);
+        if (!isNaN(value) && value >= 1980) {
             setFormData(prevState => ({
                 ...prevState,
-                genre: selectedGenres,
+                year__min: value.toString(),
             }));
-        } else {
-            setFormData({
-                ...formData,
-                [name]: value,
-            });
+            const slider = document.getElementById("slider") as HTMLElementWithNoUiSlider;
+            if (slider && slider.noUiSlider) {
+                slider.noUiSlider.set([value, null]);
+            }
+        }
+    };
+
+    const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(e.target.value);
+        if (!isNaN(value) && value <= new Date().getFullYear()) {
+            setFormData(prevState => ({
+                ...prevState,
+                year__max: value.toString(),
+            }));
+            const slider = document.getElementById("slider") as HTMLElementWithNoUiSlider;
+            if (slider && slider.noUiSlider) {
+                slider.noUiSlider.set([null, value]);
+            }
         }
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        console.log(formData)
         e.preventDefault();
+
         navigate('/filter', { state: formData });
+
+        window.location.reload();
     };
 
     useEffect(() => {
         const asideFilter = document.querySelector<HTMLElement>(".aside__filter");
+        const currentYear = new Date().getFullYear();
 
         if (asideFilter !== null) {
-            AnimateElement(asideFilter, "animate__fadeInRight", 300);
+            AnimateElement(asideFilter, "animate__fadeInRight", 75);
         }
 
-        customSelect();
-
-        const slider: any = document.getElementById("slider");
-        const sliderValueMin: any = document.getElementById("slider-min");
-        const sliderValueMax: any = document.getElementById("slider-max");
+        const slider = document.getElementById("slider") as HTMLElementWithNoUiSlider;
+        const sliderValueMin = document.getElementById("slider-min") as HTMLInputElement;
+        const sliderValueMax = document.getElementById("slider-max") as HTMLInputElement;
 
         if (slider != null) {
             if (slider.noUiSlider) {
@@ -56,97 +77,84 @@ const FilterAside = React.memo(() => {
             }
 
             noUiSlider.create(slider, {
-                start: [1980, 2024],
+                start: [1980, currentYear],
                 connect: false,
                 step: 1,
                 range: {
                     min: 1980,
-                    max: 2024,
+                    max: currentYear,
                 },
             });
 
-            slider.noUiSlider.on("update", function (values: any) {
-                sliderValueMin.value = parseInt(values[0]);
-                sliderValueMax.value = parseInt(values[1]);
-            });
+            slider.noUiSlider?.on("update", (values: (string | number)[]) => {
+                const min = parseInt(String(values[0]));
+                const max = parseInt(String(values[1]));
 
-            sliderValueMin.addEventListener("input", function (this: HTMLInputElement) {
-                const value = parseInt(this.value);
-                if (!isNaN(value) && value > 1980) {
-                    slider.noUiSlider.set([value, null]);
-                }
-            });
+                sliderValueMin.value = String(min);
+                sliderValueMax.value = String(max);
 
-            sliderValueMax.addEventListener("input", function (this: HTMLInputElement) {
-                const value = parseInt(this.value);
-                if (!isNaN(value) && value < 2024) {
-                    slider.noUiSlider.set([null, value]);
-                }
-            });
-
-            sliderValueMin.addEventListener("change", function (this: HTMLInputElement) {
-                slider.noUiSlider.set([this.value, null]);
-            });
-
-            sliderValueMax.addEventListener("change", function (this: HTMLInputElement) {
-                slider.noUiSlider.set([null, this.value]);
+                setFormData(prevState => ({
+                    ...prevState,
+                    year__min: String(min),
+                    year__max: String(max),
+                }));
             });
         }
     }, []);
+
+    const genreOptions = [
+        { value: 'аниме', label: 'Аниме' },
+        { value: 'биография', label: 'Биография' },
+        { value: 'боевик', label: 'Боевик' },
+        { value: 'вестерн', label: 'Вестерн' },
+        { value: 'военный', label: 'Военный' },
+        { value: 'детектив', label: 'Детектив' },
+        { value: 'детский', label: 'Детский' },
+        { value: 'документальный', label: 'Документальный' },
+        { value: 'драма', label: 'Драма' },
+        { value: 'игра', label: 'Игра' },
+        { value: 'история', label: 'История' },
+        { value: 'комедия', label: 'Комедия' },
+        { value: 'концерт', label: 'Концерт' },
+        { value: 'короткометражка', label: 'Короткометражка' },
+        { value: 'криминал', label: 'Криминал' },
+        { value: 'мелодрама', label: 'Мелодрама' },
+        { value: 'музыка', label: 'Музыка' },
+        { value: 'мультфильм', label: 'Мультфильм' },
+        { value: 'мюзикл', label: 'Мюзикл' },
+        { value: 'новости', label: 'Новости' },
+        { value: 'приключения', label: 'Приключения' },
+        { value: 'семейный', label: 'Семейный' },
+        { value: 'спорт', label: 'Спорт' },
+        { value: 'ток-шоу', label: 'Ток-шоу' },
+        { value: 'триллер', label: 'Триллер' },
+        { value: 'ужасы', label: 'Ужасы' },
+        { value: 'фантастика', label: 'Фантастика' },
+        { value: 'фэнтези', label: 'Фэнтези' },
+    ];
 
     return (
         <div className="aside__filter">
             <h3>Сортировка</h3>
             <form onSubmit={handleSubmit}>
-                <select className="custom-select" name="genre" multiple onChange={handleChange}>
-                    <option value="выбрать">Выберите жанр</option>
-                    <option value="аниме">Аниме</option>
-                    <option value="биография">Биография</option>
-                    <option value="боевик">Боевик</option>
-                    <option value="вестерн">Вестерн</option>
-                    <option value="военный">Военный</option>
-                    <option value="детектив">Детектив</option>
-                    <option value="детский">Детский</option>
-                    <option value="документальный">Документальный</option>
-                    <option value="драма">Драма</option>
-                    <option value="игра">Игра</option>
-                    <option value="история">История</option>
-                    <option value="комедия">Комедия</option>
-                    <option value="концерт">Концерт</option>
-                    <option value="короткометражка">Короткометражка</option>
-                    <option value="криминал">Криминал</option>
-                    <option value="мелодрама">Мелодрама</option>
-                    <option value="музыка">Музыка</option>
-                    <option value="мультфильм">Мультфильм</option>
-                    <option value="мюзикл">Мюзикл</option>
-                    <option value="новости">Новости</option>
-                    <option value="приключения">Приключения</option>
-                    <option value="семейный">Семейный</option>
-                    <option value="спорт">Спорт</option>
-                    <option value="ток-шоу">Ток-шоу</option>
-                    <option value="триллер">Триллер</option>
-                    <option value="ужасы">Ужасы</option>
-                    <option value="фантастика">Фантастика</option>
-                    <option value="фэнтези">Фэнтези</option>
-                </select>
-                <div className="select-wrapper"></div>
+                <CustomSelect options={genreOptions} onSelectChange={handleSelectChange} />
                 <div className="slider__year">
                     <h4>Выберите год</h4>
                     <div id="slider"></div>
                     <div className="slider__value">
                         <input type="text" id="slider-min" name="year__min" value={formData.year__min}
-                               onChange={handleChange}/>
+                               onChange={handleMinChange}/>
                         <input type="text" id="slider-max" name="year__max" value={formData.year__max}
-                               onChange={handleChange}/>
+                               onChange={handleMaxChange}/>
                     </div>
                 </div>
                 <button type="submit">
                     <div id="circle"></div>
-                    <a href="#">Отправить</a>
+                    <span>Отправить</span>
                 </button>
             </form>
         </div>
     )
 });
 
-export default FilterAside
+export default FilterAside;

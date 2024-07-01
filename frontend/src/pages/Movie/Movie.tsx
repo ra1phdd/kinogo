@@ -1,10 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { useParams } from 'react-router-dom';
 import AnimateElement from '@components/AnimateElement';
-import SearchAside from '@components/Aside/Search';
-import FilterAside from '@components/Aside/Filter';
-import BestMovieAside from '@components/Aside/BestMovie';
-import '@assets/css/src/movie.css'
+import '@assets/styles/pages/movie.css';
 import VideoPlayer from "@components/HLSPlayer.tsx";
 import { Movie, getMovieById } from "@components/gRPC.tsx";
 import CommentsComponent from "@components/Comments.tsx";
@@ -32,30 +29,6 @@ const MovieDetails: React.FC<MovieCardProps> = ({ movie }) => {
             <div className="section__movie-info">
                 <h1>{movie.title}</h1>
                 <p>{movie.description}</p>
-                <div className="section__movie-main">
-                    <div className="section__movie-buttons">
-                        <div className="button__like">
-                            <form action="/like" method="post">
-                                <input type="hidden" name="id" value={movie.id} className="likeValue"/>
-                                <button type="submit" className="likeButton">Поставить лайк</button>
-                            </form>
-                        </div>
-                        <div className="button__dislike">
-                            <form action="/dislike" method="post">
-                                <input type="hidden" name="id" value={movie.id} className="dislikeValue"/>
-                                <button type="submit" className="dislikeButton">Поставить дизлайк</button>
-                            </form>
-                        </div>
-                    </div>
-                    <div className="section__movie-ratings">
-                        <div className="rating__kinopoisk rating">
-                            <p>Кинопоиск {movie.scoreKP}</p>
-                        </div>
-                        <div className="rating__imdb rating">
-                            <p>IMDb {movie.scoreIMDB}</p>
-                        </div>
-                    </div>
-                </div>
                 <h3>О фильме</h3>
                 <table>
                     <tbody>
@@ -93,13 +66,18 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
     return (
         <>
             <MovieDetails movie={movie} />
-            <div className="section__player">
-                {hasToken ? (
-                    <VideoPlayer id={movie.id} title={movie.title} />
-                ) : (
-                    <p style={{ color: '#d4d4d4', textAlign: 'center' }}>Для просмотра этого контента авторизуйтесь на сайте.</p>
-                )}
-            </div>
+            {hasToken ? (
+                <div className="section__player">
+                    <VideoPlayer id={movie.id} title={movie.title}/>
+                </div>
+            ) : (
+                <div className="section__player out">
+                    {!hasToken && (
+                        <div className="section__player-hide">Для просмотра этого контента авторизуйтесь на сайте</div>
+                    )}
+                    <VideoPlayer id={movie.id} title={movie.title}/>
+                </div>
+            )}
             <div className="section__comments">
                 <h2>Комментарии</h2>
                 <CommentsComponent id={movie.id}/>
@@ -110,7 +88,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 
 // Компонент Movie
 const GetMovie: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const [movie, setMovie] = useState<Movie | null>(null);
 
     const fetchMovieById = useCallback(async () => {
@@ -156,11 +134,6 @@ const GetMovie: React.FC = () => {
                     <MovieCard key={movie.id} movie={movie} />
                 </div>
             </div>
-            <aside>
-                <SearchAside />
-                <FilterAside />
-                <BestMovieAside />
-            </aside>
         </>
     );
 };

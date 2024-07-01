@@ -1,0 +1,45 @@
+.out [data-media-player]{
+  filter: blur(15px) brightness(75%);
+}
+
+.section__player{
+  margin-bottom: 2rem;
+  display: none;
+  [data-media-player][data-controls] .quality-selector{
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .quality-selector{
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    button{
+      border: 1px solid #232323;
+      border-radius: 4px;
+      background-color: #0a0a0a;
+      padding: 7.5px;
+      margin-right: 5px;
+      transition: .1s ease-in-out;
+      &:hover{
+        background-color: #222222;
+        transition: .1s ease-in-out;
+        cursor: pointer;
+      }
+      &.active{
+        background-color: #222222;
+      }
+    }
+  }
+  .section__player-hide{
+    width: 100%;
+    padding: 28.125% 0;
+    position: absolute;
+    z-index: 100;
+    font-size: 1.5rem;
+    color: #d4d4d4;
+    text-align: center;
+  }
+}

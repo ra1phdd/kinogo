@@ -166,11 +166,13 @@ export function getFilterMovies(genres: string, yearMin: number, yearMax: number
         const request = new movies_v1.GetMoviesByFilterRequest();
         request.filters = new movies_v1.GetMoviesByFilterItem();
 
-        request.filters.genres = genres.split(',').map((genre) => {
-            const genreObj = new Genres();
-            genreObj.name = genre.trim();
-            return genreObj;
-        });
+        if (genres != ""){
+            request.filters.genres = genres.split(',').map((genre) => {
+                const genreObj = new Genres();
+                genreObj.name = genre.trim();
+                return genreObj;
+            });
+        }
         request.filters.yearMin = yearMin;
         request.filters.yearMax = yearMax
         request.limit = limit;
@@ -179,7 +181,7 @@ export function getFilterMovies(genres: string, yearMin: number, yearMax: number
         clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
             if (err) {
                 reject(err);
-            }  else if (response && response.movies) {
+            } else if (response && response.movies) {
                 resolve(response.movies);
             } else {
                 reject(new Error('No comments found'));

@@ -1,0 +1,94 @@
+@import "../base/variables";
+
+.aside__filter {
+  display: none;
+  padding: 1.5rem 0;
+  border-bottom: 2px $secondary-color solid;
+  h3 {
+    margin-top: 0;
+  }
+  form {
+    .custom-select {
+      position: relative;
+      width: 100%;
+      .select-box {
+        @include component();
+        padding: 1rem;
+        cursor: pointer;
+        z-index: 0;
+        p {
+          padding: 0;
+          margin: auto 0;
+          line-height: 1.4;
+        }
+        span {
+          color: $text-primary-color;
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          transform: rotate(180deg);
+          -webkit-transition: 0.3s;
+          transition: 0.3s;
+          font-size: 1.25rem;
+        }
+        &.clicked {
+          z-index: 1;
+          border-bottom-left-radius: 0;
+          border-bottom-right-radius: 0;
+          box-shadow: none;
+          span {
+            top: 1rem;
+            transform: rotate(90deg);
+          }
+        }
+      }
+      .options {
+        @include component();
+        position: relative;
+        padding: 0;
+        border-radius: 0 0 1rem 1rem;
+        opacity: 0;
+        height: 0;
+        transition: opacity 0.3s ease;
+        &.show{
+          display: block;
+          opacity: 1;
+          height: 100%;
+          transition: 0.3s ease-in-out;
+        }
+        .option{
+          color: $text-primary-color;
+          padding: 1rem;
+          cursor: pointer;
+          &.selected, &:hover {
+            color: $thirdy-color;
+          }
+        }
+      }
+    }
+    .slider__year {
+      .noUi-touch-area {
+        cursor: pointer;
+      }
+      .slider__value {
+        display: flex;
+        margin-top: 0.625rem;
+        input {
+          @include component();
+          padding: 0.5rem;
+          border-radius: 0.5rem;
+          width: 2.5rem;
+          text-align: center;
+        }
+        input:focus {
+          outline: none;
+        }
+        #slider-max {
+          margin-left: auto;
+          margin-right: 0;
+        }
+      }
+    }
+    @include button();
+  }
+}

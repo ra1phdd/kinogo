@@ -1,0 +1,50 @@
+@import "../base/variables";
+
+header{
+  display: flex;
+  padding: 1.5rem 0;
+  border-bottom: 2px $secondary-color solid;
+  .header__logotype h1{
+    margin: 0;
+    a {
+      text-decoration: none;
+      font-size: 1.75rem;
+    }
+  }
+  nav{
+    margin: auto;
+    a{
+      margin: 0 0.5rem;
+      vertical-align: middle;
+      text-decoration: none;
+      transition: 0.3s;
+      &:hover{
+        transition: 0.3s;
+      }
+    }
+  }
+  .header__auth{
+    margin: auto 0;
+    div{
+      height: 1.75rem;
+    }
+    .header__auth-logout{
+      vertical-align: middle;
+      transition: 0.3s;
+      &:hover{
+        cursor: pointer;
+        color: $thirdy-color;
+        transition: 0.3s;
+      }
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  nav{
+    display: none;
+  }
+  .header__auth{
+    display: none;
+  }
+}

@@ -1,0 +1,55 @@
+.section__movie.animate__animated{
+  display: flex;
+}
+.section__movie{
+  margin-bottom: 2rem;
+  .section__movie-img{
+    margin-right: 1.5rem;
+    img{
+      width: 20rem;
+      border-radius: 1rem;
+    }
+  }
+  .section__movie-info{
+    h1{
+      margin-top: 0;
+    }
+    p{
+      color: $text-secondary-color;
+      line-height: 1.5;
+    }
+    table{
+      border-spacing: 0;
+      tr{
+        .titleInfo{
+          color: $text-secondary-color;
+          width: 10rem;
+          padding: 5px 0;
+        }
+        .itemInfo{
+          color: $text-primary-color;
+          padding: 5px 0;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 479px) {
+  .section__movie.animate__animated{
+    display: block;
+  }
+  .section__movie-img{
+    text-align: center;
+  }
+  .section__movie-info {
+    h1 {
+      margin-top: 1rem !important;
+    }
+  }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .section__movie-img img{
+      width: 18rem !important;
+  }
+}

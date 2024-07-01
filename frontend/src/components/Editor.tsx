@@ -65,24 +65,29 @@ const Editor: React.FC<EditorProps> = memo(({ parentId, parentComment, movieId, 
         <form ref={formRef} className="editor" onSubmit={handleSubmit}>
             {parentComment && (
                 <div className="editor__comment">
-                    <p className="editor__comment-answer"><span className="editor__comment-cancel" onClick={onCancelReply}>×</span> Ответ
-                        пользователю <img src={parentComment.user.photoUrl} alt="User"/>{parentComment.user.firstName} {parentComment.user.lastName}</p>
+                    <p className="editor__comment-answer"><span className="editor__comment-cancel"
+                                                                onClick={onCancelReply}>×</span> Ответ
+                        пользователю <img src={parentComment.user.photoUrl}
+                                          alt="User"/>{parentComment.user.firstName} {parentComment.user.lastName}</p>
                     <p className="editor__comment-text">{parentComment.text}</p>
                 </div>
             )}
             {editComment && (
                 <div className="editor__comment">
-                    <p className="editor__comment-answer"><span className="editor__comment-cancel" onClick={onCancelReply}>×</span> Изменение
-                        текста комментария</p>
-                    <p className="editor__comment-text">{editComment.text}</p>
+                    <p className="editor__comment-answer">
+                        <span className="editor__comment-cancel" onClick={onCancelReply}>×</span>
+                         Изменение текста комментария</p>
                 </div>
             )}
             <textarea
                 value={textValue}
                 onChange={handleTextareaChange}
                 placeholder="Введите ваш комментарий..."
-            /><br />
-            <button type="submit">Отправить</button>
+            /><br/>
+            <button type="submit">
+                <div id="circle"></div>
+                <span>Отправить</span>
+            </button>
         </form>
     );
 });

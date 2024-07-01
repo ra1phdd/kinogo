@@ -1,0 +1,20 @@
+@import '../base/reset';
+@import '../base/typography';
+@import '../base/mixins';
+@import '../base/utilites';
+
+@import '../layouts/header';
+@import "../components/movieinfo";
+@import "../components/player";
+@import "../components/editor";
+@import "../components/comment";
+
+.sections{
+  margin-top: 1.5rem;
+  .section__comments{
+    display: none;
+    .level-0{
+      margin-left: 0 !important;
+    }
+  }
+}

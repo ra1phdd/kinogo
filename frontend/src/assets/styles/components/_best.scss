@@ -1,0 +1,17 @@
+.aside__bestmovie {
+  display: none;
+  padding: 1.5rem 0;
+  h3 {
+    margin-top: 0;
+  }
+  .bestmovie__item {
+    img {
+      width: 100%;
+      border-radius: 1.5rem;
+    }
+    p {
+      text-align: center;
+    }
+    @include button();
+  }
+}

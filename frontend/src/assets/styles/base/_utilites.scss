@@ -1,0 +1,89 @@
+@font-face {
+  font-family: "Comfortaa", sans-serif;
+  src: url("/src/assets/fonts/Comfortaa-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+body{
+  background-color: #080715;
+  width: 70%;
+  margin: 0 auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.hide-scrollbar{
+  overflow: hidden;
+}
+::-webkit-scrollbar{
+  width: 10px;
+  background-color: #080715;
+}
+::-webkit-scrollbar-thumb{
+  background-color: #262836;
+}
+
+@media (max-width: 479px) {
+  html{
+    font-size: 10px;
+  }
+  body{
+    width: 80%;
+  }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  html{
+    font-size: 10px;
+  }
+  body{
+    width: 80%;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  html{
+    font-size: 12px;
+  }
+  body{
+    width: 85%;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  html{
+    font-size: 12px;
+  }
+  body{
+    width: 85%;
+  }
+}
+@media (min-width: 1280px) and (max-width: 1599px) {
+  html{
+    font-size: 14px;
+  }
+  body{
+    width: 80%;
+  }
+}
+@media (min-width: 1600px) and (max-width: 1919px) {
+  html{
+    font-size: 14px;
+  }
+  body{
+    width: 80%;
+  }
+}
+@media (min-width: 1920px) and (max-width: 2399px) {
+  html{
+    font-size: 16px;
+  }
+  body{
+    width: 70%;
+  }
+}
+@media (min-width: 2400px) {
+  html{
+    font-size: 18px;
+  }
+  body{
+    width: 75%;
+  }
+}

@@ -200,16 +200,16 @@ const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onE
             {comment.children && comment.children.length > 0 && (
             <div className="comment">
             {comment.children.map((child) => (
-                        <Comment
-                            key={child.id}
-                            comment={child}
-                            level={level + 1}
-                            onReply={onReply}
-                            onEdit={onEdit}
-                            refreshComments={refreshComments}
-                        />
-                    ))}
-                </div>
+                <Comment
+                    key={child.id}
+                    comment={child}
+                    level={level + 1}
+                    onReply={onReply}
+                    onEdit={onEdit}
+                    refreshComments={refreshComments}
+                />
+            ))}
+            </div>
             )}
         </div>
     );

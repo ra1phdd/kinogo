@@ -1,20 +1,21 @@
-import '@components/Navigation.tsx'
-import {BrowserRouter, Routes, Route} from "react-router-dom";
-import '@assets/css/src/main.css'
-import '@assets/css/dist/animate.min.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import '@assets/styles/vendor/animate.min.css'
 import Navigation from "@components/Navigation.tsx";
-import Home from "./pages/Home/Home.tsx"
-import Movie from "./pages/Movie/Movie.tsx"
-import Auth from "@components/TelegramAuth.tsx"
-import Search from "@/pages/Search/Search.tsx";
-import Filter from "@/pages/Filter/Filter.tsx";
+import Auth from "@components/TelegramAuth.tsx";
+import { lazy } from "react";
+
+// Ленивая загрузка страниц
+const Home = lazy(() => import("./pages/Home/Home.tsx"));
+const Movie = lazy(() => import("./pages/Movie/Movie.tsx"));
+const Filter = lazy(() => import("@/pages/Filter/Filter.tsx"));
+const Movies = lazy(() => import("@/pages/Movies/Movies.tsx"));
 
 function App() {
     return (
     <>
         <BrowserRouter>
             <div className="container">
-                <header className="animate__animated animate__fadeInDown animate__faster" style={{overflow: 'hidden'}}>
+                <header>
                     <div className="header__logotype">
                         <h1><a href="/">KINOTEATR</a></h1>
                     </div>
@@ -27,13 +28,15 @@ function App() {
                 </header>
                 <main>
                     <Routes>
+                        {/* Мэйн */}
                         <Route path="/" element={<Home />} />
-                        <Route path="/films" element={<Home />} />
-                        <Route path="/cartoons" element={<Home />} />
-                        <Route path="/telecasts" element={<Home />} />
+                        <Route path="/films" element={<Movies />} />
+                        <Route path="/cartoons" element={<Movies />} />
+                        <Route path="/telecasts" element={<Movies />} />
                         <Route path="/id/:id" element={<Movie />} />
-                        <Route path="/search" element={<Search />} />
+                        <Route path="/search" element={<Filter />} />
                         <Route path="/filter" element={<Filter />} />
+                        {/* Админ-панель */}
                     </Routes>
                 </main>
             </div>

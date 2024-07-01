@@ -6,7 +6,7 @@ function SearchAside() {
 
     useEffect(() => {
         if (asideSearchRef.current !== null) {
-            AnimateElement(asideSearchRef.current, "animate__fadeInRight", 150);
+            AnimateElement(asideSearchRef.current, "animate__fadeInRight", 0);
         }
     }, []);
 

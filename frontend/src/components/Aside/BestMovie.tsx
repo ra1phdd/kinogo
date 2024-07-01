@@ -23,7 +23,7 @@ const BestMovieAside: React.FC = () => {
         const asideBestMovie = document.querySelector<HTMLElement>(".aside__bestmovie");
 
         if (asideBestMovie !== null) {
-            AnimateElement(asideBestMovie, "animate__fadeInRight", 300);
+            AnimateElement(asideBestMovie, "animate__fadeInRight", 150);
         }
     }, [movie]);
 
