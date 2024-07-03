@@ -21,11 +21,11 @@ build-frontend:
 	rm -rf frontend/dist
 	cd frontend && npm run build
 
-.PHONY: generate generate-backend generate-backend-movies generate-backend-interactions generate-backend-comments generate-backend-auth generate-frontend generate-frontend-movies generate-frontend-interactions generate-frontend-comments generate-frontend-auth
+.PHONY: generate generate-backend generate-backend-movies generate-backend-interactions generate-backend-comments generate-backend-metrics generate-frontend generate-frontend-movies generate-frontend-interactions generate-frontend-comments generate-frontend-metrics
 
 generate: generate-backend generate-frontend
 
-generate-backend: generate-backend-movies generate-backend-interactions generate-backend-comments generate-backend-auth
+generate-backend: generate-backend-movies generate-backend-interactions generate-backend-comments generate-backend-metrics
 
 generate-backend-movies:
 	rm -rf backend/pkg/movies_v1
@@ -51,15 +51,15 @@ generate-backend-comments:
 	mv backend/pkg/comments_v1/comments_v1/* backend/pkg/comments_v1
 	rm -rf backend/pkg/comments_v1/comments_v1/
 
-generate-backend-auth:
-	rm -rf backend/pkg/auth_v1
-	mkdir -p backend/pkg/auth_v1
-	protoc --go_out=backend/pkg/auth_v1 --go-grpc_out=backend/pkg/auth_v1 \
-    	protos/auth_v1/auth_v1.proto
-	mv backend/pkg/auth_v1/auth_v1/* backend/pkg/auth_v1
-	rm -rf backend/pkg/auth_v1/auth_v1/
+generate-backend-metrics:
+	rm -rf backend/pkg/metrics_v1
+	mkdir -p backend/pkg/metrics_v1
+	protoc --go_out=backend/pkg/auth_v1 --go-grpc_out=backend/pkg/metrics_v1 \
+    	protos/metrics_v1/metrics_v1.proto
+	mv backend/pkg/metrics_v1/metrics_v1/* backend/pkg/metrics_v1
+	rm -rf backend/pkg/metrics_v1/metrics_v1/
 
-generate-frontend: generate-frontend-movies generate-frontend-interactions generate-frontend-comments generate-frontend-auth
+generate-frontend: generate-frontend-movies generate-frontend-interactions generate-frontend-comments generate-frontend-metrics
 
 generate-frontend-movies:
 	@echo "Generate file movies_v1.ts"
@@ -83,9 +83,9 @@ generate-frontend-comments:
 	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/protos/comments_v1/comments_v1.ts
 	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/google/protobuf/timestamp.ts
 
-generate-frontend-auth:
-	@echo "Generate file auth_v1.ts"
+generate-frontend-metrics:
+	@echo "Generate file metrics_v1.ts"
 	@protoc -I=. --plugin="protoc-gen-ts=frontend/node_modules/.bin/protoc-gen-ts" --ts_opt=target=web --ts_out=frontend/src \
-        protos/auth_v1/auth_v1.proto
+        protos/metrics_v1/metrics_v1.proto
 	@echo "Adding headers to the generated file..."
-	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/protos/auth_v1/auth_v1.ts
+	@sed -i '1i/* eslint-disable */\n// @ts-nocheck' frontend/src/protos/metrics_v1/metrics_v1.ts
