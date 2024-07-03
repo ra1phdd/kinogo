@@ -20,6 +20,7 @@ header{
       transition: 0.3s;
       &:hover{
         transition: 0.3s;
+        color: $thirdy-color;
       }
     }
   }
@@ -35,6 +36,15 @@ header{
         cursor: pointer;
         color: $thirdy-color;
         transition: 0.3s;
+      }
+    }
+    .header__auth-admin{
+      margin-right: 1rem;
+      text-decoration: none;
+      transition: 0.3s;
+      &:hover{
+        transition: 0.3s;
+        color: $thirdy-color;
       }
     }
   }

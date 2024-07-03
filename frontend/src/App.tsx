@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import '@assets/styles/vendor/animate.min.css'
 import Navigation from "@components/Navigation.tsx";
 import Auth from "@components/TelegramAuth.tsx";
-import { lazy } from "react";
+import {lazy} from "react";
+import Studio from "@/pages/Studio/Studio.tsx";
 
 // Ленивая загрузка страниц
 const Home = lazy(() => import("./pages/Home/Home.tsx"));
@@ -37,6 +38,7 @@ function App() {
                         <Route path="/search" element={<Filter />} />
                         <Route path="/filter" element={<Filter />} />
                         {/* Админ-панель */}
+                        <Route path="/studio" element={<Studio />} />
                     </Routes>
                 </main>
             </div>

@@ -1,19 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LoginButton, TelegramAuthData } from '@telegram-auth/react';
+import Cookies from 'js-cookie';
+import { GetIsAdmin } from '@components/JwtDecode.tsx';
 
 function Auth() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [showLoginButton, setShowLoginButton] = useState(false);
-    const [key, setKey] = useState(0);
+    const [userAdmin, setUserAdmin] = useState(false);
+    const isAdmin = GetIsAdmin();
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            setIsAuthenticated(true);
-        } else {
-            setShowLoginButton(true);
-        }
+        const token = Cookies.get('token');
+        setIsAuthenticated(!!token);
     }, []);
+
+    useEffect(() => {
+        if (isAdmin !== undefined) {
+            setUserAdmin(isAdmin);
+        }
+    }, [isAdmin]);
 
     const handleAuthCallback = useCallback(async (data: TelegramAuthData) => {
         try {
@@ -26,17 +30,15 @@ function Auth() {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                console.log(`HTTP error! Status: ${response.status}`);
             }
 
             const result = await response.json();
 
             if (result.success) {
-                localStorage.setItem('token', result.token);
-                localStorage.setItem('userid', result.userid);
+                Cookies.set('token', result.token);
                 setIsAuthenticated(true);
-                setShowLoginButton(false);
-                window.location.reload()
+                window.location.reload();
             } else {
                 console.error('Authentication failed:', result.message);
             }
@@ -46,33 +48,33 @@ function Auth() {
     }, []);
 
     const handleLogout = useCallback(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userid');
+        Cookies.remove('token');
         setIsAuthenticated(false);
-        setShowLoginButton(true);
-        setKey(prevKey => prevKey + 1);
-        window.location.reload()
+        window.location.reload();
     }, []);
 
-    if (isAuthenticated) {
-        return (
-            <a className="header__auth-logout" onClick={handleLogout}>Выйти</a>
-        );
-    }
-
     return (
-        <div key={key}>
-            {showLoginButton && (
-                <LoginButton
-                    botUsername="kinogolang_bot"
-                    buttonSize="medium"
-                    cornerRadius={10}
-                    showAvatar={false}
-                    lang="ru"
-                    onAuthCallback={handleAuthCallback}
-                />
+        <>
+            {isAuthenticated ? (
+                <>
+                    {userAdmin && (
+                        <a className="header__auth-admin" href="/studio">Творческая студия</a>
+                    )}
+                    <a className="header__auth-logout" onClick={handleLogout}>Выйти</a>
+                </>
+            ) : (
+                <div>
+                    <LoginButton
+                        botUsername="kinogolang_bot"
+                        buttonSize="medium"
+                        cornerRadius={10}
+                        showAvatar={false}
+                        lang="ru"
+                        onAuthCallback={handleAuthCallback}
+                    />
+                </div>
             )}
-        </div>
+        </>
     );
 }
 

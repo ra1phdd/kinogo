@@ -6,12 +6,14 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"kinogo/config"
+	"kinogo/internal/app/endpoint/grpcAuth"
 	"kinogo/internal/app/endpoint/grpcComments"
 	"kinogo/internal/app/endpoint/grpcMovies"
 	"kinogo/internal/app/endpoint/restAuth"
-	"kinogo/internal/app/services/auth"
+	auth "kinogo/internal/app/services/auth"
 	comments "kinogo/internal/app/services/comments"
 	movies "kinogo/internal/app/services/movies"
+	pbAuth "kinogo/pkg/auth_v1"
 	"kinogo/pkg/cache"
 	pbComments "kinogo/pkg/comments_v1"
 	"kinogo/pkg/db"
@@ -42,7 +44,7 @@ func New() (*App, error) {
 
 	a := &App{}
 
-	NewGRPC(a)
+	NewGRPC(a, cfg.Auth)
 	NewREST(a, cfg.Auth)
 
 	err = cache.Init(cfg.Redis.RedisAddr+":"+cfg.Redis.RedisPort, cfg.Redis.RedisUsername, cfg.Redis.RedisPassword, cfg.Redis.RedisDBId)
@@ -60,12 +62,13 @@ func New() (*App, error) {
 	return a, nil
 }
 
-func NewGRPC(a *App) {
+func NewGRPC(a *App, cfgAuth config.Auth) {
 	a.server = grpc.NewServer()
 
 	// обьявляем сервисы
 	a.movies = movies.New()
 	a.comments = comments.New()
+	a.auth = auth.New()
 
 	// регистрируем эндпоинты
 	serviceMovies := &grpcMovies.Endpoint{
@@ -74,8 +77,13 @@ func NewGRPC(a *App) {
 	serviceComments := &grpcComments.Endpoint{
 		Comments: a.comments,
 	}
+	serviceAuth := &grpcAuth.Endpoint{
+		Auth:      a.auth,
+		JwtSecret: cfgAuth.JWTSecret,
+	}
 	pbMovies.RegisterMoviesV1Server(a.server, serviceMovies)
 	pbComments.RegisterCommentsV1Server(a.server, serviceComments)
+	pbAuth.RegisterAuthV1Server(a.server, serviceAuth)
 }
 
 func NewREST(a *App, cfgAuth config.Auth) {

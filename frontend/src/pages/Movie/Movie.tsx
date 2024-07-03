@@ -5,6 +5,7 @@ import '@assets/styles/pages/movie.css';
 import VideoPlayer from "@components/HLSPlayer.tsx";
 import { Movie, getMovieById } from "@components/gRPC.tsx";
 import CommentsComponent from "@components/Comments.tsx";
+import Cookies from "js-cookie";
 
 // Пропсы для компонента MovieCard
 interface MovieCardProps {
@@ -59,7 +60,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
     const [hasToken, setHasToken] = useState(false);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = Cookies.get('token');
         setHasToken(!!token);
     }, []);
 

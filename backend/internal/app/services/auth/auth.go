@@ -1,14 +1,20 @@
-package auth
+package auth_v1
 
 import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
+	"kinogo/pkg/logger"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -20,11 +26,15 @@ func New() *Service {
 	return &Service{}
 }
 
-func (s Service) ValidateTelegramAuth(data map[string]string, botToken string) bool {
-	checkHash := data["hash"]
+func (s Service) ValidateTelegramAuth(data map[string]interface{}, botToken string) bool {
+	checkHash, ok := data["hash"].(string)
+	if !ok {
+		fmt.Println("hash is missing or not a string")
+		return false
+	}
 	delete(data, "hash")
 
-	keys := make([]string, 0, len(data))
+	var keys []string
 	for k := range data {
 		keys = append(keys, k)
 	}
@@ -32,9 +42,11 @@ func (s Service) ValidateTelegramAuth(data map[string]string, botToken string) b
 
 	var checkString strings.Builder
 	for _, key := range keys {
-		if value := data[key]; value != "" {
-			checkString.WriteString(key + "=" + value + "\n")
+		value := fmt.Sprintf("%v", data[key])
+		if value == "" {
+			continue
 		}
+		checkString.WriteString(fmt.Sprintf("%s=%s\n", key, value))
 	}
 	checkStringString := strings.TrimSuffix(checkString.String(), "\n")
 
@@ -46,12 +58,27 @@ func (s Service) ValidateTelegramAuth(data map[string]string, botToken string) b
 	hmacHash.Write([]byte(checkStringString))
 	calculatedHash := hex.EncodeToString(hmacHash.Sum(nil))
 
-	fmt.Println(calculatedHash)
+	if !strings.EqualFold(calculatedHash, checkHash) {
+		fmt.Println("calculated hash does not match provided hash")
+		return false
+	}
 
-	return strings.EqualFold(calculatedHash, checkHash)
+	// Проверка времени аутентификации (auth_date)
+	authDate, ok := data["auth_date"].(int)
+	if !ok {
+		fmt.Println("auth_date is missing or not a number")
+		return false
+	}
+	telegramAuthTime := time.Unix(int64(authDate), 0)
+	if time.Since(telegramAuthTime) > 24*time.Hour {
+		fmt.Println("authentication data is outdated")
+		return false
+	}
+
+	return true
 }
 
-func (s Service) AddUserIfNotExists(data map[string]string) {
+func (s Service) AddUserIfNotExists(data map[string]interface{}) {
 	id := data["id"]
 
 	// Проверка на существование пользователя
@@ -83,12 +110,98 @@ func (s Service) AddUserIfNotExists(data map[string]string) {
 	return
 }
 
-func (s Service) GenerateToken(userID string, jwtSecret string) (string, error) {
+func (s Service) GenerateToken(data map[string]interface{}, jwtSecret string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Токен действителен 24 часа
+		"id":        data["id"],
+		"firstName": data["first_name"],
+		"lastName":  data["last_name"],
+		"username":  data["username"],
+		"photoUrl":  data["photo_url"],
+		"authDate":  data["auth_date"],
+		"isAdmin":   data["isAdmin"],
+		"exp":       time.Now().Add(time.Hour * 72).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 
 	return tokenString, err
+}
+
+func (s Service) ValidateToken(tokenString string, data map[string]interface{}, jwtSecret string) (bool, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(jwtSecret), nil
+	})
+	if err != nil {
+		return false, err
+	}
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		fmt.Println(claims)
+		var id string
+
+		if idFloat, ok := claims["id"].(float64); ok {
+			id = strconv.FormatFloat(idFloat, 'f', 0, 64)
+		}
+
+		if id != fmt.Sprint(data["id"].(int32)) {
+			return false, fmt.Errorf("invalid id claim")
+		} else if claims["firstName"] != data["first_name"] {
+			return false, fmt.Errorf("invalid firstName claim")
+		} else if claims["lastName"] != data["last_name"] {
+			return false, fmt.Errorf("invalid lastName claim")
+		} else if claims["username"] != data["username"] {
+			return false, fmt.Errorf("invalid username claim")
+		} else if claims["photoUrl"] != data["photo_url"] {
+			return false, fmt.Errorf("invalid photoUrl claim")
+		} else if claims["isAdmin"] != data["isAdmin"] {
+			return false, fmt.Errorf("invalid isAdmin claim")
+		}
+
+		return true, nil
+	} else {
+		return false, fmt.Errorf("invalid token")
+	}
+}
+
+func (s Service) CheckAdminService(id int32) (bool, error) {
+	authString, err := cache.Rdb.Get(cache.Ctx, fmt.Sprintf("checkAdmin_%d", id)).Result()
+	if err == nil && authString != "" {
+		switch authString {
+		case "true":
+			return true, nil
+		case "false":
+			return false, nil
+		}
+	}
+	if err != nil && !errors.Is(err, redis.Nil) {
+		logger.Error("Ошибка при получении данных из Redis")
+	}
+
+	rows, err := db.Conn.Query(`SELECT "isAdmin" FROM users WHERE id = $1`, id)
+	if err != nil {
+		logger.Error("Ошибка выполнения SQL-запроса", zap.Int32("id", id))
+		return false, err
+	}
+	defer func() {
+		if errClose := rows.Close(); errClose != nil {
+			logger.Error("Ошибка при закрытии rows", zap.Error(errClose))
+		}
+	}()
+
+	var isAdmin bool
+	for rows.Next() {
+		errScan := rows.Scan(&isAdmin)
+		if errScan != nil {
+			logger.Error("Ошибка сканирования строки результата запроса")
+			return false, errScan
+		}
+	}
+
+	err = cache.Rdb.Set(cache.Ctx, fmt.Sprintf("checkAdmin_%d", id), fmt.Sprint(isAdmin), 60*time.Minute).Err()
+	if err != nil {
+		logger.Error("Ошибка при сохранении данных в Redis")
+	}
+
+	return isAdmin, nil
 }

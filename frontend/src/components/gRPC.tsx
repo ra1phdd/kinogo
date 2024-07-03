@@ -1,10 +1,12 @@
 import {movies_v1} from '@protos/movies_v1/movies_v1';
 import {comments_v1} from '@protos/comments_v1/comments_v1'
+import {auth_v1} from "@protos/auth_v1/auth_v1";
 import {google} from "@/google/protobuf/timestamp.ts";
 import Genres = movies_v1.Genres;
 
 const clientMoviesV1 = new movies_v1.MoviesV1Client('http://localhost:10000');
 const clientCommentsV1 = new comments_v1.CommentsV1Client('http://localhost:10000');
+const clientAuthV1 = new auth_v1.AuthV1Client('http://localhost:10000');
 
 export interface Movies {
     id: number;
@@ -265,6 +267,30 @@ export function deleteComment(id: number): Promise<string> {
                 reject(err);
             } else if (response && response.err == "") {
                 resolve("");
+            } else {
+                reject(new Error('Failed to add comment'));
+            }
+        });
+    });
+}
+
+export function checkAuth(token: string, userId: number, firstName: string, lastName: string, username: string, photoUrl: string, authDate: string, isAdmin: boolean): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+        const request = new auth_v1.CheckAuthRequest();
+        request.token = token;
+        request.userId = userId;
+        request.firstName = firstName;
+        request.lastName = lastName;
+        request.username = username;
+        request.photoUrl = photoUrl;
+        request.authDate = authDate;
+        request.isAdmin = isAdmin;
+
+        clientAuthV1.CheckAuth(request, {}, (err, response) => {
+            if (err) {
+                reject(err);
+            } else if (response && response.err == "") {
+                resolve(response.isAuth);
             } else {
                 reject(new Error('Failed to add comment'));
             }

@@ -359,73 +359,63 @@ header .header__auth .header__auth-admin:hover {
     display: none;
   }
 }
-.card {
-  display: none;
-  text-align: center;
-  width: 15rem;
-  margin: 0 auto;
+main {
+  display: flex;
 }
-.card a {
-  text-decoration: none;
+main aside {
+  max-width: 20rem;
+  width: 100%;
 }
-.card a .card__poster img {
-  width: 15rem;
-  border-radius: 1rem;
-}
-.card a .card__info .card__info-title {
-  text-align: center;
-  margin: 0.75rem 0;
-}
-.card a .card__info .card__info-rating {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.375rem;
-  border-radius: 0.625rem;
-}
-.card a .card__info .card__info-rating p {
-  margin: 0;
-}
-.card a .card__info .card__info-genres p {
-  margin: 0 0 0.5rem 0;
-  color: #adadad;
+main .sections {
+  width: 100%;
+  margin: 1.5rem 0 0 1.5rem;
 }
 
-.section__videos {
-  margin: 1.5rem 0;
-  display: grid;
-  gap: 1.5rem;
-}
-
-@media (max-width: 479px) {
+@media (max-width: 767px) {
   .section__videos {
     grid-template-columns: 1fr;
+  }
+  aside {
+    display: none;
   }
 }
 @media (min-width: 480px) and (max-width: 767px) {
   .section__videos {
     grid-template-columns: 1fr 1fr;
   }
+  aside {
+    display: none;
+  }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
+  .section__videos {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
   .section__videos {
     grid-template-columns: 1fr 1fr 1fr;
   }
 }
-@media (min-width: 1024px) and (max-width: 1599px) {
+@media (min-width: 1280px) and (max-width: 1599px) {
+  .section__videos {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+@media (min-width: 1600px) and (max-width: 1919px) {
   .section__videos {
     grid-template-columns: 1fr 1fr 1fr 1fr;
   }
 }
-@media (min-width: 1600px) and (max-width: 2399px) {
+@media (min-width: 1920px) and (max-width: 2399px) {
   .section__videos {
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
   }
 }
 @media (min-width: 2400px) {
   .section__videos {
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   }
 }
 
-/*# sourceMappingURL=home.css.map */
+/*# sourceMappingURL=studio.css.map */

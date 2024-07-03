@@ -1,13 +1,14 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import {Comments, getComments, deleteComment} from '@components/gRPC';
 import Editor from '@components/Editor.tsx';
+import {GetUserId} from "@components/JwtDecode.tsx";
+import Cookies from "js-cookie";
 
 interface CommentProps {
     comment: Comments;
     level?: number;
     onReply: (parentId: number, parentComment: Comments) => void;
     onEdit: (comment: Comments) => void;
-    refreshComments: () => void;
 }
 
 const formatDate = (timestamp: number): string => {
@@ -43,7 +44,7 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
     const [page, setPage] = useState(1);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = Cookies.get('token');
         setHasToken(!!token);
         setMovieId(id);
     }, [id]);
@@ -81,9 +82,9 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
                 .catch((error) => {
                     if (error.code === 5) {
                         setEnd(true);
-                        return
+                    } else {
+                        console.error('Error fetching comments:', error);
                     }
-                    console.error('Error fetching comments:', error);
                 })
                 .finally(() => {
                     setLoading(false);
@@ -104,20 +105,6 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
         };
     }, [handleScroll]);
 
-    const refreshComments = useCallback(() => {
-        getComments(id, 10, 1)
-            .then((commentsData) => {
-                setComments(commentsData);
-            })
-            .catch((error) => {
-                console.error('Error fetching comments:', error);
-            });
-    }, [id]);
-
-    useEffect(() => {
-        refreshComments();
-    }, [id, refreshComments]);
-
     return (
         <>
             {hasToken && (
@@ -127,12 +114,11 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
                     movieId={movieId}
                     onSubmit={handleSubmit}
                     onCancelReply={handleCancelReply}
-                    refreshComments={refreshComments}
                     editComment={editComment}
                 />
             )}
             {comments.map((comment) => (
-                <Comment key={comment.id} comment={comment} onReply={handleReply} onEdit={handleEdit} refreshComments={refreshComments} />
+                <Comment key={comment.id} comment={comment} onReply={handleReply} onEdit={handleEdit} />
             ))}
             {loading && <p>Загрузка...</p>}
             {!loading && comments.length === 0 && <p>No comments found.</p>}
@@ -140,10 +126,10 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
     );
 };
 
-const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onEdit, refreshComments }) => {
+const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onEdit }) => {
     const showReplyButton = level < 7;
     const [userCheck, setUserCheck] = useState(false);
-    let userId: number | null = null;
+    const userId = GetUserId();
 
     const handleReplyClick = () => {
         onReply(comment.id, comment);
@@ -156,25 +142,16 @@ const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onE
     const handleDeleteClick = async () => {
         try {
             await deleteComment(comment.id);
-            refreshComments();
         } catch (error) {
             console.error('Failed to add comment:', error);
         }
     };
 
     useEffect(() => {
-        const storedUserId = localStorage.getItem('userid');
-        if (storedUserId !== null) {
-            userId = Number(storedUserId);
-        } else {
-            console.error('User ID is not available.');
-            return;
+        if ((userId !== undefined) && (userId == comment.user.id)) {
+            setUserCheck(true)
         }
-
-        if (userId == comment.user.id){
-            setUserCheck(true);
-        }
-    }, []);
+    }, [userId]);
 
     return (
         <div className={`comment level-${level} id-${comment.id}`}>
@@ -192,21 +169,20 @@ const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onE
                 </span>
             )}
             {userCheck && (
-                <span className="edit-button" onClick={handleEditClick}>Edit</span>
-            )}
-            {userCheck && (
-                <span className="delete-button" onClick={handleDeleteClick}>Delete</span>
+                <>
+                    <span className="edit-button" onClick={handleEditClick}>Edit</span>
+                    <span className="delete-button" onClick={handleDeleteClick}>Delete</span>
+                </>
             )}
             {comment.children && comment.children.length > 0 && (
-            <div className="comment">
-            {comment.children.map((child) => (
+                <div className="comment">
+                    {comment.children.map((child) => (
                 <Comment
                     key={child.id}
                     comment={child}
                     level={level + 1}
                     onReply={onReply}
                     onEdit={onEdit}
-                    refreshComments={refreshComments}
                 />
             ))}
             </div>
