@@ -32,6 +32,7 @@ const Editor: React.FC<EditorProps> = memo(({ parentId, parentComment, movieId, 
             }
 
             setTextValue('');
+            window.location.reload();
         } catch (error) {
             console.error('Failed to add/update comment:', error);
         }

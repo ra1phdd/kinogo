@@ -8,16 +8,21 @@ import (
 	"kinogo/config"
 	"kinogo/internal/app/endpoint/grpcAuth"
 	"kinogo/internal/app/endpoint/grpcComments"
+	"kinogo/internal/app/endpoint/grpcMetrics"
 	"kinogo/internal/app/endpoint/grpcMovies"
 	"kinogo/internal/app/endpoint/restAuth"
+	icAuth "kinogo/internal/app/interceptors/auth"
+	"kinogo/internal/app/interceptors/uuid"
 	auth "kinogo/internal/app/services/auth"
 	comments "kinogo/internal/app/services/comments"
+	metrics "kinogo/internal/app/services/metrics"
 	movies "kinogo/internal/app/services/movies"
 	pbAuth "kinogo/pkg/auth_v1"
 	"kinogo/pkg/cache"
 	pbComments "kinogo/pkg/comments_v1"
 	"kinogo/pkg/db"
 	"kinogo/pkg/logger"
+	pbMetrics "kinogo/pkg/metrics_v1"
 	pbMovies "kinogo/pkg/movies_v1"
 	"log"
 	"net"
@@ -28,6 +33,7 @@ type App struct {
 	movies   *movies.Service
 	comments *comments.Service
 	auth     *auth.Service
+	metrics  *metrics.Service
 
 	server *grpc.Server
 	router *gin.Engine
@@ -63,12 +69,18 @@ func New() (*App, error) {
 }
 
 func NewGRPC(a *App, cfgAuth config.Auth) {
-	a.server = grpc.NewServer()
+	a.server = grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			icUuid.UUIDCheckerInterceptor,
+			icAuth.AuthCheckerInterceptor,
+		),
+	)
 
 	// обьявляем сервисы
 	a.movies = movies.New()
 	a.comments = comments.New()
 	a.auth = auth.New()
+	a.metrics = metrics.New()
 
 	// регистрируем эндпоинты
 	serviceMovies := &grpcMovies.Endpoint{
@@ -81,9 +93,13 @@ func NewGRPC(a *App, cfgAuth config.Auth) {
 		Auth:      a.auth,
 		JwtSecret: cfgAuth.JWTSecret,
 	}
+	serviceMetrics := &grpcMetrics.Endpoint{
+		Metrics: a.metrics,
+	}
 	pbMovies.RegisterMoviesV1Server(a.server, serviceMovies)
 	pbComments.RegisterCommentsV1Server(a.server, serviceComments)
 	pbAuth.RegisterAuthV1Server(a.server, serviceAuth)
+	pbMetrics.RegisterMetricsV1Server(a.server, serviceMetrics)
 }
 
 func NewREST(a *App, cfgAuth config.Auth) {

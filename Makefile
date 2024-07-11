@@ -54,7 +54,7 @@ generate-backend-comments:
 generate-backend-metrics:
 	rm -rf backend/pkg/metrics_v1
 	mkdir -p backend/pkg/metrics_v1
-	protoc --go_out=backend/pkg/auth_v1 --go-grpc_out=backend/pkg/metrics_v1 \
+	protoc --go_out=backend/pkg/metrics_v1 --go-grpc_out=backend/pkg/metrics_v1 \
     	protos/metrics_v1/metrics_v1.proto
 	mv backend/pkg/metrics_v1/metrics_v1/* backend/pkg/metrics_v1
 	rm -rf backend/pkg/metrics_v1/metrics_v1/

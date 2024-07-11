@@ -3,34 +3,30 @@ package metrics_v1;
 option go_package = "./metrics_v1";
 import "google/protobuf/timestamp.proto";
 
-message MetricRequest {
-  repeated Metric metrics = 1;
-}
-message Metric {
-  MetricType type = 2;
+message NewUserRequest {}
+
+message AvgTimeOnSiteRequest {
+  google.protobuf.Timestamp time = 1;
 }
 
-message MetricResponse {
-  bool success = 1;
-}
+message MetricResponse {}
 
 enum MetricType {
-  UNIQUE_USERS = 0;
-  NEW_USERS = 1;
-  RETURNING_USERS = 2;
-  AVG_TIME_ON_SITE = 3;
-  PAGE_VIEWS = 4;
-  BOUNCE_RATE = 5;
-  COMMENTS = 6;
-  REGISTRATIONS = 7;
-  PAGE_LOAD_TIME = 8;
-  ERROR_RATE = 9;
-  SERVER_RESPONSE_TIME = 10;
-  STREAMING_PERFORMANCE = 11;
-  AVG_VIEW_DURATION = 12;
-  POPULAR_GENRES = 13;
+  NEW_USERS = 0;
+  AVG_TIME_ON_SITE = 1;
+  PAGE_VIEWS = 3;
+  BOUNCE_RATE = 4;
+  COMMENTS = 5;
+  REGISTRATIONS = 6;
+  PAGE_LOAD_TIME = 7;
+  ERROR_RATE = 8;
+  SERVER_RESPONSE_TIME = 9;
+  STREAMING_PERFORMANCE = 10;
+  AVG_VIEW_DURATION = 11;
+  POPULAR_GENRES = 12;
 }
 
 service MetricsV1 {
-  rpc CollectMetric(MetricRequest) returns (MetricResponse);
+  rpc NewUser(NewUserRequest) returns (MetricResponse);
+  rpc AvgTimeOnSite(AvgTimeOnSiteRequest) returns (MetricResponse);
 }

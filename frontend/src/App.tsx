@@ -2,8 +2,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import '@assets/styles/vendor/animate.min.css'
 import Navigation from "@components/Navigation.tsx";
 import Auth from "@components/TelegramAuth.tsx";
-import {lazy} from "react";
+import {lazy, useEffect} from "react";
 import Studio from "@/pages/Studio/Studio.tsx";
+import Cookies from "js-cookie";
+import { v4 as uuidv4 } from 'uuid';
+import {metricNewUser} from "@components/gRPC.tsx";
+import TimeTracker from "@components/TimeTracker.tsx";
 
 // Ленивая загрузка страниц
 const Home = lazy(() => import("./pages/Home/Home.tsx"));
@@ -12,8 +16,25 @@ const Filter = lazy(() => import("@/pages/Filter/Filter.tsx"));
 const Movies = lazy(() => import("@/pages/Movies/Movies.tsx"));
 
 function App() {
+        useEffect(() => {
+        let userUUID = Cookies.get('userUUID');
+
+        if (userUUID == undefined) {
+            userUUID = uuidv4();
+
+            try {
+                metricNewUser();
+            } catch (error) {
+                console.error('Error fetching movie:', error);
+            }
+        }
+
+        Cookies.set('userUUID', userUUID, { expires: 365 });
+    }, []);
+
     return (
     <>
+        <TimeTracker/>
         <BrowserRouter>
             <div className="container">
                 <header>

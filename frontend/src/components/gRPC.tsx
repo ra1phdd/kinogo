@@ -1,12 +1,27 @@
 import {movies_v1} from '@protos/movies_v1/movies_v1';
-import {comments_v1} from '@protos/comments_v1/comments_v1'
-import {auth_v1} from "@protos/auth_v1/auth_v1";
+import {comments_v1} from '@protos/comments_v1/comments_v1';
+import {metrics_v1} from "@protos/metrics_v1/metrics_v1.ts";
 import {google} from "@/google/protobuf/timestamp.ts";
 import Genres = movies_v1.Genres;
+import Cookies from "js-cookie";
 
 const clientMoviesV1 = new movies_v1.MoviesV1Client('http://localhost:10000');
 const clientCommentsV1 = new comments_v1.CommentsV1Client('http://localhost:10000');
-const clientAuthV1 = new auth_v1.AuthV1Client('http://localhost:10000');
+const clientMetricsV1 = new metrics_v1.MetricsV1Client('http://localhost:10000')
+
+const jwt = Cookies.get("token");
+const userUUID = Cookies.get("userUUID");
+let uuid: string, token: string;
+if (userUUID) {
+    uuid = userUUID
+} else {
+    uuid = ""
+}
+if (jwt) {
+    token = jwt
+} else {
+    token = ""
+}
 
 export interface Movies {
     id: number;
@@ -68,7 +83,7 @@ export function getMovies(limit: number, page: number): Promise<Movies[]> {
         request.limit = limit;
         request.page = page;
 
-        clientMoviesV1.GetMovies(request, {}, (err, response) => {
+        clientMoviesV1.GetMovies(request, {"uuid": uuid}, (err, response) => {
             if (err) {
                 reject(err);
             } else if (response && response.movies) {
@@ -88,7 +103,7 @@ export function getMoviesByTypeMovie(limit: number, page: number, typeMovie: num
         request.limit = limit;
         request.page = page;
 
-        clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
+        clientMoviesV1.GetMoviesByFilter(request, {"uuid": uuid}, (err, response) => {
             if (err) {
                 reject(err);
             } else if (response && response.movies) {
@@ -105,7 +120,7 @@ export function getMovieById(id: number): Promise<Movie> {
         const request = new movies_v1.GetMoviesByIdRequest();
         request.id = id;
 
-        clientMoviesV1.GetMovieById(request, {}, (err, response) => {
+        clientMoviesV1.GetMovieById(request, {"uuid": uuid}, (err, response) => {
             if (err) {
                 reject(err);
             } else if (response) {
@@ -151,7 +166,7 @@ export function getSearchMovies(text: string, limit: number, page: number): Prom
         request.limit = limit;
         request.page = page;
 
-        clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
+        clientMoviesV1.GetMoviesByFilter(request, {"uuid": uuid}, (err, response) => {
             if (err) {
                 reject(err);
             }  else if (response && response.movies) {
@@ -180,7 +195,7 @@ export function getFilterMovies(genres: string, yearMin: number, yearMax: number
         request.limit = limit;
         request.page = page;
 
-        clientMoviesV1.GetMoviesByFilter(request, {}, (err, response) => {
+        clientMoviesV1.GetMoviesByFilter(request, {"uuid": uuid}, (err, response) => {
             if (err) {
                 reject(err);
             } else if (response && response.movies) {
@@ -223,7 +238,7 @@ export function addComment(parentId: number | null, movieId: number, userId: num
         request.text = text;
         request.createdAt = timestamp;
 
-        clientCommentsV1.AddComment(request, {}, (err, response) => {
+        clientCommentsV1.AddComment(request, {"uuid": uuid, "token": token}, (err, response) => {
             if (err) {
                 reject(err);
             } else if (response && response.err == "") {
@@ -245,7 +260,7 @@ export function updateComment(id: number, text: string): Promise<string> {
         request.text = text;
         request.updatedAt = timestamp;
 
-        clientCommentsV1.UpdateComment(request, {}, (err, response) => {
+        clientCommentsV1.UpdateComment(request, {"uuid": uuid, "token": token}, (err, response) => {
             if (err) {
                 reject(err);
             } else if (response && response.err == "") {
@@ -262,7 +277,7 @@ export function deleteComment(id: number): Promise<string> {
         const request = new comments_v1.DelCommentRequest();
         request.id = id;
 
-        clientCommentsV1.DelComment(request, {}, (err, response) => {
+        clientCommentsV1.DelComment(request, {"uuid": uuid, "token": token}, (err, response) => {
             if (err) {
                 reject(err);
             } else if (response && response.err == "") {
@@ -274,25 +289,27 @@ export function deleteComment(id: number): Promise<string> {
     });
 }
 
-export function checkAuth(token: string, userId: number, firstName: string, lastName: string, username: string, photoUrl: string, authDate: string, isAdmin: boolean): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-        const request = new auth_v1.CheckAuthRequest();
-        request.token = token;
-        request.userId = userId;
-        request.firstName = firstName;
-        request.lastName = lastName;
-        request.username = username;
-        request.photoUrl = photoUrl;
-        request.authDate = authDate;
-        request.isAdmin = isAdmin;
+export function metricNewUser() {
+    return new Promise((_, reject) => {
+        const request = new metrics_v1.NewUserRequest;
 
-        clientAuthV1.CheckAuth(request, {}, (err, response) => {
+        clientMetricsV1.NewUser(request, {}, (err) => {
             if (err) {
                 reject(err);
-            } else if (response && response.err == "") {
-                resolve(response.isAuth);
-            } else {
-                reject(new Error('Failed to add comment'));
+            }
+        });
+    });
+}
+
+export function metricAvgTimeOnSite(timeSpent: number) {
+    return new Promise((_, reject) => {
+        const request = new metrics_v1.AvgTimeOnSiteRequest;
+        const timestamp = new google.protobuf.Timestamp({ seconds: Math.floor(timeSpent / 1000), nanos: 0 });
+        request.time = timestamp;
+
+        clientMetricsV1.AvgTimeOnSite(request, {}, (err) => {
+            if (err) {
+                reject(err);
             }
         });
     });

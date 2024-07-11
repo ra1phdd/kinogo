@@ -74,7 +74,7 @@ const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
     const loadMoreComments = useCallback(() => {
         if (!loading && !end) {
             setLoading(true);
-            getComments(id, 10, page + 1)
+            getComments(id, 10, page)
                 .then((newComments) => {
                     setComments(prevComments => [...prevComments, ...newComments]);
                     setPage((prevPage) => prevPage + 1);
@@ -142,6 +142,7 @@ const Comment: React.FC<CommentProps> = memo(({ comment, level = 0, onReply, onE
     const handleDeleteClick = async () => {
         try {
             await deleteComment(comment.id);
+            window.location.reload();
         } catch (error) {
             console.error('Failed to add comment:', error);
         }

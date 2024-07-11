@@ -166,7 +166,7 @@ func (s Service) UpdateCommentService(data map[string]interface{}) error {
 		return err
 	}
 
-	pattern := fmt.Sprintf("comments_%d_*_*", data["movieId"].(int32))
+	pattern := fmt.Sprintf("comments_%d_*_*", movieId)
 	err = cache.ClearCacheByPattern(pattern)
 	if err != nil {
 		logger.Error("Ошибка очистки кеша по паттерну", zap.String("pattern", pattern))

@@ -7,6 +7,7 @@ import (
 	"kinogo/internal/app/models"
 	"kinogo/pkg/logger"
 	pb "kinogo/pkg/movies_v1"
+	"strings"
 )
 
 type Movies interface {
@@ -55,7 +56,9 @@ func (e *Endpoint) GetMovieById(_ context.Context, req *pb.GetMoviesByIdRequest)
 
 	movie, err := e.Movies.GetMovieByIdService(req.Id)
 	if err != nil {
-		logger.Error("Ошибка в работе функции GetMovieByIdService", zap.Error(err))
+		if !strings.Contains(err.Error(), "NotFound") {
+			logger.Error("Ошибка в работе функции GetMovieByIdService", zap.Error(err))
+		}
 		return &pb.GetMoviesByIdResponse{}, err
 	}
 
