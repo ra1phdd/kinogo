@@ -3,15 +3,6 @@ import {metricAvgTimeOnSite} from "@components/gRPC.tsx";
 
 const TimeTracker: React.FC = () => {
     const getCurrentTime = (): number => new Date().getTime();
-
-    const setLastTime = (): void => {
-        localStorage.setItem('lastTime', getCurrentTime().toString());
-    };
-
-    const getLastTime = (): number => {
-        return parseInt(localStorage.getItem('lastTime') || '0');
-    };
-
     const setFirstTime = (): void => {
         if (!localStorage.getItem('firstTime')){
             localStorage.setItem('firstTime', getCurrentTime().toString());
@@ -33,32 +24,22 @@ const TimeTracker: React.FC = () => {
     const checkAndSendData = (): void => {
         const firstTime = getFirstTime();
         const currentTime = getCurrentTime();
-        const lastTime = getLastTime();
-        const timeSpent = currentTime - lastTime;
-        const timestamp = lastTime - firstTime;
+        const timeSpent = currentTime - firstTime;
 
-        if ((timeSpent >= 30000) && (localStorage.getItem('lastTime') && (localStorage.getItem('lastTime')))) {
-            sendDataToBackend(timestamp);
-            localStorage.removeItem('lastTime');
-            localStorage.removeItem('lastTime');
-        }
+        sendDataToBackend(timeSpent);
+        localStorage.removeItem('firstTime');
     };
 
-    // useEffect для установки времени входа и проверки перед выходом
     useEffect(() => {
         setFirstTime();
-        checkAndSendData();
-    }, []);
 
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            setLastTime();
-        }, 5000);
+        window.addEventListener('beforeunload', checkAndSendData);
 
         return () => {
-            clearInterval(intervalId);
+            window.removeEventListener('beforeunload', checkAndSendData);
         };
     }, []);
+
 
     return <></>;
 };

@@ -5,6 +5,7 @@ import (
 	"errors"
 	ts "google.golang.org/protobuf/types/known/timestamppb"
 	"kinogo/internal/app/models"
+	metrics "kinogo/internal/app/services/metrics"
 	pb "kinogo/pkg/comments_v1"
 )
 
@@ -48,6 +49,9 @@ func (e *Endpoint) AddComment(_ context.Context, req *pb.AddCommentRequest) (*pb
 	if err != nil {
 		return &pb.AddCommentResponse{Err: err.Error()}, err
 	}
+
+	m := metrics.New()
+	m.NewComments()
 
 	return &pb.AddCommentResponse{Id: id}, nil
 }

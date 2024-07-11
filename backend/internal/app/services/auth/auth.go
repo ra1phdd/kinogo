@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+	metrics "kinogo/internal/app/services/metrics"
 	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
 	"kinogo/pkg/logger"
@@ -105,6 +106,9 @@ func (s Service) AddUserIfNotExists(data map[string]interface{}) {
 	if err != nil {
 		fmt.Errorf("error inserting new user: %v", err)
 	}
+
+	m := metrics.New()
+	m.NewRegistrations()
 
 	log.Printf("User with ID %s added successfully.", id)
 	return

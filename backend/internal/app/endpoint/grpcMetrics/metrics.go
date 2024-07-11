@@ -11,11 +11,10 @@ type Metrics interface {
 	Reset()
 	UniqueUsers(uuid string)
 	NewUsers()
-	AvgTime(userTime time.Time)
+	SpentTime(userTime time.Time, uuid string)
 	ReturningUsers(uuid string)
-	PageViews()
-	Comments()
-	Registrations()
+	NewComments()
+	NewRegistrations()
 }
 
 type Endpoint struct {
@@ -29,8 +28,8 @@ func (e *Endpoint) NewUser(_ context.Context, req *pb.NewUserRequest) (*pb.Metri
 	return &pb.MetricResponse{}, nil
 }
 
-func (e *Endpoint) AvgTimeOnSite(_ context.Context, req *pb.AvgTimeOnSiteRequest) (*pb.MetricResponse, error) {
-	e.Metrics.AvgTime(req.Time.AsTime())
+func (e *Endpoint) SpentTime(_ context.Context, req *pb.SpentTimeRequest) (*pb.MetricResponse, error) {
+	e.Metrics.SpentTime(req.Time.AsTime(), req.Uuid)
 
 	return &pb.MetricResponse{}, nil
 }

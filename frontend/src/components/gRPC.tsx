@@ -303,11 +303,12 @@ export function metricNewUser() {
 
 export function metricAvgTimeOnSite(timeSpent: number) {
     return new Promise((_, reject) => {
-        const request = new metrics_v1.AvgTimeOnSiteRequest;
+        const request = new metrics_v1.SpentTimeRequest;
         const timestamp = new google.protobuf.Timestamp({ seconds: Math.floor(timeSpent / 1000), nanos: 0 });
         request.time = timestamp;
+        request.uuid = uuid;
 
-        clientMetricsV1.AvgTimeOnSite(request, {}, (err) => {
+        clientMetricsV1.SpentTime(request, {}, (err) => {
             if (err) {
                 reject(err);
             }

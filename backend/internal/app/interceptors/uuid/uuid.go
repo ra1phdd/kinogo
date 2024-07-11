@@ -2,7 +2,6 @@ package icUuid
 
 import (
 	"context"
-	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"kinogo/internal/app/interceptors"
@@ -18,7 +17,6 @@ func UUIDCheckerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 				m := metrics.New()
 				m.UniqueUsers(uuids[0])
 				m.ReturningUsers(uuids[0])
-				fmt.Println("проверка uuid")
 			}
 		}
 	}

@@ -8,7 +8,6 @@ import Cookies from "js-cookie";
 import { v4 as uuidv4 } from 'uuid';
 import {metricNewUser} from "@components/gRPC.tsx";
 import TimeTracker from "@components/TimeTracker.tsx";
-
 // Ленивая загрузка страниц
 const Home = lazy(() => import("./pages/Home/Home.tsx"));
 const Movie = lazy(() => import("./pages/Movie/Movie.tsx"));
@@ -16,7 +15,7 @@ const Filter = lazy(() => import("@/pages/Filter/Filter.tsx"));
 const Movies = lazy(() => import("@/pages/Movies/Movies.tsx"));
 
 function App() {
-        useEffect(() => {
+    useEffect(() => {
         let userUUID = Cookies.get('userUUID');
 
         if (userUUID == undefined) {

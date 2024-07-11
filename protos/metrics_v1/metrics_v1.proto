@@ -5,8 +5,9 @@ import "google/protobuf/timestamp.proto";
 
 message NewUserRequest {}
 
-message AvgTimeOnSiteRequest {
+message SpentTimeRequest {
   google.protobuf.Timestamp time = 1;
+  string uuid = 2;
 }
 
 message MetricResponse {}
@@ -14,8 +15,7 @@ message MetricResponse {}
 enum MetricType {
   NEW_USERS = 0;
   AVG_TIME_ON_SITE = 1;
-  PAGE_VIEWS = 3;
-  BOUNCE_RATE = 4;
+  BOUNCE_RATE = 3;
   COMMENTS = 5;
   REGISTRATIONS = 6;
   PAGE_LOAD_TIME = 7;
@@ -28,5 +28,5 @@ enum MetricType {
 
 service MetricsV1 {
   rpc NewUser(NewUserRequest) returns (MetricResponse);
-  rpc AvgTimeOnSite(AvgTimeOnSiteRequest) returns (MetricResponse);
+  rpc SpentTime(SpentTimeRequest) returns (MetricResponse);
 }

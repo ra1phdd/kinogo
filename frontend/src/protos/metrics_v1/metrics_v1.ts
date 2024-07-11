@@ -13,8 +13,7 @@ export namespace metrics_v1 {
     export enum MetricType {
         NEW_USERS = 0,
         AVG_TIME_ON_SITE = 1,
-        PAGE_VIEWS = 3,
-        BOUNCE_RATE = 4,
+        BOUNCE_RATE = 3,
         COMMENTS = 5,
         REGISTRATIONS = 6,
         PAGE_LOAD_TIME = 7,
@@ -64,16 +63,20 @@ export namespace metrics_v1 {
             return NewUserRequest.deserialize(bytes);
         }
     }
-    export class AvgTimeOnSiteRequest extends pb_1.Message {
+    export class SpentTimeRequest extends pb_1.Message {
         #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
             time?: dependency_1.google.protobuf.Timestamp;
+            uuid?: string;
         }) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("time" in data && data.time != undefined) {
                     this.time = data.time;
+                }
+                if ("uuid" in data && data.uuid != undefined) {
+                    this.uuid = data.uuid;
                 }
             }
         }
@@ -86,21 +89,35 @@ export namespace metrics_v1 {
         get has_time() {
             return pb_1.Message.getField(this, 1) != null;
         }
+        get uuid() {
+            return pb_1.Message.getFieldWithDefault(this, 2, "") as string;
+        }
+        set uuid(value: string) {
+            pb_1.Message.setField(this, 2, value);
+        }
         static fromObject(data: {
             time?: ReturnType<typeof dependency_1.google.protobuf.Timestamp.prototype.toObject>;
-        }): AvgTimeOnSiteRequest {
-            const message = new AvgTimeOnSiteRequest({});
+            uuid?: string;
+        }): SpentTimeRequest {
+            const message = new SpentTimeRequest({});
             if (data.time != null) {
                 message.time = dependency_1.google.protobuf.Timestamp.fromObject(data.time);
+            }
+            if (data.uuid != null) {
+                message.uuid = data.uuid;
             }
             return message;
         }
         toObject() {
             const data: {
                 time?: ReturnType<typeof dependency_1.google.protobuf.Timestamp.prototype.toObject>;
+                uuid?: string;
             } = {};
             if (this.time != null) {
                 data.time = this.time.toObject();
+            }
+            if (this.uuid != null) {
+                data.uuid = this.uuid;
             }
             return data;
         }
@@ -110,17 +127,22 @@ export namespace metrics_v1 {
             const writer = w || new pb_1.BinaryWriter();
             if (this.has_time)
                 writer.writeMessage(1, this.time, () => this.time.serialize(writer));
+            if (this.uuid.length)
+                writer.writeString(2, this.uuid);
             if (!w)
                 return writer.getResultBuffer();
         }
-        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): AvgTimeOnSiteRequest {
-            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new AvgTimeOnSiteRequest();
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): SpentTimeRequest {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new SpentTimeRequest();
             while (reader.nextField()) {
                 if (reader.isEndGroup())
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
                         reader.readMessage(message.time, () => message.time = dependency_1.google.protobuf.Timestamp.deserialize(reader));
+                        break;
+                    case 2:
+                        message.uuid = reader.readString();
                         break;
                     default: reader.skipField();
                 }
@@ -130,8 +152,8 @@ export namespace metrics_v1 {
         serializeBinary(): Uint8Array {
             return this.serialize();
         }
-        static deserializeBinary(bytes: Uint8Array): AvgTimeOnSiteRequest {
-            return AvgTimeOnSiteRequest.deserialize(bytes);
+        static deserializeBinary(bytes: Uint8Array): SpentTimeRequest {
+            return SpentTimeRequest.deserialize(bytes);
         }
     }
     export class MetricResponse extends pb_1.Message {
@@ -185,19 +207,19 @@ export namespace metrics_v1 {
                 responseSerialize: (message: MetricResponse) => Buffer.from(message.serialize()),
                 responseDeserialize: (bytes: Buffer) => MetricResponse.deserialize(new Uint8Array(bytes))
             },
-            AvgTimeOnSite: {
-                path: "/metrics_v1.MetricsV1/AvgTimeOnSite",
+            SpentTime: {
+                path: "/metrics_v1.MetricsV1/SpentTime",
                 requestStream: false,
                 responseStream: false,
-                requestSerialize: (message: AvgTimeOnSiteRequest) => Buffer.from(message.serialize()),
-                requestDeserialize: (bytes: Buffer) => AvgTimeOnSiteRequest.deserialize(new Uint8Array(bytes)),
+                requestSerialize: (message: SpentTimeRequest) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => SpentTimeRequest.deserialize(new Uint8Array(bytes)),
                 responseSerialize: (message: MetricResponse) => Buffer.from(message.serialize()),
                 responseDeserialize: (bytes: Buffer) => MetricResponse.deserialize(new Uint8Array(bytes))
             }
         };
         [method: string]: grpc_1.UntypedHandleCall;
         abstract NewUser(call: grpc_1.ServerUnaryCall<NewUserRequest, MetricResponse>, callback: grpc_1.sendUnaryData<MetricResponse>): void;
-        abstract AvgTimeOnSite(call: grpc_1.ServerUnaryCall<AvgTimeOnSiteRequest, MetricResponse>, callback: grpc_1.sendUnaryData<MetricResponse>): void;
+        abstract SpentTime(call: grpc_1.ServerUnaryCall<SpentTimeRequest, MetricResponse>, callback: grpc_1.sendUnaryData<MetricResponse>): void;
     }
     export class MetricsV1Client {
         private _address: string;
@@ -213,9 +235,9 @@ export namespace metrics_v1 {
         NewUser(message: NewUserRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: MetricResponse) => void) {
             return this._client.rpcCall<NewUserRequest, MetricResponse>(this._address + "/metrics_v1.MetricsV1/NewUser", message, metadata || {}, MetricsV1Client.NewUser, callback);
         }
-        private static AvgTimeOnSite = new grpc_web_1.MethodDescriptor<AvgTimeOnSiteRequest, MetricResponse>("/metrics_v1.MetricsV1/AvgTimeOnSite", grpc_web_1.MethodType.UNARY, AvgTimeOnSiteRequest, MetricResponse, (message: AvgTimeOnSiteRequest) => message.serialize(), MetricResponse.deserialize);
-        AvgTimeOnSite(message: AvgTimeOnSiteRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: MetricResponse) => void) {
-            return this._client.rpcCall<AvgTimeOnSiteRequest, MetricResponse>(this._address + "/metrics_v1.MetricsV1/AvgTimeOnSite", message, metadata || {}, MetricsV1Client.AvgTimeOnSite, callback);
+        private static SpentTime = new grpc_web_1.MethodDescriptor<SpentTimeRequest, MetricResponse>("/metrics_v1.MetricsV1/SpentTime", grpc_web_1.MethodType.UNARY, SpentTimeRequest, MetricResponse, (message: SpentTimeRequest) => message.serialize(), MetricResponse.deserialize);
+        SpentTime(message: SpentTimeRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: MetricResponse) => void) {
+            return this._client.rpcCall<SpentTimeRequest, MetricResponse>(this._address + "/metrics_v1.MetricsV1/SpentTime", message, metadata || {}, MetricsV1Client.SpentTime, callback);
         }
     }
 }

@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MetricsV1Client interface {
 	NewUser(ctx context.Context, in *NewUserRequest, opts ...grpc.CallOption) (*MetricResponse, error)
-	AvgTimeOnSite(ctx context.Context, in *AvgTimeOnSiteRequest, opts ...grpc.CallOption) (*MetricResponse, error)
+	SpentTime(ctx context.Context, in *SpentTimeRequest, opts ...grpc.CallOption) (*MetricResponse, error)
 }
 
 type metricsV1Client struct {
@@ -43,9 +43,9 @@ func (c *metricsV1Client) NewUser(ctx context.Context, in *NewUserRequest, opts 
 	return out, nil
 }
 
-func (c *metricsV1Client) AvgTimeOnSite(ctx context.Context, in *AvgTimeOnSiteRequest, opts ...grpc.CallOption) (*MetricResponse, error) {
+func (c *metricsV1Client) SpentTime(ctx context.Context, in *SpentTimeRequest, opts ...grpc.CallOption) (*MetricResponse, error) {
 	out := new(MetricResponse)
-	err := c.cc.Invoke(ctx, "/metrics_v1.MetricsV1/AvgTimeOnSite", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/metrics_v1.MetricsV1/SpentTime", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *metricsV1Client) AvgTimeOnSite(ctx context.Context, in *AvgTimeOnSiteRe
 // for forward compatibility
 type MetricsV1Server interface {
 	NewUser(context.Context, *NewUserRequest) (*MetricResponse, error)
-	AvgTimeOnSite(context.Context, *AvgTimeOnSiteRequest) (*MetricResponse, error)
+	SpentTime(context.Context, *SpentTimeRequest) (*MetricResponse, error)
 	mustEmbedUnimplementedMetricsV1Server()
 }
 
@@ -68,8 +68,8 @@ type UnimplementedMetricsV1Server struct {
 func (UnimplementedMetricsV1Server) NewUser(context.Context, *NewUserRequest) (*MetricResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewUser not implemented")
 }
-func (UnimplementedMetricsV1Server) AvgTimeOnSite(context.Context, *AvgTimeOnSiteRequest) (*MetricResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AvgTimeOnSite not implemented")
+func (UnimplementedMetricsV1Server) SpentTime(context.Context, *SpentTimeRequest) (*MetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpentTime not implemented")
 }
 func (UnimplementedMetricsV1Server) mustEmbedUnimplementedMetricsV1Server() {}
 
@@ -102,20 +102,20 @@ func _MetricsV1_NewUser_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MetricsV1_AvgTimeOnSite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AvgTimeOnSiteRequest)
+func _MetricsV1_SpentTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpentTimeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MetricsV1Server).AvgTimeOnSite(ctx, in)
+		return srv.(MetricsV1Server).SpentTime(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/metrics_v1.MetricsV1/AvgTimeOnSite",
+		FullMethod: "/metrics_v1.MetricsV1/SpentTime",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MetricsV1Server).AvgTimeOnSite(ctx, req.(*AvgTimeOnSiteRequest))
+		return srv.(MetricsV1Server).SpentTime(ctx, req.(*SpentTimeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,8 +132,8 @@ var MetricsV1_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MetricsV1_NewUser_Handler,
 		},
 		{
-			MethodName: "AvgTimeOnSite",
-			Handler:    _MetricsV1_AvgTimeOnSite_Handler,
+			MethodName: "SpentTime",
+			Handler:    _MetricsV1_SpentTime_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
