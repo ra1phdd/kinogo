@@ -1,10 +1,10 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { useParams } from 'react-router-dom';
-import AnimateElement from '@components/AnimateElement';
+import AnimateElement from '@components/common/AnimateElement.tsx';
 import '@assets/styles/pages/movie.css';
-import VideoPlayer from "@components/HLSPlayer.tsx";
+import VideoPlayer from "@components/specific/HLSPlayer.tsx";
 import { Movie, getMovieById } from "@components/gRPC.tsx";
-import CommentsComponent from "@components/Comments.tsx";
+import CommentsComponent from "@components/specific/Comments/CommentsComponent.tsx";
 import Cookies from "js-cookie";
 
 // Пропсы для компонента MovieCard

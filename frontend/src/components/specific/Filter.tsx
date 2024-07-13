@@ -1,8 +1,8 @@
-import '../../assets/styles/vendor/nouislider.min.css';
+import '@assets/styles/vendor/nouislider.min.css';
 import noUiSlider, { API } from 'nouislider';
-import CustomSelect from '@components/CustomSelect';
+import CustomSelect from '@components/specific/CustomSelect.tsx';
 import React, { useEffect, useState } from "react";
-import AnimateElement from "@components/AnimateElement";
+import AnimateElement from "@components/common/AnimateElement.tsx";
 import { useNavigate } from "react-router-dom";
 
 interface HTMLElementWithNoUiSlider extends HTMLElement {

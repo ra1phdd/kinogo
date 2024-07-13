@@ -1,23 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { BestMovie, getBestMovie } from "@components/gRPC.tsx";
-import AnimateElement from "@components/AnimateElement.tsx";
+import React, { useEffect } from "react";
+import AnimateElement from "@components/common/AnimateElement.tsx";
+import useBestMovie from "@/hooks/useBestMovie.ts";
 
 // Компонент BestMovieAside
 const BestMovieAside: React.FC = () => {
-    const [movie, setMovie] = useState<BestMovie | null>(null);
-
-    useEffect(() => {
-        const fetchMovie = async () => {
-            try {
-                const movieResponse = await getBestMovie();
-                setMovie(movieResponse[0]);
-            } catch (error) {
-                console.error('Ошибка при получении фильма:', error);
-            }
-        };
-
-        fetchMovie();
-    }, []);
+    const movie = useBestMovie();
 
     useEffect(() => {
         const asideBestMovie = document.querySelector<HTMLElement>(".aside__bestmovie");

@@ -1,7 +1,6 @@
 package restAuth
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"kinogo/pkg/logger"
@@ -84,15 +83,8 @@ func (e Endpoint) TelegramAuthCallback(jwtSecret string, botToken string) gin.Ha
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"success":   true,
-			"token":     token,
-			"userId":    fmt.Sprint(authData.ID),
-			"firstName": authData.FirstName,
-			"lastName":  authData.LastName,
-			"username":  authData.Username,
-			"photoUrl":  authData.PhotoURL,
-			"authDate":  fmt.Sprint(authData.AuthDate),
-			"isAdmin":   isAdmin,
+			"success": true,
+			"token":   token,
 		})
 	}
 }

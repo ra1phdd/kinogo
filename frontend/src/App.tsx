@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import '@assets/styles/vendor/animate.min.css'
-import Navigation from "@components/Navigation.tsx";
-import Auth from "@components/TelegramAuth.tsx";
+import Navigation from "@components/common/Navigation.tsx";
+import Auth from "@components/common/TelegramAuth.tsx";
 import {lazy, useEffect} from "react";
 import Studio from "@/pages/Studio/Studio.tsx";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from 'uuid';
 import {metricNewUser} from "@components/gRPC.tsx";
-import TimeTracker from "@components/TimeTracker.tsx";
+import TimeTracker from "@components/common/TimeTracker.tsx";
+
 // Ленивая загрузка страниц
 const Home = lazy(() => import("./pages/Home/Home.tsx"));
 const Movie = lazy(() => import("./pages/Movie/Movie.tsx"));

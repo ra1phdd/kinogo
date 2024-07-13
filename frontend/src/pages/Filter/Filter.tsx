@@ -1,10 +1,10 @@
 import React, {useCallback, useEffect, useState} from "react";
-import SearchAside from "@components/Aside/Search.tsx";
-import FilterAside from "@components/Aside/Filter.tsx";
-import BestMovieAside from "@components/Aside/BestMovie.tsx";
+import SearchAside from "@components/specific/Search.tsx";
+import FilterAside from "@components/specific/Filter.tsx";
+import BestMovieAside from "@components/specific/BestMovie.tsx";
 import {Movies, getFilterMovies, getSearchMovies} from '@components/gRPC.tsx';
 import {useLocation, useSearchParams} from "react-router-dom";
-import MovieCard from "@components/MovieCard.tsx";
+import MovieCard from "@components/common/MovieCard.tsx";
 import '@assets/styles/pages/filter.css';
 import {RpcError} from "grpc-web";
 

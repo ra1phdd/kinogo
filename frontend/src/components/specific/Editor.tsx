@@ -1,6 +1,8 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect } from 'react';
 import { Comments, addComment, updateComment } from "@components/gRPC.tsx";
-import { GetUserId } from "@components/JwtDecode.tsx";
+import { useAuth } from "@/contexts/Auth.tsx";
+import { useTextareaState } from '@/hooks/useTextareaState';
+import { useScrollIntoView } from '@/hooks/useScrollIntoView';
 
 interface EditorProps {
     parentId: number | null;
@@ -12,26 +14,22 @@ interface EditorProps {
 }
 
 const Editor: React.FC<EditorProps> = memo(({ parentId, parentComment, movieId, onSubmit, onCancelReply, editComment }) => {
-    const [textValue, setTextValue] = useState<string>('');
-    const formRef = useRef<HTMLFormElement>(null);
-    const userId = GetUserId();
-
-    const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setTextValue(event.target.value);
-    };
+    const { value: textValue, onChange: handleTextareaChange, reset: resetTextarea } = useTextareaState(editComment?.text);
+    const { userId } = useAuth();
+    const formRef = useScrollIntoView(parentId !== null || (editComment !== null && editComment !== undefined));
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
             onSubmit(textValue, parentId);
 
-            if (!editComment && userId !== undefined && textValue.trim() !== '') {
+            if (!editComment && userId !== null && textValue.trim() !== '') {
                 await addComment(parentId, movieId, userId, textValue);
             } else if (editComment) {
                 await updateComment(editComment.id, textValue);
             }
 
-            setTextValue('');
+            resetTextarea();
             window.location.reload();
         } catch (error) {
             console.error('Failed to add/update comment:', error);
@@ -39,17 +37,9 @@ const Editor: React.FC<EditorProps> = memo(({ parentId, parentComment, movieId, 
     };
 
     useEffect(() => {
-        if (parentId !== null && formRef.current) {
-            formRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, [parentId]);
-
-    useEffect(() => {
+        resetTextarea();
         if (editComment) {
-            setTextValue(editComment.text);
-            if (formRef.current) {
-                formRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, [editComment]);
 

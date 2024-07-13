@@ -1,23 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { LoginButton, TelegramAuthData } from '@telegram-auth/react';
 import Cookies from 'js-cookie';
-import { GetIsAdmin } from '@components/JwtDecode.tsx';
+import {useAuth} from "@/contexts/Auth.tsx";
 
 function Auth() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userAdmin, setUserAdmin] = useState(false);
-    const isAdmin = GetIsAdmin();
-
-    useEffect(() => {
-        const token = Cookies.get('token');
-        setIsAuthenticated(!!token);
-    }, []);
-
-    useEffect(() => {
-        if (isAdmin !== undefined) {
-            setUserAdmin(isAdmin);
-        }
-    }, [isAdmin]);
+    const { isAuthenticated, userAdmin } = useAuth();
 
     const handleAuthCallback = useCallback(async (data: TelegramAuthData) => {
         try {
@@ -36,8 +23,7 @@ function Auth() {
             const result = await response.json();
 
             if (result.success) {
-                Cookies.set('token', result.token);
-                setIsAuthenticated(true);
+                Cookies.set('token', result.token)
                 window.location.reload();
             } else {
                 console.error('Authentication failed:', result.message);
@@ -49,7 +35,6 @@ function Auth() {
 
     const handleLogout = useCallback(() => {
         Cookies.remove('token');
-        setIsAuthenticated(false);
         window.location.reload();
     }, []);
 

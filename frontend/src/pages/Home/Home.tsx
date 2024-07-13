@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Movies, getMovies } from '@components/gRPC.tsx';
-import MovieCard from "@components/MovieCard.tsx";
+import MovieCard from "@components/common/MovieCard.tsx";
 import {RpcError} from "grpc-web";
 import '@assets/styles/pages/home.css'
 

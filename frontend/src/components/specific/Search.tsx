@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import AnimateElement from "@components/AnimateElement.tsx";
+import AnimateElement from "@components/common/AnimateElement.tsx";
 
 function SearchAside() {
     const asideSearchRef = useRef<HTMLDivElement>(null);

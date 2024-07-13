@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef} from "react";
-import AnimateElement from "@components/AnimateElement.tsx";
+import AnimateElement from "@components/common/AnimateElement.tsx";
 import {Movies} from "@components/gRPC.tsx";
 
 interface MovieCardProps {
