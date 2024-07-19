@@ -2,8 +2,8 @@ import {movies_v1} from '@protos/movies_v1/movies_v1';
 import {comments_v1} from '@protos/comments_v1/comments_v1';
 import {metrics_v1} from "@protos/metrics_v1/metrics_v1.ts";
 import {google} from "@/google/protobuf/timestamp.ts";
-import Genres = movies_v1.Genres;
 import Cookies from "js-cookie";
+import Genres = movies_v1.Genres;
 
 const clientMoviesV1 = new movies_v1.MoviesV1Client('http://localhost:10000');
 const clientCommentsV1 = new comments_v1.CommentsV1Client('http://localhost:10000');
@@ -304,11 +304,29 @@ export function metricNewUser() {
 export function metricAvgTimeOnSite(timeSpent: number) {
     return new Promise((_, reject) => {
         const request = new metrics_v1.SpentTimeRequest;
-        const timestamp = new google.protobuf.Timestamp({ seconds: Math.floor(timeSpent / 1000), nanos: 0 });
-        request.time = timestamp;
+        request.time = new google.protobuf.Timestamp({seconds: Math.floor(timeSpent / 1000), nanos: 0});
         request.uuid = uuid;
 
         clientMetricsV1.SpentTime(request, {}, (err) => {
+            if (err) {
+                reject(err);
+            }
+        });
+    });
+}
+
+export function metricStreamingPerformance(movieId: number, bufferingCount: number, bufferingTime: number, playbackError: string, viewsTime: number, duration: number) {
+    return new Promise((_, reject) => {
+        const request = new metrics_v1.StreamingPerformanceRequest;
+        request.uuid = uuid;
+        request.movieId = movieId;
+        request.bufferingCount = bufferingCount;
+        request.bufferingTime = Math.round(bufferingTime);
+        request.playbackError = playbackError;
+        request.viewsTime = Math.round(viewsTime);
+        request.duration = Math.round(duration);
+
+        clientMetricsV1.StreamingPerformance(request, {}, (err) => {
             if (err) {
                 reject(err);
             }

@@ -6,7 +6,6 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"kinogo/config"
-	"kinogo/internal/app/endpoint/grpcAuth"
 	"kinogo/internal/app/endpoint/grpcComments"
 	"kinogo/internal/app/endpoint/grpcMetrics"
 	"kinogo/internal/app/endpoint/grpcMovies"
@@ -17,7 +16,6 @@ import (
 	comments "kinogo/internal/app/services/comments"
 	metrics "kinogo/internal/app/services/metrics"
 	movies "kinogo/internal/app/services/movies"
-	pbAuth "kinogo/pkg/auth_v1"
 	"kinogo/pkg/cache"
 	pbComments "kinogo/pkg/comments_v1"
 	"kinogo/pkg/db"
@@ -40,7 +38,6 @@ type App struct {
 }
 
 func New() (*App, error) {
-	// инициализируем конфиг, логгер и кэш
 	cfg, err := config.NewConfig()
 	if err != nil {
 		log.Fatalf("Ошибка при попытке спарсить .env файл в структуру: %v", err)
@@ -50,7 +47,7 @@ func New() (*App, error) {
 
 	a := &App{}
 
-	NewGRPC(a, cfg.Auth)
+	NewGRPC(a)
 	NewREST(a, cfg.Auth)
 
 	err = cache.Init(cfg.Redis.RedisAddr+":"+cfg.Redis.RedisPort, cfg.Redis.RedisUsername, cfg.Redis.RedisPassword, cfg.Redis.RedisDBId)
@@ -68,7 +65,7 @@ func New() (*App, error) {
 	return a, nil
 }
 
-func NewGRPC(a *App, cfgAuth config.Auth) {
+func NewGRPC(a *App) {
 	a.server = grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			icUuid.UUIDCheckerInterceptor,
@@ -89,16 +86,11 @@ func NewGRPC(a *App, cfgAuth config.Auth) {
 	serviceComments := &grpcComments.Endpoint{
 		Comments: a.comments,
 	}
-	serviceAuth := &grpcAuth.Endpoint{
-		Auth:      a.auth,
-		JwtSecret: cfgAuth.JWTSecret,
-	}
 	serviceMetrics := &grpcMetrics.Endpoint{
 		Metrics: a.metrics,
 	}
 	pbMovies.RegisterMoviesV1Server(a.server, serviceMovies)
 	pbComments.RegisterCommentsV1Server(a.server, serviceComments)
-	pbAuth.RegisterAuthV1Server(a.server, serviceAuth)
 	pbMetrics.RegisterMetricsV1Server(a.server, serviceMetrics)
 }
 
@@ -176,28 +168,3 @@ func (a *App) RunREST() error {
 
 	return nil
 }
-
-/*mux := http.NewServeMux()
-
-// Добавление видео
-mux.HandleFunc("/resultmovie", services.ResultMovieHandler)
-mux.HandleFunc("/addmovie", services.AddMovieHandler)
-
-mux.HandleFunc("/like", func(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	id, err := strconv.Atoi(r.Form.Get("like"))
-	if err != nil {
-		logger.Error("Ошибка парсинга ID фильма для постановки лайка")
-	}
-	logger.Debug("Постановка лайка", zap.Int("id", id))
-	services.HandleLike(r, int64(id))
-})
-mux.HandleFunc("/dislike", func(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	id, err := strconv.Atoi(r.Form.Get("dislike"))
-	if err != nil {
-		logger.Error("Ошибка парсинга ID фильма для постановки дизлайка")
-	}
-	logger.Debug("Постановка дизлайка", zap.Int("id", id))
-	services.HandleDislike(r, int64(id))
-})*/

@@ -156,6 +156,211 @@ export namespace metrics_v1 {
             return SpentTimeRequest.deserialize(bytes);
         }
     }
+    export class StreamingPerformanceRequest extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
+            uuid?: string;
+            movieId?: number;
+            bufferingCount?: number;
+            bufferingTime?: number;
+            playbackError?: string;
+            viewsTime?: number;
+            duration?: number;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("uuid" in data && data.uuid != undefined) {
+                    this.uuid = data.uuid;
+                }
+                if ("movieId" in data && data.movieId != undefined) {
+                    this.movieId = data.movieId;
+                }
+                if ("bufferingCount" in data && data.bufferingCount != undefined) {
+                    this.bufferingCount = data.bufferingCount;
+                }
+                if ("bufferingTime" in data && data.bufferingTime != undefined) {
+                    this.bufferingTime = data.bufferingTime;
+                }
+                if ("playbackError" in data && data.playbackError != undefined) {
+                    this.playbackError = data.playbackError;
+                }
+                if ("viewsTime" in data && data.viewsTime != undefined) {
+                    this.viewsTime = data.viewsTime;
+                }
+                if ("duration" in data && data.duration != undefined) {
+                    this.duration = data.duration;
+                }
+            }
+        }
+        get uuid() {
+            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+        }
+        set uuid(value: string) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        get movieId() {
+            return pb_1.Message.getFieldWithDefault(this, 2, 0) as number;
+        }
+        set movieId(value: number) {
+            pb_1.Message.setField(this, 2, value);
+        }
+        get bufferingCount() {
+            return pb_1.Message.getFieldWithDefault(this, 3, 0) as number;
+        }
+        set bufferingCount(value: number) {
+            pb_1.Message.setField(this, 3, value);
+        }
+        get bufferingTime() {
+            return pb_1.Message.getFieldWithDefault(this, 4, 0) as number;
+        }
+        set bufferingTime(value: number) {
+            pb_1.Message.setField(this, 4, value);
+        }
+        get playbackError() {
+            return pb_1.Message.getFieldWithDefault(this, 5, "") as string;
+        }
+        set playbackError(value: string) {
+            pb_1.Message.setField(this, 5, value);
+        }
+        get viewsTime() {
+            return pb_1.Message.getFieldWithDefault(this, 6, 0) as number;
+        }
+        set viewsTime(value: number) {
+            pb_1.Message.setField(this, 6, value);
+        }
+        get duration() {
+            return pb_1.Message.getFieldWithDefault(this, 7, 0) as number;
+        }
+        set duration(value: number) {
+            pb_1.Message.setField(this, 7, value);
+        }
+        static fromObject(data: {
+            uuid?: string;
+            movieId?: number;
+            bufferingCount?: number;
+            bufferingTime?: number;
+            playbackError?: string;
+            viewsTime?: number;
+            duration?: number;
+        }): StreamingPerformanceRequest {
+            const message = new StreamingPerformanceRequest({});
+            if (data.uuid != null) {
+                message.uuid = data.uuid;
+            }
+            if (data.movieId != null) {
+                message.movieId = data.movieId;
+            }
+            if (data.bufferingCount != null) {
+                message.bufferingCount = data.bufferingCount;
+            }
+            if (data.bufferingTime != null) {
+                message.bufferingTime = data.bufferingTime;
+            }
+            if (data.playbackError != null) {
+                message.playbackError = data.playbackError;
+            }
+            if (data.viewsTime != null) {
+                message.viewsTime = data.viewsTime;
+            }
+            if (data.duration != null) {
+                message.duration = data.duration;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                uuid?: string;
+                movieId?: number;
+                bufferingCount?: number;
+                bufferingTime?: number;
+                playbackError?: string;
+                viewsTime?: number;
+                duration?: number;
+            } = {};
+            if (this.uuid != null) {
+                data.uuid = this.uuid;
+            }
+            if (this.movieId != null) {
+                data.movieId = this.movieId;
+            }
+            if (this.bufferingCount != null) {
+                data.bufferingCount = this.bufferingCount;
+            }
+            if (this.bufferingTime != null) {
+                data.bufferingTime = this.bufferingTime;
+            }
+            if (this.playbackError != null) {
+                data.playbackError = this.playbackError;
+            }
+            if (this.viewsTime != null) {
+                data.viewsTime = this.viewsTime;
+            }
+            if (this.duration != null) {
+                data.duration = this.duration;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.uuid.length)
+                writer.writeString(1, this.uuid);
+            if (this.movieId != 0)
+                writer.writeInt32(2, this.movieId);
+            if (this.bufferingCount != 0)
+                writer.writeInt32(3, this.bufferingCount);
+            if (this.bufferingTime != 0)
+                writer.writeInt32(4, this.bufferingTime);
+            if (this.playbackError.length)
+                writer.writeString(5, this.playbackError);
+            if (this.viewsTime != 0)
+                writer.writeInt32(6, this.viewsTime);
+            if (this.duration != 0)
+                writer.writeInt32(7, this.duration);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): StreamingPerformanceRequest {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new StreamingPerformanceRequest();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.uuid = reader.readString();
+                        break;
+                    case 2:
+                        message.movieId = reader.readInt32();
+                        break;
+                    case 3:
+                        message.bufferingCount = reader.readInt32();
+                        break;
+                    case 4:
+                        message.bufferingTime = reader.readInt32();
+                        break;
+                    case 5:
+                        message.playbackError = reader.readString();
+                        break;
+                    case 6:
+                        message.viewsTime = reader.readInt32();
+                        break;
+                    case 7:
+                        message.duration = reader.readInt32();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): StreamingPerformanceRequest {
+            return StreamingPerformanceRequest.deserialize(bytes);
+        }
+    }
     export class MetricResponse extends pb_1.Message {
         #one_of_decls: number[][] = [];
         constructor(data?: any[] | {}) {
@@ -215,11 +420,21 @@ export namespace metrics_v1 {
                 requestDeserialize: (bytes: Buffer) => SpentTimeRequest.deserialize(new Uint8Array(bytes)),
                 responseSerialize: (message: MetricResponse) => Buffer.from(message.serialize()),
                 responseDeserialize: (bytes: Buffer) => MetricResponse.deserialize(new Uint8Array(bytes))
+            },
+            StreamingPerformance: {
+                path: "/metrics_v1.MetricsV1/StreamingPerformance",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: StreamingPerformanceRequest) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => StreamingPerformanceRequest.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: MetricResponse) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => MetricResponse.deserialize(new Uint8Array(bytes))
             }
         };
         [method: string]: grpc_1.UntypedHandleCall;
         abstract NewUser(call: grpc_1.ServerUnaryCall<NewUserRequest, MetricResponse>, callback: grpc_1.sendUnaryData<MetricResponse>): void;
         abstract SpentTime(call: grpc_1.ServerUnaryCall<SpentTimeRequest, MetricResponse>, callback: grpc_1.sendUnaryData<MetricResponse>): void;
+        abstract StreamingPerformance(call: grpc_1.ServerUnaryCall<StreamingPerformanceRequest, MetricResponse>, callback: grpc_1.sendUnaryData<MetricResponse>): void;
     }
     export class MetricsV1Client {
         private _address: string;
@@ -238,6 +453,10 @@ export namespace metrics_v1 {
         private static SpentTime = new grpc_web_1.MethodDescriptor<SpentTimeRequest, MetricResponse>("/metrics_v1.MetricsV1/SpentTime", grpc_web_1.MethodType.UNARY, SpentTimeRequest, MetricResponse, (message: SpentTimeRequest) => message.serialize(), MetricResponse.deserialize);
         SpentTime(message: SpentTimeRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: MetricResponse) => void) {
             return this._client.rpcCall<SpentTimeRequest, MetricResponse>(this._address + "/metrics_v1.MetricsV1/SpentTime", message, metadata || {}, MetricsV1Client.SpentTime, callback);
+        }
+        private static StreamingPerformance = new grpc_web_1.MethodDescriptor<StreamingPerformanceRequest, MetricResponse>("/metrics_v1.MetricsV1/StreamingPerformance", grpc_web_1.MethodType.UNARY, StreamingPerformanceRequest, MetricResponse, (message: StreamingPerformanceRequest) => message.serialize(), MetricResponse.deserialize);
+        StreamingPerformance(message: StreamingPerformanceRequest, metadata: grpc_web_1.Metadata | null, callback: (error: grpc_web_1.RpcError, response: MetricResponse) => void) {
+            return this._client.rpcCall<StreamingPerformanceRequest, MetricResponse>(this._address + "/metrics_v1.MetricsV1/StreamingPerformance", message, metadata || {}, MetricsV1Client.StreamingPerformance, callback);
         }
     }
 }

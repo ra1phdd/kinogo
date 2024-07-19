@@ -3,7 +3,7 @@ import '@assets/styles/vendor/animate.min.css'
 import Navigation from "@components/common/Navigation.tsx";
 import Auth from "@components/common/TelegramAuth.tsx";
 import {lazy, useEffect} from "react";
-import Studio from "@/pages/Studio/Studio.tsx";
+import Admin from "@/pages/Admin/Admin.tsx";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from 'uuid';
 import {metricNewUser} from "@components/gRPC.tsx";
@@ -59,7 +59,7 @@ function App() {
                         <Route path="/search" element={<Filter />} />
                         <Route path="/filter" element={<Filter />} />
                         {/* Админ-панель */}
-                        <Route path="/studio" element={<Studio />} />
+                        <Route path="/admin" element={<Admin />} />
                     </Routes>
                 </main>
             </div>

@@ -1,6 +1,7 @@
 package metrics_v1
 
 import (
+	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -248,5 +249,74 @@ func (s Service) NewRegistrations() {
 	err := cache.Rdb.Incr(cache.Ctx, "metrics:new_registrations").Err()
 	if err != nil {
 		logger.Warn("Ошибка инкрементирования метрики metrics_registrations", zap.Error(err))
+	}
+}
+
+func (s Service) StreamingPerformance(uuid string, movieId, bufferingCount, bufferingTime int32, playbackError string, viewsTime, duration int32) {
+	s.updatePerformance(uuid, movieId, "bufferingCount", bufferingCount)
+	s.updatePerformance(uuid, movieId, "bufferingTime", bufferingTime)
+	s.updatePerformance(uuid, movieId, "viewsTime", viewsTime)
+	s.duration(uuid, movieId, duration)
+	s.playbackError(uuid, movieId, playbackError)
+}
+
+func (s Service) updatePerformance(uuid string, movieId int32, metric string, value int32) {
+	cacheKey := fmt.Sprintf("streaming_performance:%s:%d:%s", uuid, movieId, metric)
+
+	// Try to get the value from the cache
+	streamingPerformanceStr, err := cache.Rdb.Get(cache.Ctx, cacheKey).Result()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		logger.Warn("Error getting value from cache", zap.Error(err))
+		return
+	}
+
+	var streamingPerformance int64
+	if err == nil {
+		streamingPerformance, err = strconv.ParseInt(streamingPerformanceStr, 10, 64)
+		if err != nil {
+			logger.Warn("Error converting string to int", zap.Error(err))
+			return
+		}
+	}
+
+	newStreamingPerformance := int32(streamingPerformance) + value
+	err = cache.Rdb.Set(cache.Ctx, cacheKey, newStreamingPerformance, 0).Err()
+	if err != nil {
+		logger.Warn("Error updating value in cache", zap.Error(err))
+	}
+}
+
+func (s Service) duration(uuid string, movieId int32, duration int32) {
+	cacheKey := fmt.Sprintf("streaming_performance:%s:%d:%s", uuid, movieId, "duration")
+
+	exists, err := cache.Rdb.Exists(cache.Ctx, cacheKey).Result()
+	if err != nil {
+		logger.Warn("Ошибка проверки наличия ключа в кеше", zap.Error(err))
+		return
+	}
+
+	if exists == 0 {
+		err = cache.Rdb.Set(cache.Ctx, cacheKey, duration, 0).Err()
+		if err != nil {
+			logger.Warn("Error updating value in cache", zap.Error(err))
+		}
+	}
+}
+
+func (s Service) playbackError(uuid string, movieId int32, playbackError string) {
+	cacheKey := fmt.Sprintf("streaming_performance:%s:%d:%s", uuid, movieId, "playbackError")
+
+	// Try to get the value from the cache
+	streamingPerformance, err := cache.Rdb.Get(cache.Ctx, cacheKey).Result()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		logger.Warn("Error getting value from cache", zap.Error(err))
+		return
+	}
+
+	streamingPerformance += "\n" + playbackError
+
+	err = cache.Rdb.Set(cache.Ctx, cacheKey, streamingPerformance, 0).Err()
+	if err != nil {
+		logger.Warn("Error updating value in cache", zap.Error(err))
 	}
 }

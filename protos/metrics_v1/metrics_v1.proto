@@ -10,6 +10,16 @@ message SpentTimeRequest {
   string uuid = 2;
 }
 
+message StreamingPerformanceRequest {
+  string uuid = 1;
+  int32 movieId = 2;
+  int32 bufferingCount = 3;
+  int32 bufferingTime = 4;
+  string playbackError = 5;
+  int32 viewsTime = 6;
+  int32 duration = 7;
+}
+
 message MetricResponse {}
 
 enum MetricType {
@@ -29,4 +39,5 @@ enum MetricType {
 service MetricsV1 {
   rpc NewUser(NewUserRequest) returns (MetricResponse);
   rpc SpentTime(SpentTimeRequest) returns (MetricResponse);
+  rpc StreamingPerformance(StreamingPerformanceRequest) returns (MetricResponse);
 }

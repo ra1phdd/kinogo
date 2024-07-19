@@ -1,8 +1,9 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { MediaPlayer, MediaProvider, type MediaPlayerInstance } from '@vidstack/react';
+import {MediaPlayer, MediaPlayerInstance, MediaProvider} from '@vidstack/react';
 import { defaultLayoutIcons, DefaultVideoLayout } from '@vidstack/react/player/layouts/default';
 import '@vidstack/react/player/styles/default/theme.css';
 import '@vidstack/react/player/styles/default/layouts/video.css';
+import {metricStreamingPerformance} from "@components/gRPC.tsx";
 
 const VideoPlayer: React.FC<{ title: string; id: number }> = ({ title, id }) => {
     const qualities = [
@@ -15,6 +16,143 @@ const VideoPlayer: React.FC<{ title: string; id: number }> = ({ title, id }) => 
     const playerRef = useRef<MediaPlayerInstance>(null);
     const [currentQuality, setCurrentQuality] = useState(qualities[0]);
     const [lastTime, setLastTime] = useState(0);
+    const [metrics, setMetrics] = useState<{
+        bufferingCount: number;
+        bufferingTime: number;
+        startTime: number;
+        playbackSuccess: boolean;
+        playbackError: MediaError | null;
+        viewTime: number,
+        lastPlayTime: number,
+        currentTime: number;
+        duration: number;
+        volume: number;
+        isMuted: boolean;
+    }>({
+        bufferingCount: 0,
+        bufferingTime: 0,
+        startTime: 0,
+        playbackSuccess: true,
+        playbackError: null,
+        viewTime: 0,
+        lastPlayTime: 0,
+        currentTime: 0,
+        duration: 0,
+        volume: 1,
+        isMuted: false,
+    });
+
+    useEffect(() => {
+        const player = playerRef.current;
+
+        if (player) {
+            // Event handlers
+            const handlePlay = () => {
+                setMetrics((prev) => ({
+                    ...prev,
+                    startTime: Date.now()
+                }));
+                updateMetrics();
+            };
+
+            const updateMetrics = () => {
+                setMetrics((prev) => ({
+                    ...prev,
+                    currentTime: player.currentTime,
+                    duration: player.duration,
+                    volume: player.volume,
+                    isMuted: player.muted,
+                }));
+            };
+
+            const handlePlaying = () => {
+                const currentTime = Date.now();
+                const startTime = metrics.startTime;
+
+                if (startTime) {
+                    const bufferingTime = currentTime - startTime;
+                    setMetrics((prev) => ({
+                        ...prev,
+                        bufferingTime: prev.bufferingTime + bufferingTime,
+                        startTime: 0,
+                    }));
+                }
+
+                setMetrics((prev) => ({
+                    ...prev,
+                    lastPlayTime: player.currentTime,
+                }));
+
+                updateMetrics();
+            };
+
+            const handlePause = () => {
+                const viewTime = player.currentTime - metrics.lastPlayTime;
+                setMetrics((prev) => ({
+                    ...prev,
+                    viewTime: viewTime,
+                }));
+
+                updateMetrics();
+
+                metricStreamingPerformance(id, metrics.bufferingCount, metrics.bufferingTime, String(metrics.playbackError), metrics.viewTime, metrics.duration);
+            };
+
+            const handleBufferingStart = () => {
+                setMetrics((prev) => ({ ...prev, startTime: Date.now() }));
+            };
+
+            const handleBufferingEnd = () => {
+                const currentTime = Date.now();
+                const startTime = metrics.startTime;
+
+                if (startTime) {
+                    const bufferingTime = currentTime - startTime;
+                    setMetrics((prev) => ({
+                        ...prev,
+                        bufferingTime: prev.bufferingTime + bufferingTime,
+                        startTime: 0,
+                    }));
+                }
+
+                updateMetrics();
+            };
+
+            const handleBuffering = () => {
+                setMetrics((prev) => ({ ...prev, bufferingCount: prev.bufferingCount + 1 }));
+            };
+
+            const handleError = (event: Event) => {
+                console.log('Playback error', event);
+                setMetrics((prev) => ({
+                    ...prev,
+                    playbackSuccess: false,
+                    playbackError: (event.target as HTMLMediaElement).error
+                }));
+
+                metricStreamingPerformance(id, metrics.bufferingCount, metrics.bufferingTime, String(metrics.playbackError), metrics.viewTime, metrics.duration);
+            };
+
+            // Attach event listeners
+            player.addEventListener('play', handlePlay);
+            player.addEventListener('playing', handlePlaying);
+            player.addEventListener('waiting', handleBuffering);
+            player.addEventListener('error', handleError);
+            player.addEventListener('waiting', handleBufferingStart);
+            player.addEventListener('playing', handleBufferingEnd);
+            player.addEventListener('pause', handlePause);
+
+            return () => {
+                player.removeEventListener('play', handlePlay);
+                player.removeEventListener('playing', handlePlaying);
+                player.removeEventListener('waiting', handleBuffering);
+                player.removeEventListener('error', handleError);
+                player.removeEventListener('waiting', handleBufferingStart);
+                player.removeEventListener('playing', handleBufferingEnd);
+                player.removeEventListener('pause', handlePause);
+            };
+        }
+    }, [metrics]);
 
     useEffect(() => {
         const savedTime = localStorage.getItem(`videoTime_${id}`);

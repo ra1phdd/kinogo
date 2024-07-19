@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type MetricsV1Client interface {
 	NewUser(ctx context.Context, in *NewUserRequest, opts ...grpc.CallOption) (*MetricResponse, error)
 	SpentTime(ctx context.Context, in *SpentTimeRequest, opts ...grpc.CallOption) (*MetricResponse, error)
+	StreamingPerformance(ctx context.Context, in *StreamingPerformanceRequest, opts ...grpc.CallOption) (*MetricResponse, error)
 }
 
 type metricsV1Client struct {
@@ -52,12 +53,22 @@ func (c *metricsV1Client) SpentTime(ctx context.Context, in *SpentTimeRequest, o
 	return out, nil
 }
 
+func (c *metricsV1Client) StreamingPerformance(ctx context.Context, in *StreamingPerformanceRequest, opts ...grpc.CallOption) (*MetricResponse, error) {
+	out := new(MetricResponse)
+	err := c.cc.Invoke(ctx, "/metrics_v1.MetricsV1/StreamingPerformance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MetricsV1Server is the server API for MetricsV1 service.
 // All implementations must embed UnimplementedMetricsV1Server
 // for forward compatibility
 type MetricsV1Server interface {
 	NewUser(context.Context, *NewUserRequest) (*MetricResponse, error)
 	SpentTime(context.Context, *SpentTimeRequest) (*MetricResponse, error)
+	StreamingPerformance(context.Context, *StreamingPerformanceRequest) (*MetricResponse, error)
 	mustEmbedUnimplementedMetricsV1Server()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedMetricsV1Server) NewUser(context.Context, *NewUserRequest) (*
 }
 func (UnimplementedMetricsV1Server) SpentTime(context.Context, *SpentTimeRequest) (*MetricResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SpentTime not implemented")
+}
+func (UnimplementedMetricsV1Server) StreamingPerformance(context.Context, *StreamingPerformanceRequest) (*MetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StreamingPerformance not implemented")
 }
 func (UnimplementedMetricsV1Server) mustEmbedUnimplementedMetricsV1Server() {}
 
@@ -120,6 +134,24 @@ func _MetricsV1_SpentTime_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MetricsV1_StreamingPerformance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StreamingPerformanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricsV1Server).StreamingPerformance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/metrics_v1.MetricsV1/StreamingPerformance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricsV1Server).StreamingPerformance(ctx, req.(*StreamingPerformanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MetricsV1_ServiceDesc is the grpc.ServiceDesc for MetricsV1 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var MetricsV1_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SpentTime",
 			Handler:    _MetricsV1_SpentTime_Handler,
+		},
+		{
+			MethodName: "StreamingPerformance",
+			Handler:    _MetricsV1_StreamingPerformance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

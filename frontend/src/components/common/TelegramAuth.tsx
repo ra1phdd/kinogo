@@ -43,7 +43,7 @@ function Auth() {
             {isAuthenticated ? (
                 <>
                     {userAdmin && (
-                        <a className="header__auth-admin" href="/studio">Творческая студия</a>
+                        <a className="header__auth-admin" href="/admin">Админ-панель</a>
                     )}
                     <a className="header__auth-logout" onClick={handleLogout}>Выйти</a>
                 </>
