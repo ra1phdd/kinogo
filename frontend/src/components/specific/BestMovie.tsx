@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import AnimateElement from "@components/common/AnimateElement.tsx";
-import useBestMovie from "@/hooks/useBestMovie.ts";
+import useBestMovie from "@/hooks/fetchMovies/useBestMovie.ts";
 
 // Компонент BestMovieAside
 const BestMovieAside: React.FC = () => {

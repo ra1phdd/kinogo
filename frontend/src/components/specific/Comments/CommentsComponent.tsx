@@ -3,7 +3,7 @@ import useComments from '@/hooks/useComments.ts';
 import Editor from '@components/specific/Editor.tsx';
 import Comment from './Comment';
 import { Comments } from '@components/gRPC.tsx';
-import {useAuth} from "@/contexts/Auth.tsx";
+import {useAuth} from "@/hooks/useAuth.ts";
 
 const CommentsComponent: React.FC<{ id: number }> = ({ id }) => {
     const { comments, loading } = useComments(id);

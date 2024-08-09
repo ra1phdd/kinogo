@@ -3,7 +3,6 @@ import '@assets/styles/vendor/animate.min.css'
 import Navigation from "@components/common/Navigation.tsx";
 import Auth from "@components/common/TelegramAuth.tsx";
 import {lazy, useEffect} from "react";
-import Admin from "@/pages/Admin/Admin.tsx";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from 'uuid';
 import {metricNewUser} from "@components/gRPC.tsx";
@@ -14,6 +13,7 @@ const Home = lazy(() => import("./pages/Home/Home.tsx"));
 const Movie = lazy(() => import("./pages/Movie/Movie.tsx"));
 const Filter = lazy(() => import("@/pages/Filter/Filter.tsx"));
 const Movies = lazy(() => import("@/pages/Movies/Movies.tsx"));
+const AddMovie = lazy(() => import("@/pages/Admin/AddMovie/AddMovie.tsx"));
 
 function App() {
     useEffect(() => {
@@ -59,7 +59,7 @@ function App() {
                         <Route path="/search" element={<Filter />} />
                         <Route path="/filter" element={<Filter />} />
                         {/* Админ-панель */}
-                        <Route path="/admin" element={<Admin />} />
+                        <Route path="/admin/addmovie" element={<AddMovie />} />
                     </Routes>
                 </main>
             </div>

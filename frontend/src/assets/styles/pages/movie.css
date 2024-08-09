@@ -554,6 +554,18 @@ header .header__auth .header__auth-admin:hover {
   top: -4.25rem;
   left: -4.25rem;
 }
+.editor button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.editor button:disabled:hover {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.editor button:disabled:hover #circle {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
 .editor button {
   width: 10%;
   margin-top: 0;

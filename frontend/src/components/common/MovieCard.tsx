@@ -49,7 +49,7 @@ const MovieCard: React.FC<MovieCardProps> = React.memo(({ movie, index, limit })
                         </div>
                     )}
                     <div className="card__info-genres">
-                        <p>{movie.genres}</p>
+                        <p>{movie.genres.map(genre => genre.name).join(', ')}</p>
                     </div>
                 </div>
             </a>

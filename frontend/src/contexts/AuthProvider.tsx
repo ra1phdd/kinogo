@@ -1,22 +1,7 @@
-import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import {jwtDecode} from "jwt-decode";
-
-interface JwtPayload {
-    id: number;
-    isAdmin: boolean;
-}
-
-interface AuthContextType {
-    isAuthenticated: boolean;
-    userAdmin: boolean;
-    userId: number | null;
-    setIsAuthenticated: (auth: boolean) => void;
-    setUserAdmin: (isAdmin: boolean) => void;
-    setUserId: (id: number | null) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, JwtPayload } from './AuthContext';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -42,15 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, userAdmin, userId, setIsAuthenticated, setUserAdmin, setUserId }}>
-    {children}
-    </AuthContext.Provider>
-);
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+            {children}
+        </AuthContext.Provider>
+    );
 };

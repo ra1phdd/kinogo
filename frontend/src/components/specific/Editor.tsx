@@ -1,6 +1,6 @@
 import React, { memo, useEffect } from 'react';
 import { Comments, addComment, updateComment } from "@components/gRPC.tsx";
-import { useAuth } from "@/contexts/Auth.tsx";
+import { useAuth } from "@/hooks/useAuth.ts";
 import { useTextareaState } from '@/hooks/useTextareaState';
 import { useScrollIntoView } from '@/hooks/useScrollIntoView';
 

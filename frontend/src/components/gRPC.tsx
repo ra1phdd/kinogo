@@ -32,7 +32,7 @@ export interface Movies {
     scoreIMDB: number;
     poster: string;
     typeMovie: number;
-    genres: string;
+    genres: Genres[];
 }
 
 export interface Movie {
@@ -178,11 +178,31 @@ export function getSearchMovies(text: string, limit: number, page: number): Prom
     });
 }
 
-export function getFilterMovies(genres: string, yearMin: number, yearMax: number, limit: number, page: number): Promise<Movies[]> {
+export function getSearchMoviesAPI(typeMovie: number, text: string): Promise<Movies[]> {
+    return new Promise((resolve, reject) => {
+        const request = new movies_v1.GetMoviesByFilterRequest();
+        request.filters = new movies_v1.GetMoviesByFilterItem();
+        request.filters.typeMovie = typeMovie;
+        request.filters.search = text;
+
+        clientMoviesV1.GetMoviesByFilter(request, {"uuid": uuid}, (err, response) => {
+            if (err) {
+                reject(err);
+            }  else if (response && response.movies) {
+                resolve(response.movies);
+            } else {
+                reject(new Error('No comments found'));
+            }
+        });
+    });
+}
+
+export function getFilterMovies(typeMovie: number, genres: string, yearMin: number, yearMax: number, limit: number, page: number): Promise<Movies[]> {
     return new Promise((resolve, reject) => {
         const request = new movies_v1.GetMoviesByFilterRequest();
         request.filters = new movies_v1.GetMoviesByFilterItem();
 
+        request.filters.typeMovie = typeMovie;
         if (genres != ""){
             request.filters.genres = genres.split(',').map((genre) => {
                 const genreObj = new Genres();
@@ -191,7 +211,7 @@ export function getFilterMovies(genres: string, yearMin: number, yearMax: number
             });
         }
         request.filters.yearMin = yearMin;
-        request.filters.yearMax = yearMax
+        request.filters.yearMax = yearMax;
         request.limit = limit;
         request.page = page;
 
@@ -225,6 +245,30 @@ export function getComments(movieId: number, limit: number, page: number): Promi
         });
     });
 }
+
+export function addMovies(title: string, description: string, releaseDate: number, scoreKP: number, typeMovie: number, genres: Genres[]): Promise<number> {
+    return new Promise((resolve, reject) => {
+        const request = new movies_v1.AddMoviesRequest();
+
+        request.title = title;
+        request.description = description;
+        request.releaseDate = releaseDate;
+        request.scoreKP = scoreKP;
+        request.typeMovie = typeMovie;
+        request.genres = genres;
+
+        clientMoviesV1.AddMovies(request, {"uuid": uuid, "token": token}, (err, response) => {
+            if (err) {
+                reject(err);
+            } else if (response && response.err == "") {
+                resolve(response.id);
+            } else {
+                reject(new Error('Failed to add comment'));
+            }
+        });
+    });
+}
+
 
 export function addComment(parentId: number | null, movieId: number, userId: number, text: string): Promise<number> {
     return new Promise((resolve, reject) => {

@@ -20,7 +20,7 @@ message GetMoviesByFilterRequest {
   int32 page = 3;
 }
 message GetMoviesByFilterItem {
-  int32 typeMovie = 1;
+  TypeMovie typeMovie = 1;
   string search = 2;
   repeated Genres genres = 3;
   int32 yearMin = 4;
@@ -32,13 +32,13 @@ message GetMoviesByFilterItem {
 message AddMoviesRequest {
   string title = 1;
   string description = 2;
-  repeated Countries countries = 3;
-  int32 releaseDate = 4;
-  int32 timeMovie = 5;
-  double scoreKP = 6;
-  double scoreIMDB = 7;
-  string poster = 8;
-  int32 typeMovie = 9;
+  int32 releaseDate = 3;
+  int32 timeMovie = 4;
+  double scoreKP = 5;
+  double scoreIMDB = 6;
+  string poster = 7;
+  int32 typeMovie = 8;
+  repeated Countries countries = 9;
   repeated Genres genres = 10;
 }
 message Countries{
@@ -53,7 +53,6 @@ message DeleteMoviesRequest {
   int32 id = 1;
 }
 
-
 // Вывод всех/категоризированных новостей
 message GetMoviesResponse {
   repeated GetMovieItem movies = 1;
@@ -67,7 +66,7 @@ message GetMovieItem {
   double scoreIMDB = 6;
   string poster = 7;
   int32 typeMovie = 8;
-  string genres = 9;
+  repeated Genres genres = 9;
 }
 
 // Вывод новости по Id
@@ -94,6 +93,15 @@ message AddMoviesResponse {
 // Удаление новости
 message DeleteMoviesResponse {
   string err = 1;
+}
+
+enum TypeMovie {
+  ALL = 0;
+  FILMS = 1;
+  SERIES = 2;
+  CARTOONS = 3;
+  TELECASTS = 4;
+  API = 5;
 }
 
 service MoviesV1 {

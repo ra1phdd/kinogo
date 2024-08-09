@@ -14,10 +14,10 @@ func TestService_ValidateTelegramAuth(t *testing.T) {
 	s := Service{}
 
 	t.Run("Valid Hash", func(t *testing.T) {
-		data := map[string]string{
-			"id":        "12345",
+		data := map[string]interface{}{
+			"id":        12345,
 			"username":  "testuser",
-			"auth_date": "1598765432",
+			"auth_date": 1598765432,
 			"hash":      "7ba4de2f37608e84700decb6d891d8108d3aa899ee1aa2a339377ec5c9c8a0bf",
 		}
 		botToken := "testbottoken"
@@ -27,10 +27,10 @@ func TestService_ValidateTelegramAuth(t *testing.T) {
 	})
 
 	t.Run("Invalid Hash", func(t *testing.T) {
-		data := map[string]string{
-			"id":        "12345",
+		data := map[string]interface{}{
+			"id":        12345,
 			"username":  "testuser",
-			"auth_date": "1598765432",
+			"auth_date": 1598765432,
 			"hash":      "f3a563b22de6400892cde0e74b1e4b1b37c2840b94b22e4e07429c30c7367c2a",
 		}
 		botToken := "testbottoken"
@@ -49,13 +49,13 @@ func TestService_AddUserIfNotExists(t *testing.T) {
 	s := Service{}
 
 	t.Run("User Does Not Exist", func(t *testing.T) {
-		data := map[string]string{
-			"id":         "12345",
+		data := map[string]interface{}{
+			"id":         12345,
 			"username":   "testuser",
 			"photo_url":  "http://example.com/photo.jpg",
 			"first_name": "Test",
 			"last_name":  "User",
-			"auth_date":  "1598765432",
+			"auth_date":  1598765432,
 		}
 
 		mock.ExpectQuery("SELECT EXISTS\\(SELECT 1 FROM users WHERE id=\\$1\\)").WithArgs(data["id"]).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(false))
@@ -66,13 +66,13 @@ func TestService_AddUserIfNotExists(t *testing.T) {
 	})
 
 	t.Run("User Already Exists", func(t *testing.T) {
-		data := map[string]string{
-			"id":         "12345",
+		data := map[string]interface{}{
+			"id":         12345,
 			"username":   "testuser",
 			"photo_url":  "http://example.com/photo.jpg",
 			"first_name": "Test",
 			"last_name":  "User",
-			"auth_date":  "1598765432",
+			"auth_date":  1598765432,
 		}
 
 		mock.ExpectQuery("SELECT EXISTS\\(SELECT 1 FROM users WHERE id=\\$1\\)").WithArgs(data["id"]).WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
@@ -85,10 +85,18 @@ func TestService_GenerateToken(t *testing.T) {
 	s := Service{}
 
 	t.Run("Generate Token Successfully", func(t *testing.T) {
-		userID := "12345"
+		data := map[string]interface{}{
+			"id":         12345,
+			"username":   "testuser",
+			"photo_url":  "http://example.com/photo.jpg",
+			"first_name": "Test",
+			"last_name":  "User",
+			"auth_date":  1598765432,
+			"isAdmin":    false,
+		}
 		jwtSecret := "secret"
 
-		token, err := s.GenerateToken(userID, jwtSecret)
+		token, err := s.GenerateToken(data, jwtSecret)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, token)
 

@@ -1,4 +1,4 @@
-import {useState} from "react";
+import React, {useState} from "react";
 
 export const useTextareaState = (initialValue: string = '') => {
     const [value, setValue] = useState<string>(initialValue);

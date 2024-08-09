@@ -1,0 +1,52 @@
+.section__movie-add {
+  text-align: center;
+  input {
+    @include component();
+    width: 540px;
+    font-size: 16px;
+    padding: 20px 25px;
+    margin-bottom: 15px;
+    &::placeholder {
+      color: $text-secondary-color;
+    }
+    &:focus {
+      outline: none;
+    }
+  }
+  .filedrop {
+    @include component();
+    width: 540px;
+    padding: 20px 25px;
+    color: $text-secondary-color;
+    margin: 0 auto 15px auto;
+    p {
+      font-size: 16px;
+    }
+  }
+  .section__movie-results {
+    @include component();
+    width: 540px;
+    padding: 20px 25px;
+    margin: 0 auto 15px auto;
+    ul {
+      list-style: none;
+      color: $text-primary-color;
+      font-size: 16px;
+      padding: 0;
+      text-align: left;
+      li {
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(151, 151, 151, 0.3);
+        cursor: pointer;
+        &.active {
+          color: #b30e76;
+        }
+      }
+    }
+  }
+  @include button();
+  button {
+    margin-top: 0;
+    width: 592px;
+  }
+}

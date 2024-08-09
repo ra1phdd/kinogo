@@ -8,20 +8,26 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
 	"kinogo/internal/app/models"
 	"kinogo/pkg/cache"
 	"kinogo/pkg/db"
 	"kinogo/pkg/movies_v1"
 	"log"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
 
 type Service struct {
+	ApiKey string
 }
 
-func New() *Service {
-	return &Service{}
+func New(ApiKey string) *Service {
+	return &Service{
+		ApiKey: ApiKey,
+	}
 }
 
 func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, error) {
@@ -74,6 +80,11 @@ func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, err
 			return nil, errScan
 		}
 
+		genres := make([]*movies_v1.Genres, len(genresArray))
+		for i, name := range genresArray {
+			genres[i] = &movies_v1.Genres{Name: name}
+		}
+
 		moviesItem := models.Movies{
 			Id:          id,
 			Title:       title,
@@ -83,7 +94,7 @@ func (s Service) GetMoviesService(limit int32, page int32) ([]models.Movies, err
 			ScoreIMDB:   scoreIMDB,
 			Poster:      poster,
 			TypeMovie:   typeMovie,
-			Genres:      strings.Join(genresArray, ", "),
+			Genres:      genres,
 		}
 
 		movies = append(movies, moviesItem)
@@ -323,6 +334,11 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 			return []models.Movies{}, errScan
 		}
 
+		genres := make([]*movies_v1.Genres, len(genresArray))
+		for i, name := range genresArray {
+			genres[i] = &movies_v1.Genres{Name: name}
+		}
+
 		moviesItem := models.Movies{
 			Id:          id,
 			Title:       title,
@@ -332,7 +348,7 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 			ScoreIMDB:   scoreIMDB,
 			Poster:      poster,
 			TypeMovie:   typeMovie,
-			Genres:      strings.Join(genresArray, ", "),
+			Genres:      genres,
 		}
 
 		movies = append(movies, moviesItem)
@@ -352,6 +368,71 @@ func (s Service) GetMoviesByFilterService(filtersMap map[string]interface{}) ([]
 	err = cache.Rdb.Set(cache.Ctx, "movies_filter_"+stringMap, moviesJSONbyte, 5*time.Minute).Err()
 	if err != nil {
 		log.Printf("Ошибка при сохранении данных в Redis: %v", err)
+	}
+
+	return movies, nil
+}
+
+func (s Service) GetMoviesByAPIService(search string) ([]models.Movies, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("https://api.kinopoisk.dev/v1.4/movie/search?page=1&limit=10&query=%s", url.QueryEscape(search)), nil)
+	if err != nil {
+		return []models.Movies{}, err
+	}
+
+	req.Header.Set("X-API-KEY", s.ApiKey)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return []models.Movies{}, err
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		return []models.Movies{}, errors.New(resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []models.Movies{}, err
+	}
+
+	var movieResponse models.MoviesByAPI
+	if err := json.Unmarshal(body, &movieResponse); err != nil {
+		return []models.Movies{}, err
+	}
+
+	var movies []models.Movies
+	for _, item := range movieResponse.Docs {
+		var typeMovie int32
+		switch item.Type {
+		case "movie":
+			typeMovie = int32(movies_v1.TypeMovie_FILMS)
+		case "cartoon":
+			typeMovie = int32(movies_v1.TypeMovie_CARTOONS)
+		default:
+			typeMovie = int32(movies_v1.TypeMovie_SERIES)
+		}
+
+		genres := make([]*movies_v1.Genres, len(item.Genres))
+		for i, genre := range item.Genres {
+			genres[i] = &movies_v1.Genres{Name: genre.Name}
+		}
+
+		movie := models.Movies{
+			Id:          int32(item.ID),
+			Title:       item.Name,
+			Description: item.Description,
+			ReleaseDate: int32(item.Year),
+			ScoreKP:     item.Rating.Kp,
+			ScoreIMDB:   item.Rating.Imdb,
+			Poster:      item.Poster.URL,
+			TypeMovie:   typeMovie,
+			Genres:      genres,
+		}
+
+		movies = append(movies, movie)
 	}
 
 	return movies, nil
@@ -383,10 +464,10 @@ func (s Service) AddMoviesService(moviesMap map[string]interface{}) (int32, erro
 	}
 
 	// Добавление фильма в таблицу movies
-	insertMovieSQL := `INSERT INTO movies (title, description, releasedate, timemovie, scorekp, scoreimdb, poster, typemovie, views, likes, dislikes) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
+	insertMovieSQL := `INSERT INTO movies (title, description, releasedate, timemovie, scorekp, scoreimdb, poster, typemovie)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 	var movieID int
-	err = tx.QueryRow(insertMovieSQL, moviesMap["title"], moviesMap["description"], moviesMap["releaseDate"], moviesMap["timeMovie"], moviesMap["scoreKP"], moviesMap["scoreIMDB"], moviesMap["poster"], moviesMap["typeMovie"], 1, 1, 1).Scan(&movieID)
+	err = tx.QueryRow(insertMovieSQL, moviesMap["title"], moviesMap["description"], moviesMap["releaseDate"], moviesMap["timeMovie"], moviesMap["scoreKP"], moviesMap["scoreIMDB"], moviesMap["poster"], moviesMap["typeMovie"]).Scan(&movieID)
 	if err != nil {
 		tx.Rollback()
 		return 0, fmt.Errorf("failed to insert movie: %v", err)

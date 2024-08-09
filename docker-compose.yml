@@ -20,12 +20,12 @@ services:
     volumes:
       - ./backend/config/envoy.yaml:/etc/envoy/envoy.yaml
 
-  frontend:
-    image: nginx:stable-alpine
-    container_name: frontend
-    ports:
-      - "80:80"
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html
-      - ./backend/config/nginx.conf:/etc/nginx/conf.d/default.conf
-    restart: always
+  #frontend:
+  #  image: nginx:stable-alpine
+  #  container_name: frontend
+  #  ports:
+  #    - "80:80"
+  #  volumes:
+  #    - ./frontend/dist:/usr/share/nginx/html
+  #    - ./backend/config/nginx.conf:/etc/nginx/conf.d/default.conf
+  #  restart: always

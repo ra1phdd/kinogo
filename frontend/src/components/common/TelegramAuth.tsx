@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { LoginButton, TelegramAuthData } from '@telegram-auth/react';
 import Cookies from 'js-cookie';
-import {useAuth} from "@/contexts/Auth.tsx";
+import {useAuth} from "@/hooks/useAuth.ts";
 
 function Auth() {
     const { isAuthenticated, userAdmin } = useAuth();

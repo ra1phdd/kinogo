@@ -10,6 +10,7 @@ import (
 	"kinogo/internal/app/endpoint/grpcMetrics"
 	"kinogo/internal/app/endpoint/grpcMovies"
 	"kinogo/internal/app/endpoint/restAuth"
+	"kinogo/internal/app/endpoint/restUpload"
 	icAuth "kinogo/internal/app/interceptors/auth"
 	"kinogo/internal/app/interceptors/uuid"
 	auth "kinogo/internal/app/services/auth"
@@ -47,7 +48,7 @@ func New() (*App, error) {
 
 	a := &App{}
 
-	NewGRPC(a)
+	NewGRPC(a, cfg.ApiKey)
 	NewREST(a, cfg.Auth)
 
 	err = cache.Init(cfg.Redis.RedisAddr+":"+cfg.Redis.RedisPort, cfg.Redis.RedisUsername, cfg.Redis.RedisPassword, cfg.Redis.RedisDBId)
@@ -65,7 +66,7 @@ func New() (*App, error) {
 	return a, nil
 }
 
-func NewGRPC(a *App) {
+func NewGRPC(a *App, ApiKey string) {
 	a.server = grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			icUuid.UUIDCheckerInterceptor,
@@ -74,7 +75,7 @@ func NewGRPC(a *App) {
 	)
 
 	// обьявляем сервисы
-	a.movies = movies.New()
+	a.movies = movies.New(ApiKey)
 	a.comments = comments.New()
 	a.auth = auth.New()
 	a.metrics = metrics.New()
@@ -114,8 +115,12 @@ func NewREST(a *App, cfgAuth config.Auth) {
 		Auth: a.auth,
 	}
 
+	serviceUpload := &restUpload.Endpoint{}
+
 	// регистрируем маршруты
 	a.router.POST("/auth/telegram/callback", serviceAuth.TelegramAuthCallback(cfgAuth.JWTSecret, cfgAuth.BotToken))
+
+	a.router.POST("/upload", serviceUpload.UploadFileHandler)
 
 	a.router.GET("/stream/:id/:quality/playlist.m3u8", func(c *gin.Context) {
 		quality := c.Param("quality")

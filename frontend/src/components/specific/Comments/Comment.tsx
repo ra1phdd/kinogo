@@ -1,6 +1,6 @@
 import React, {memo, useState, useEffect} from 'react';
 import {deleteComment} from '@components/gRPC.tsx';
-import {useAuth} from '@/contexts/Auth.tsx';
+import {useAuth} from '@/hooks/useAuth.ts';
 import {Comments} from '@components/gRPC.tsx';
 import {formatDate} from '@/utils/FormatDate.ts';
 

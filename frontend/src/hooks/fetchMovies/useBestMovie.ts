@@ -5,16 +5,14 @@ const useBestMovie = () => {
     const [movie, setMovie] = useState<BestMovie | null>(null);
 
     useEffect(() => {
-        const fetchMovie = async () => {
+        (async () => {
             try {
                 const movieResponse = await getBestMovie();
                 setMovie(movieResponse[0]);
             } catch (error) {
                 console.error('Ошибка при получении фильма:', error);
             }
-        };
-
-        fetchMovie();
+        })();
     }, []);
 
     return movie;

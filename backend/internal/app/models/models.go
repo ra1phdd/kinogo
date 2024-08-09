@@ -1,18 +1,21 @@
 package models
 
-import "time"
+import (
+	"kinogo/pkg/movies_v1"
+	"time"
+)
 
 type (
 	Movies struct {
-		Id          int32   `json:"id"`
-		Title       string  `json:"title"`
-		Description string  `json:"description"`
-		ReleaseDate int32   `json:"release_date"`
-		ScoreKP     float64 `json:"score_kp"`
-		ScoreIMDB   float64 `json:"score_imdb"`
-		Poster      string  `json:"poster"`
-		TypeMovie   int32   `json:"type_movie"`
-		Genres      string  `json:"genres"`
+		Id          int32               `json:"id"`
+		Title       string              `json:"title"`
+		Description string              `json:"description"`
+		ReleaseDate int32               `json:"release_date"`
+		ScoreKP     float64             `json:"score_kp"`
+		ScoreIMDB   float64             `json:"score_imdb"`
+		Poster      string              `json:"poster"`
+		TypeMovie   int32               `json:"type_movie"`
+		Genres      []*movies_v1.Genres `json:"genres"`
 	}
 
 	Movie struct {
@@ -32,7 +35,7 @@ type (
 		Genres      string
 	}
 
-	MovieByAPI struct {
+	MoviesByAPI struct {
 		Docs []struct {
 			ID                int    `json:"id"`
 			Name              string `json:"name"`

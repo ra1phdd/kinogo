@@ -359,6 +359,126 @@ header .header__auth .header__auth-admin:hover {
     display: none;
   }
 }
+.section__movie-add {
+  text-align: center;
+}
+.section__movie-add input {
+  padding: 1.5rem;
+  background-color: #262836;
+  box-shadow: 0 0.5rem 2rem 0 rgba(31, 38, 135, 0.15);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 540px;
+  font-size: 16px;
+  padding: 20px 25px;
+  margin-bottom: 15px;
+}
+.section__movie-add input::placeholder {
+  color: #adadad;
+}
+.section__movie-add input:focus {
+  outline: none;
+}
+.section__movie-add .filedrop {
+  padding: 1.5rem;
+  background-color: #262836;
+  box-shadow: 0 0.5rem 2rem 0 rgba(31, 38, 135, 0.15);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 540px;
+  padding: 20px 25px;
+  color: #adadad;
+  margin: 0 auto 15px auto;
+}
+.section__movie-add .filedrop p {
+  font-size: 16px;
+}
+.section__movie-add .section__movie-results {
+  padding: 1.5rem;
+  background-color: #262836;
+  box-shadow: 0 0.5rem 2rem 0 rgba(31, 38, 135, 0.15);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 540px;
+  padding: 20px 25px;
+  margin: 0 auto 15px auto;
+}
+.section__movie-add .section__movie-results ul {
+  list-style: none;
+  color: #ffffff;
+  font-size: 16px;
+  padding: 0;
+  text-align: left;
+}
+.section__movie-add .section__movie-results ul li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(151, 151, 151, 0.3);
+  cursor: pointer;
+}
+.section__movie-add .section__movie-results ul li.active {
+  color: #b30e76;
+}
+.section__movie-add button {
+  padding: 1.5rem;
+  background-color: #262836;
+  box-shadow: 0 0.5rem 2rem 0 rgba(31, 38, 135, 0.15);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 1rem;
+  width: 100%;
+  height: 3.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.625rem;
+  margin-top: 1rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.section__movie-add button a, .section__movie-add button span {
+  position: relative;
+  transition: all 0.45s ease-Out;
+  text-decoration: none;
+}
+.section__movie-add button #circle {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  line-height: 2.5rem;
+  border-radius: 50%;
+  background: #b30e76;
+  position: absolute;
+  transition: all 0.5s ease-Out;
+  top: 1.25rem;
+  left: 4.25rem;
+}
+.section__movie-add button:hover {
+  border: 1px solid #b30e76;
+  transition: all 0.45s ease-Out;
+}
+.section__movie-add button:hover #circle {
+  width: 200%;
+  height: 500%;
+  opacity: 1;
+  top: -4.25rem;
+  left: -4.25rem;
+}
+.section__movie-add button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.section__movie-add button:disabled:hover {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.section__movie-add button:disabled:hover #circle {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+.section__movie-add button {
+  margin-top: 0;
+  width: 592px;
+}
+
 main {
   display: flex;
 }
@@ -371,51 +491,4 @@ main .sections {
   margin: 1.5rem 0 0 1.5rem;
 }
 
-@media (max-width: 767px) {
-  .section__videos {
-    grid-template-columns: 1fr;
-  }
-  aside {
-    display: none;
-  }
-}
-@media (min-width: 480px) and (max-width: 767px) {
-  .section__videos {
-    grid-template-columns: 1fr 1fr;
-  }
-  aside {
-    display: none;
-  }
-}
-@media (min-width: 768px) and (max-width: 1023px) {
-  .section__videos {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .section__videos {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-}
-@media (min-width: 1280px) and (max-width: 1599px) {
-  .section__videos {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
-}
-@media (min-width: 1600px) and (max-width: 1919px) {
-  .section__videos {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-  }
-}
-@media (min-width: 1920px) and (max-width: 2399px) {
-  .section__videos {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-  }
-}
-@media (min-width: 2400px) {
-  .section__videos {
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-  }
-}
-
-/*# sourceMappingURL=home.css.map */
+/*# sourceMappingURL=addmovie.css.map */

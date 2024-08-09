@@ -10,6 +10,7 @@ import (
 
 type Configuration struct {
 	LoggerLevel string `env:"LOGGER_LEVEL" envDefault:"debug"`
+	ApiKey      string `env:"API_KEY,required"`
 	GRPC        GRPC
 	Auth        Auth
 	DB          DB

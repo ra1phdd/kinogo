@@ -3,6 +3,7 @@ package grpcMovies
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"kinogo/internal/app/models"
 	"kinogo/pkg/logger"
@@ -14,6 +15,7 @@ type Movies interface {
 	GetMoviesService(int32, int32) ([]models.Movies, error)
 	GetMovieByIdService(int32) (models.Movie, error)
 	GetMoviesByFilterService(map[string]interface{}) ([]models.Movies, error)
+	GetMoviesByAPIService(search string) ([]models.Movies, error)
 	AddMoviesService(map[string]interface{}) (int32, error)
 	DeleteMoviesService(int32) error
 }
@@ -91,7 +93,13 @@ func (e *Endpoint) GetMoviesByFilter(_ context.Context, req *pb.GetMoviesByFilte
 		"page":      req.Page,
 	}
 
-	movies, err := e.Movies.GetMoviesByFilterService(filtersMap)
+	var movies []models.Movies
+	var err error
+	if filtersMap["typeMovie"] == pb.TypeMovie_API {
+		movies, err = e.Movies.GetMoviesByAPIService(filtersMap["search"].(string))
+	} else {
+		movies, err = e.Movies.GetMoviesByFilterService(filtersMap)
+	}
 	if err != nil {
 		return &pb.GetMoviesResponse{}, err
 	}
@@ -111,7 +119,7 @@ func (e *Endpoint) GetMoviesByFilter(_ context.Context, req *pb.GetMoviesByFilte
 		}
 		pbMovies = append(pbMovies, pbMovie)
 	}
-
+	fmt.Println("1")
 	return &pb.GetMoviesResponse{Movies: pbMovies}, nil
 }
 

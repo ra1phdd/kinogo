@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import { AuthProvider } from '@/contexts/Auth';
+import { AuthProvider } from '@/contexts/AuthProvider';
 import reportWebVitals from "@/reportWebVitals.ts";
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

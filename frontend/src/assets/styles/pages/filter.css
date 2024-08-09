@@ -578,6 +578,18 @@ header .header__auth .header__auth-admin:hover {
   top: -4.25rem;
   left: -4.25rem;
 }
+.aside__filter form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.aside__filter form button:disabled:hover {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.aside__filter form button:disabled:hover #circle {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
 
 .aside__bestmovie {
   display: none;
@@ -637,6 +649,18 @@ header .header__auth .header__auth-admin:hover {
   top: -4.25rem;
   left: -4.25rem;
 }
+.aside__bestmovie .bestmovie__item button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.aside__bestmovie .bestmovie__item button:disabled:hover {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.aside__bestmovie .bestmovie__item button:disabled:hover #circle {
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
 
 main {
   display: flex;
@@ -666,7 +690,6 @@ main .sections .section__filters span {
 }
 main .sections .section__videos {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 1.5rem;
 }
 main aside {
@@ -674,7 +697,7 @@ main aside {
   width: 100%;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 479px) {
   .section__videos {
     grid-template-columns: 1fr;
   }
